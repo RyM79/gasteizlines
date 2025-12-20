@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gasteiz Lines</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts para Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Google Maps API (clave pública a restringir en producción) -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYzYH_4p2NbIqBp9_2t3gcOy_6Ag0PKL0"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #181818;
+      color: white;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #212121;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .bus-label, .tram-label {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .bus-label { background: #4CAF50; }
+    .tram-label { background: #E91E63; }
+    .stop-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      justify-content: center;
+    }
+    .explore-btn {
+      font-size: 14px;
+      padding: 8px 16px;
+      background: #37474F;
+      border: none;
+      border-radius: 20px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .explore-btn:hover { transform: scale(1.05); }
+    .toggle-btn {
+      background: #37474F;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .toggle-btn:hover { transform: scale(1.05); }
+    .refresh-btn {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      margin: 20px 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(25,118,210,0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .refresh-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(25,118,210,0.4);
+    }
+    .refresh-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(25,118,210,0.3);
+    }
+    .fav-btn {
+      font-size: 28px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: gold;
+      transition: transform 0.3s ease;
+    }
+    .fav-btn:hover { transform: scale(1.1); }
+    .stop-info-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .stop-name {
+      font-weight: bold;
+      font-size: 18px;
+      color: white;
+    }
+    .loading { font-size: 20px; color: #EEEEEE; margin: 15px 0; }
+    /* Se reduce el margen superior del contador para mayor compacidad */
+    .time-display {
+      font-size: 65px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    .bus-time {
+      font-size: 20px;
+      font-weight: bold;
+      opacity: 0.8;
+      color: #CFD8DC;
+    }
+    .arrival-list {
+      display: none;
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 10px;
+      text-align: left;
+    }
+    .arrival-list.show {
+      display: block;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .arrival-item {
+      font-size: 18px;
+      padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .arrival-icon {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+    .arrival-label {
+      background: rgba(255,255,255,0.2);
+      border-radius: 5px;
+      padding: 4px 8px;
+      font-weight: bold;
+      margin-right: 10px;
+      color: #ffffff;
+    }
+    .arrival-remaining {
+      color: #ffffff;
+      font-size: 18px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Modal para selección de paradas: se aumenta la altura disponible */
+    #stopsModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+    }
+    #stopsModalContent {
+      background: #212121;
+      margin: 5vh auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: left;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    /* Modal para selección de línea */
+    #lineModal {
+      display: none;
+      position: fixed;
+      z-index: 1100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+    }
+    #lineModalContent {
+      background: #212121;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: left;
+      position: relative;
+    }
+    /* Lista de líneas con scroll personalizado */
+    #lineList {
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 0;
+      margin: 10px 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    #lineList li {
+      list-style: none;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+    }
+    #lineList li:last-child {
+      border-bottom: none;
+    }
+    #lineList li:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    /* Se elimina el límite de altura para la lista de paradas */
+    #stopsListContainer {
+      overflow-y: auto;
+      margin-bottom: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .stop-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: background 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stop-item:last-child { border-bottom: none; }
+    .stop-item:hover { background: rgba(255,255,255,0.3); }
+    .selected-stop { background: rgba(255,255,255,0.3); }
+    /* Scrollbar elegante para Webkit */
+    #lineList::-webkit-scrollbar,
+    #stopsListContainer::-webkit-scrollbar {
+      width: 8px;
+    }
+    #lineList::-webkit-scrollbar-track,
+    #stopsListContainer::-webkit-scrollbar-track {
+      background: #2a2a2a;
+      border-radius: 10px;
+    }
+    #lineList::-webkit-scrollbar-thumb,
+    #stopsListContainer::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 10px;
+    }
+    #lineList::-webkit-scrollbar-thumb:hover,
+    #stopsListContainer::-webkit-scrollbar-thumb:hover {
+      background: #777;
+    }
+    /* Firefox */
+    #lineList, #stopsListContainer {
+      scrollbar-width: thin;
+      scrollbar-color: #555 #2a2a2a;
+    }
+    /* Botón de volver en modales (para líneas y paradas) */
+    .back-btn {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+    .back-btn:active { transform: translateY(0); box-shadow: none; }
+    /* Modal del mapa */
+    #mapModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.8);
+    }
+    #mapModalContent {
+      position: relative;
+      margin: 5% auto;
+      width: 90%;
+      max-width: 800px;
+      height: 80%;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #map { width: 100%; height: 100%; }
+    #closeMap {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      z-index: 1001;
+      background: #E91E63;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gasteiz Lines</h1>
+    <div style="margin-bottom: 15px;">
+      <!-- Botones para agregar líneas (sin texto) y refrescar -->
+      <button id="addBusLineBtn" class="refresh-btn">
+        <i class="material-icons" style="vertical-align: middle;">directions_bus</i>
+      </button>
+      <button id="addTramLineBtn" class="refresh-btn">
+        <i class="material-icons" style="vertical-align: middle;">tram</i>
+      </button>
+      <button id="globalRefreshBtn" class="refresh-btn">
+        <i class="material-icons" style="vertical-align: middle;">refresh</i>
+      </button>
+    </div>
+    <div id="panels-container"></div>
+  </div>
+
+  <!-- Modal para selección de línea a agregar -->
+  <div id="lineModal">
+    <div id="lineModalContent">
+      <button class="back-btn" onclick="closeLineModal()">← Volver</button>
+      <h3 id="lineModalTitle">Seleccione una línea</h3>
+      <ul id="lineList"></ul>
+    </div>
+  </div>
+
+  <!-- Modal para selección de paradas -->
+  <div id="stopsModal">
+    <div id="stopsModalContent">
+      <button class="back-btn" onclick="closeStopsModal()">← Volver</button>
+      <h3 id="stopsModalTitle">Selecciona una parada</h3>
+      <div id="stopsListContainer"></div>
+    </div>
+  </div>
+
+  <!-- Modal del mapa (para líneas de autobús) -->
+  <div id="mapModal">
+    <div id="mapModalContent">
+      <button id="closeMap" onclick="closeBusMap()">×</button>
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <script>
+    // Variable para determinar el tipo de línea a agregar ("bus" o "tram")
+    let currentAddLineType = null;
+    // Icono de reloj para la lista de llegadas
+    const clockIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrival-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+    
+    /*******************
+     * Funciones de Favoritos (localStorage)
+     *******************/
+    function setFavorite(lineCode, stopObj) {
+      localStorage.setItem("favorite_" + lineCode, JSON.stringify(stopObj));
+    }
+    function removeFavorite(lineCode) {
+      localStorage.removeItem("favorite_" + lineCode);
+    }
+    function getFavorite(lineCode) {
+      const item = localStorage.getItem("favorite_" + lineCode);
+      return item ? JSON.parse(item) : null;
+    }
+    function updateFavIcon(lineCode) {
+      const favIcon = document.getElementById("fav-icon-" + lineCode);
+      const panel = panels[lineCode];
+      const fav = getFavorite(lineCode);
+      favIcon.textContent = (fav && fav.id === panel.currentStopId) ? "★" : "☆";
+    }
+    function toggleFavorite(lineCode) {
+      const panel = panels[lineCode];
+      if (getFavorite(lineCode) && getFavorite(lineCode).id === panel.currentStopId) {
+        removeFavorite(lineCode);
+      } else {
+        setFavorite(lineCode, { id: panel.currentStopId, name: panel.currentStopName });
+      }
+      updateFavIcon(lineCode);
+    }
+    
+    /*******************
+     * Variables y Configuración
+     *******************/
+    const lines = [
+      { code: "E1", name: "Cementerio El Salvador", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000017&idioma=ES" },
+      { code: "G1", name: "Lakua - Abetxuko", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000019&idioma=ES" },
+      { code: "G2", name: "Adurtza - Salburua", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000018&idioma=ES" },
+      { code: "G3", name: "Armentia - Zabalgana", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000015&idioma=ES" },
+      { code: "G4", name: "Sansomendi - Lakua", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000014&idioma=ES" },
+      { code: "G6", name: "Salburua - Aranbizkarra", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000016&idioma=ES" },
+      { code: "L1", name: "Circular", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000004&idioma=ES" },
+      { code: "L2A", name: "BEI A", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000012&idioma=ES" },
+      { code: "L2B", name: "BEI B", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000013&idioma=ES" },
+      { code: "L3", name: "Betoño - Goikolarra", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000002&idioma=ES" },
+      { code: "L4", name: "Lakua - Mariturri", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000022&idioma=ES" },
+      { code: "L5", name: "Arkaiate - Elejalde", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000007&idioma=ES" },
+      { code: "L5A", name: "Arkaiate - Astegieta", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
+      { code: "L5B", name: "Arkaiate - Ariñez", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
+      { code: "L5C", name: "Arkaiate - Júndiz-ITV", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000010&idioma=ES" },
+      { code: "L5D", name: "Arkaiate - Ariñez-ITV", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000011&idioma=ES" },
+      { code: "L6", name: "Zabalgana - Arkaiate", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000006&idioma=ES" },
+      { code: "L7", name: "Borinbizkarra - Paz", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000005&idioma=ES" },
+      { code: "L8", name: "Unibertsitatea", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000001&idioma=ES" },
+      { code: "L9", name: "Gamarra - Goikolarra", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000000&idioma=ES" },
+      // Líneas de tranvía
+      { code: "TG1", name: "Abetxuko-Unibertsitatea", type: "tram", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000021&idioma=ES" },
+      { code: "TG2", name: "Ibaiondo-Salburua", type: "tram", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000020&idioma=ES" }
+    ];
+    const panels = {}; // Mapea cada panel por línea
+    let currentStopSelectionPanel = null; // Para el modal de paradas
+    const arrivalApiUrlTemplate = "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_PARADAS&idParada={stopId}&idRuta={lineCode}";
+    const proxyUrl = "https://api.allorigins.win/raw?url=";
+    
+    /*******************
+     * Variables para el mapa de autobuses
+     *******************/
+    let busMapInterval = null, map, busMarkers = {};
+    let currentBusMapLine = null;
+    
+    /*******************
+     * Funciones para Líneas Fijadas (pinned)
+     *******************/
+    function getPinnedLines() {
+      const pinned = localStorage.getItem("pinned_lines");
+      return pinned ? JSON.parse(pinned) : [];
+    }
+    function setPinnedLines(pinnedArray) {
+      localStorage.setItem("pinned_lines", JSON.stringify(pinnedArray));
+    }
+    function updatePinIcon(lineCode) {
+      const pinBtn = document.getElementById("pin-btn-" + lineCode);
+      const pinned = getPinnedLines();
+      if (pinned.includes(lineCode)) {
+        pinBtn.innerHTML = '<i class="material-icons" style="color:gold; vertical-align: middle;">push_pin</i>';
+      } else {
+        pinBtn.innerHTML = '<i class="material-icons" style="vertical-align: middle;">push_pin</i>';
+      }
+    }
+    function togglePin(lineCode) {
+      let pinned = getPinnedLines();
+      if (pinned.includes(lineCode)) {
+        pinned = pinned.filter(code => code !== lineCode);
+      } else {
+        pinned.push(lineCode);
+      }
+      setPinnedLines(pinned);
+      updatePinIcon(lineCode);
+    }
+    
+    /*******************
+     * Cargar Líneas Fijadas al Iniciar
+     *******************/
+    function loadPinnedPanels() {
+      const pinned = getPinnedLines();
+      pinned.forEach(lineCode => {
+        const line = lines.find(l => l.code === lineCode);
+        if (line && !panels[line.code]) {
+          createPanel(line);
+        }
+      });
+    }
+    
+    /*******************
+     * Funciones para mostrar el modal de selección de línea a agregar
+     *******************/
+    function openAddLineModal(type) {
+      currentAddLineType = type;
+      const modal = document.getElementById("lineModal");
+      const title = document.getElementById("lineModalTitle");
+      const listEl = document.getElementById("lineList");
+      let filtered = lines.filter(l => l.type === type && !panels[l.code]);
+      filtered.sort((a, b) => a.code.localeCompare(b.code));
+      if(filtered.length === 0) {
+          title.textContent = "No quedan líneas disponibles para agregar.";
+          listEl.innerHTML = "";
+      } else {
+          title.textContent = "Seleccione una línea de " + (type === "bus" ? "autobús" : "tranvía");
+          listEl.innerHTML = "";
+          filtered.forEach(line => {
+             const li = document.createElement("li");
+             li.textContent = line.code + " - " + line.name;
+             li.onclick = function() { addSelectedLineFromList(line.code); };
+             listEl.appendChild(li);
+          });
+      }
+      modal.style.display = "block";
+    }
+    
+    function closeLineModal() {
+      document.getElementById("lineModal").style.display = "none";
+    }
+    
+    function addSelectedLineFromList(lineCode) {
+      const line = lines.find(l => l.code === lineCode);
+      if(line && !panels[line.code]) {
+         createPanel(line);
+      }
+      closeLineModal();
+    }
+    
+    /*******************
+     * Creación de Panel Dinámico
+     *******************/
+    function createPanel(line) {
+      const container = document.getElementById("panels-container");
+      const panelDiv = document.createElement("div");
+      panelDiv.className = "card";
+      panelDiv.id = "panel-" + line.code;
+      const icon = (line.type === "bus") ? "directions_bus" : "tram";
+      // Botón del mapa (solo para autobús)
+      const mapBtn = (line.type === "bus")
+        ? `<button class="explore-btn" onclick="openBusMap('${line.code}')">
+             <i class="material-icons" style="vertical-align: middle;">location_on</i>
+           </button>`
+        : "";
+      panelDiv.innerHTML = `
+        <h2 class="${(line.type === "bus") ? "bus-label" : "tram-label"}">
+          <i class="material-icons" style="vertical-align: middle;">${icon}</i> ${line.code} - ${line.name}
+        </h2>
+        <div class="stop-buttons">
+          <button class="explore-btn" onclick="showStopsList('${line.code}')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          ${mapBtn}
+          <button class="explore-btn" id="pin-btn-${line.code}" onclick="togglePin('${line.code}')">
+            <i class="material-icons" style="vertical-align: middle;">push_pin</i>
+          </button>
+          <button class="explore-btn" onclick="deletePanel('${line.code}')">
+            <i class="material-icons" style="vertical-align: middle;">delete</i>
+          </button>
+        </div>
+        <div class="stop-info-container">
+          <span class="stop-name" id="stop-info-${line.code}">Cargando parada...</span>
+          <button class="fav-btn" onclick="toggleFavorite('${line.code}')">
+            <span id="fav-icon-${line.code}"></span>
+          </button>
+        </div>
+        <div id="info-${line.code}" class="loading">Cargando información...</div>
+        <button class="toggle-btn" onclick="toggleArrivalList('${line.code}')">Ver próximas llegadas</button>
+        <div id="list-${line.code}" class="arrival-list"></div>
+      `;
+      container.appendChild(panelDiv);
+      panels[line.code] = {
+        line: line,
+        currentStopId: null,
+        currentStopName: null,
+        countdownInterval: null
+      };
+      loadStopsForPanel(line.code);
+      updatePinIcon(line.code);
+    }
+    
+    /*******************
+     * Carga y Selección de Paradas (Favorita Persistente)
+     *******************/
+    async function loadStopsForPanel(lineCode) {
+      const panel = panels[lineCode];
+      const line = panel.line;
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(line.stopsUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de paradas");
+        const data = await response.json();
+        if (!data.recorrido || !Array.isArray(data.recorrido)) throw new Error("Formato de paradas no esperado");
+        const favorite = getFavorite(line.code);
+        if (favorite) {
+          panel.currentStopId = favorite.id;
+          panel.currentStopName = favorite.name;
+          document.getElementById("stop-info-" + lineCode).textContent = "📍 " + favorite.name;
+        } else {
+          if (data.recorrido.length > 0) {
+            const defaultStop = data.recorrido[0];
+            panel.currentStopId = defaultStop.idParada;
+            panel.currentStopName = defaultStop.nombre;
+            document.getElementById("stop-info-" + lineCode).textContent = "📍 " + defaultStop.nombre;
+          } else {
+            document.getElementById("stop-info-" + lineCode).textContent = "No hay paradas disponibles";
+          }
+        }
+        refreshPanel(lineCode);
+        updateFavIcon(lineCode);
+      } catch (error) {
+        console.error("Error al cargar paradas para " + lineCode, error);
+        document.getElementById("stop-info-" + lineCode).textContent = "Error al cargar paradas";
+      }
+    }
+    
+    async function showStopsList(lineCode) {
+      currentStopSelectionPanel = lineCode;
+      const panel = panels[lineCode];
+      const line = panel.line;
+      document.getElementById("stopsModalTitle").textContent = `Selecciona una parada para ${line.code} - ${line.name}`;
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(line.stopsUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de paradas");
+        const data = await response.json();
+        if (!data.recorrido || !Array.isArray(data.recorrido)) throw new Error("Formato de paradas no esperado");
+        const stopsListContainer = document.getElementById("stopsListContainer");
+        stopsListContainer.innerHTML = data.recorrido.map(stop => {
+          const selectedClass = (stop.idParada === panel.currentStopId) ? " selected-stop" : "";
+          return `<div class="stop-item${selectedClass}" onclick="selectStop('${stop.idParada}', '${stop.nombre.replace(/'/g, "\\'")}')">
+                    ${stop.nombre}
+                  </div>`;
+        }).join("");
+        document.getElementById("stopsModal").style.display = "block";
+      } catch (error) {
+        console.error("Error obteniendo paradas:", error);
+      }
+    }
+    
+    function closeStopsModal() {
+      document.getElementById("stopsModal").style.display = "none";
+    }
+    
+    function selectStop(stopId, stopName) {
+      if (currentStopSelectionPanel) {
+        const panel = panels[currentStopSelectionPanel];
+        panel.currentStopId = stopId;
+        panel.currentStopName = stopName;
+        document.getElementById("stop-info-" + currentStopSelectionPanel).textContent = "📍 " + stopName;
+        closeStopsModal();
+        refreshPanel(currentStopSelectionPanel);
+        updateFavIcon(currentStopSelectionPanel);
+      }
+    }
+    
+    /*******************
+     * Refresco de Información y Llegadas
+     *******************/
+    async function refreshPanel(lineCode) {
+      const panel = panels[lineCode];
+      if (!panel.currentStopId) return;
+      const line = panel.line;
+      const infoDiv = document.getElementById("info-" + lineCode);
+      const listDiv = document.getElementById("list-" + lineCode);
+      
+      // Definición de expectedLine:
+      // - Si la línea es de autobús y empieza por "L" (excepto L2A y L2B), se quita la "L".
+      // - Si es L2A o L2B, se usa el código completo.
+      // - Para el resto, se usa el código completo.
+      let expectedLine;
+      if(line.type === "bus" && line.code.startsWith("L") && line.code !== "L2A" && line.code !== "L2B") {
+        expectedLine = line.code.substring(1);
+      } else {
+        expectedLine = line.code;
+      }
+      
+      const apiUrl = arrivalApiUrlTemplate
+                       .replace("{stopId}", panel.currentStopId)
+                       .replace("{lineCode}", expectedLine);
+      try {
+        const apiUrlWithCacheBuster = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+        const response = await fetch(proxyUrl + encodeURIComponent(apiUrlWithCacheBuster), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de llegadas.");
+        const data = await response.json();
+        console.log(`Datos obtenidos (${line.code}):`, data);
+        if (!data.llegadas || !Array.isArray(data.llegadas)) {
+          throw new Error("El formato de datos recibido no es el esperado.");
+        }
+        let arrivals = data.llegadas.filter(l => l.line === expectedLine).slice(0, 4);
+        if (arrivals.length > 0) {
+          let listArrivals = arrivals.slice(1);
+          let listHtml = listArrivals.map(l => {
+            let formattedTime = (l.seconds < 60) ? `${l.seconds} seg` : formatTime(Math.ceil(l.seconds/60));
+            return `<div class="arrival-item">
+                      <span class="arrival-icon">${clockIcon}</span>
+                      <span class="arrival-label">${convertirHora(l.realtimeArrival)}</span> - <span class="arrival-remaining">${formattedTime}</span>
+                    </div>`;
+          }).join("");
+          listDiv.innerHTML = listHtml;
+          let nextArrival = arrivals[0];
+          let nextFormatted;
+          if(nextArrival.seconds < 60) {
+            clearInterval(panel.countdownInterval);
+            nextFormatted = `<span id="time-display-${line.code}">${nextArrival.seconds}</span>`;
+            panel.countdownInterval = setInterval(() => {
+              const td = document.getElementById(`time-display-${line.code}`);
+              if (!td) { clearInterval(panel.countdownInterval); return; }
+              let current = parseInt(td.textContent);
+              if (current > 0) {
+                td.textContent = current - 1;
+              } else {
+                td.textContent = "En la parada";
+                clearInterval(panel.countdownInterval);
+              }
+            }, 1000);
+          } else {
+            clearInterval(panel.countdownInterval);
+            nextFormatted = formatTime(Math.ceil(nextArrival.seconds / 60));
+          }
+          infoDiv.innerHTML = `<div class="time-display">${nextFormatted}</div>
+                               <div class="bus-time">Hora prevista: ${convertirHora(nextArrival.realtimeArrival)}</div>`;
+        } else {
+          infoDiv.innerHTML = "🚍 No hay más llegadas hoy.";
+        }
+      } catch (error) {
+        console.error(`Error obteniendo datos (${line.code}):`, error);
+        infoDiv.innerHTML = "⚠️ Error al obtener la información.";
+      }
+    }
+    
+    function formatTime(minutes) {
+      if (minutes >= 60) {
+        let hours = Math.floor(minutes / 60);
+        let mins = minutes % 60;
+        return `${hours}h ${mins}m`;
+      }
+      return `${minutes} min`;
+    }
+    
+    function convertirHora(segundos) {
+      let horas = Math.floor(segundos / 3600);
+      let minutos = Math.floor((segundos % 3600) / 60);
+      return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+    }
+    
+    function toggleArrivalList(lineCode) {
+      const listDiv = document.getElementById("list-" + lineCode);
+      listDiv.classList.toggle("show");
+    }
+    
+    /*******************
+     * Funciones para el Mapa de Autobuses
+     *******************/
+    function openBusMap(lineCode) {
+      currentBusMapLine = lineCode;
+      document.getElementById("mapModal").style.display = "block";
+      initMap();
+      updateBusPositions(lineCode);
+      busMapInterval = setInterval(() => updateBusPositions(lineCode), 5000);
+    }
+    
+    function closeBusMap() {
+      document.getElementById("mapModal").style.display = "none";
+      if (busMapInterval) {
+        clearInterval(busMapInterval);
+        busMapInterval = null;
+      }
+      for (let key in busMarkers) {
+        busMarkers[key].setMap(null);
+      }
+      busMarkers = {};
+    }
+    
+    function initMap() {
+      const vitCoords = { lat: 42.846, lng: -2.671 };
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: vitCoords,
+        zoom: 14,
+      });
+    }
+    
+    async function updateBusPositions(lineCode) {
+      try {
+        const busPositionsUrl = `https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RUTA&idRuta=${lineCode}&type=positions`;
+        const response = await fetch(proxyUrl + encodeURIComponent(busPositionsUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de posiciones");
+        const data = await response.json();
+        console.log("Posiciones de autobuses:", data);
+        if (!data.posiciones || !Array.isArray(data.posiciones)) {
+          throw new Error("Formato de posiciones no esperado");
+        }
+        data.posiciones.forEach(pos => {
+          const vehiculo = pos.vehiculo;
+          const latLng = { lat: parseFloat(pos.latitud), lng: parseFloat(pos.longitud) };
+          if (busMarkers[vehiculo]) {
+            busMarkers[vehiculo].setPosition(latLng);
+          } else {
+            busMarkers[vehiculo] = new google.maps.Marker({
+              position: latLng,
+              map: map,
+              title: `Autobús ${vehiculo}`,
+              icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Error actualizando posiciones:", error);
+      }
+    }
+    
+    /*******************
+     * Botón Global Actualizar
+     *******************/
+    function refreshAllPanels() {
+      for (let lineCode in panels) {
+        refreshPanel(lineCode);
+      }
+    }
+    document.getElementById("globalRefreshBtn").addEventListener("click", refreshAllPanels);
+    
+    /*******************
+     * Función para Eliminar Panel
+     *******************/
+    function deletePanel(lineCode) {
+      const panelDiv = document.getElementById("panel-" + lineCode);
+      if (panelDiv) {
+        panelDiv.remove();
+      }
+      delete panels[lineCode];
+      let pinned = getPinnedLines();
+      if (pinned.includes(lineCode)) {
+        pinned = pinned.filter(code => code !== lineCode);
+        setPinnedLines(pinned);
+      }
+    }
+    
+    /*******************
+     * Auto-Actualización de Paneles (cada 30 segundos)
+     *******************/
+    setInterval(refreshAllPanels, 30000);
+    
+    /*******************
+     * Asignar Event Listeners al Iniciar
+     *******************/
+    window.onload = function() {
+      document.getElementById("addBusLineBtn").addEventListener("click", () => openAddLineModal("bus"));
+      document.getElementById("addTramLineBtn").addEventListener("click", () => openAddLineModal("tram"));
+      loadPinnedPanels();
+    };
+    
+    /*******************
+     * Funciones para el Modal de selección de línea a agregar
+     *******************/
+    function openAddLineModal(type) {
+      currentAddLineType = type;
+      const modal = document.getElementById("lineModal");
+      const title = document.getElementById("lineModalTitle");
+      const listEl = document.getElementById("lineList");
+      let filtered = lines.filter(l => l.type === type && !panels[l.code]);
+      filtered.sort((a, b) => a.code.localeCompare(b.code));
+      if(filtered.length === 0) {
+          title.textContent = "No quedan líneas disponibles para agregar.";
+          listEl.innerHTML = "";
+      } else {
+          title.textContent = "Seleccione una línea de " + (type === "bus" ? "autobús" : "tranvía");
+          listEl.innerHTML = "";
+          filtered.forEach(line => {
+             const li = document.createElement("li");
+             li.textContent = line.code + " - " + line.name;
+             li.onclick = function() { addSelectedLineFromList(line.code); };
+             listEl.appendChild(li);
+          });
+      }
+      modal.style.display = "block";
+    }
+    
+    function closeLineModal() {
+      document.getElementById("lineModal").style.display = "none";
+    }
+    
+    function addSelectedLineFromList(lineCode) {
+      const line = lines.find(l => l.code === lineCode);
+      if(line && !panels[line.code]) {
+         createPanel(line);
+      }
+      closeLineModal();
+    }
+  </script>
+</body>
+</html>

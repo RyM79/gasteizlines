@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gasteiz Lines - Bus & Tranvía</title>
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Google Fonts: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Google Maps API (clave pública a restringir en producción) -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYzYH_4p2NbIqBp9_2t3gcOy_6Ag0PKL0"></script>
+  <style>
+    :root {
+      --color-bg: #f6f8fc;
+      --color-white: #ffffff;
+      --color-text: #2e2e2e;
+      --color-gray: #777;
+      --color-border: #e0e0e0;
+      --color-primary: #2e7dff;
+      --radius-lg: 12px;
+      --spacing-xs: 8px;
+      --spacing-sm: 12px;
+      --spacing-md: 16px;
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      padding: var(--spacing-md);
+    }
+    h1 {
+      font-size: 1.3em;
+      margin-bottom: var(--spacing-md);
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .top-buttons {
+      display: flex;
+      flex-direction: row;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-md);
+      justify-content: center;
+    }
+    #empty-message {
+      display: none;
+      text-align: center;
+      color: var(--color-gray);
+      margin-bottom: var(--spacing-md);
+      font-size: 1em;
+    }
+    .card {
+      background: var(--color-white);
+      padding: var(--spacing-md);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      margin-bottom: var(--spacing-md);
+      width: 100%;
+      text-align: center;
+    }
+    .line-title-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-xs);
+      margin-bottom: var(--spacing-sm);
+    }
+    .line-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-lg);
+      background-color: #e0e0e0;
+      color: var(--color-white);
+      font-size: 1.5rem;
+    }
+    .bus-icon { background-color: #4CAF50; }
+    .tram-icon { background-color: #E91E63; }
+    .line-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      outline: none;
+      font-family: inherit;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      color: var(--color-white);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+    .icon-btn:hover { transform: scale(1.05); }
+    /* Botones de la botonera del panel */
+    .panel-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--color-white);
+      border: 2px solid var(--color-primary);
+      color: var(--color-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+    .panel-btn:hover { transform: scale(1.05); }
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .btn-label {
+      font-size: 0.7rem;
+      color: var(--color-primary);
+      margin-top: 1px;
+    }
+    /* Botón volver */
+    .back-btn {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      border: none;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .back-btn:hover {
+      background-color: #1c64d1;
+    }
+    /* Botón de favorito sin círculo */
+    .fav-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 1.5rem;
+      color: var(--color-primary);
+      cursor: pointer;
+    }
+    .fav-btn.selected {
+      color: gold;
+    }
+    /* Estilo para el buscador */
+    .search-input {
+      width: 100%;
+      padding: var(--spacing-sm);
+      margin: var(--spacing-sm) 0;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+    }
+    .stop-info-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-xs);
+      margin-top: var(--spacing-sm);
+    }
+    .stop-name {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .loading { font-size: 1rem; color: var(--color-gray); margin: var(--spacing-sm) 0; }
+    .time-display {
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin: var(--spacing-xs) 0;
+    }
+    .bus-time {
+      font-size: 1rem;
+      font-weight: 600;
+      opacity: 0.8;
+      color: var(--color-gray);
+    }
+    .arrival-icon { margin-right: var(--spacing-xs); }
+    .arrival-label {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--color-primary);
+    }
+    .upcoming-arrivals {
+      display: flex;
+      gap: var(--spacing-xs);
+      justify-content: center;
+      margin-top: var(--spacing-sm);
+    }
+    .bus-arrival-badge {
+      background: #f0f0f0;
+      color: var(--color-text);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .bus-arrival-badge .badge-time {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+    .bus-arrival-badge .badge-remaining {
+      font-size: 0.8rem;
+      color: var(--color-gray);
+    }
+    .tram-arrivals-container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-sm);
+    }
+    .tram-destination {
+      border: 1px solid var(--color-border);
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+    }
+    .tram-destination-header {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: var(--spacing-xs);
+      color: var(--color-primary);
+    }
+    .tram-destination-header::before {
+      content: "Destino: ";
+      font-weight: normal;
+      color: var(--color-gray);
+    }
+    .tram-next-arrival {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: var(--spacing-xs);
+    }
+    .tram-countdown {
+      font-size: 1.5rem;
+      color: var(--color-text);
+      margin-bottom: var(--spacing-xs);
+      font-weight: bold;  /* Ahora en negrita */
+    }
+    .tram-scheduled {
+      font-size: 0.9rem;
+      color: var(--color-gray);
+    }
+    .tram-upcoming-arrivals {
+      display: flex;
+      gap: var(--spacing-xs);
+      justify-content: center;
+      margin-top: var(--spacing-xs);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.3);
+      overflow: auto;
+    }
+    .modal-content {
+      background: var(--color-white);
+      margin: 5% auto;
+      padding: var(--spacing-md);
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+      box-shadow: var(--shadow-md);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    #lineList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+    }
+    #lineList li {
+      padding: var(--spacing-sm);
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #lineList li:hover { background-color: var(--color-border); }
+    #stopsListContainer {
+      padding: 0;
+      margin: 0;
+      text-align: center;
+    }
+    .stop-item {
+      padding: var(--spacing-sm);
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .stop-item:hover { background: var(--color-border); }
+    .selected-stop { background: var(--color-border); }
+    #mapModalContent {
+      margin: 5% auto;
+      width: 90%;
+      max-width: 800px;
+      height: 80%;
+      background: var(--color-white);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow-md);
+    }
+    #map { width: 100%; height: 100%; }
+    #closeMap {
+      position: absolute;
+      top: var(--spacing-sm);
+      right: var(--spacing-sm);
+      z-index: 1001;
+      background: var(--color-primary);
+      color: var(--color-white);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gasteiz Lines - Bus & Tranvía</h1>
+    <div class="top-buttons">
+      <button id="addBusLineBtn" class="icon-btn">
+        <i class="material-icons">directions_bus</i>
+      </button>
+      <button id="addTramLineBtn" class="icon-btn">
+        <i class="material-icons">tram</i>
+      </button>
+      <button id="globalRefreshBtn" class="icon-btn">
+        <i class="material-icons">refresh</i>
+      </button>
+    </div>
+    <div id="empty-message">
+      No hay ninguna línea añadida.<br>¡Añade tu primera línea de autobús o tranvía para empezar a usar la app!
+    </div>
+    <div id="panels-container"></div>
+  </div>
+  
+  <!-- Modal para selección de línea -->
+  <div id="lineModal" class="modal">
+    <div class="modal-content" id="lineModalContent">
+      <button class="back-btn" onclick="closeLineModal()">← Volver</button>
+      <h3 id="lineModalTitle">Seleccione una línea</h3>
+      <input type="text" id="lineSearchInput" class="search-input" placeholder="Buscar línea...">
+      <ul id="lineList"></ul>
+    </div>
+  </div>
+  
+  <!-- Modal para selección de paradas -->
+  <div id="stopsModal" class="modal">
+    <div class="modal-content" id="stopsModalContent">
+      <button class="back-btn" onclick="closeStopsModal()">← Volver</button>
+      <h3 id="stopsModalTitle">Selecciona una parada</h3>
+      <input type="text" id="stopSearchInput" class="search-input" placeholder="Buscar parada...">
+      <div id="stopsListContainer"></div>
+    </div>
+  </div>
+  
+  <!-- Modal del mapa -->
+  <div id="mapModal" class="modal">
+    <div id="mapModalContent">
+      <button id="closeMap" onclick="closeMap()">×</button>
+      <div id="map"></div>
+    </div>
+  </div>
+  
+  <script>
+    let currentAddLineType = null;
+    const clockIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrival-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+    
+    function setFavorite(lineCode, stopObj) {
+      localStorage.setItem("favorite_" + lineCode, JSON.stringify(stopObj));
+    }
+    function removeFavorite(lineCode) {
+      localStorage.removeItem("favorite_" + lineCode);
+    }
+    function getFavorite(lineCode) {
+      const item = localStorage.getItem("favorite_" + lineCode);
+      return item ? JSON.parse(item) : null;
+    }
+    // Actualiza el ícono de favorito y añade o quita la clase "selected"
+    function updateFavIcon(lineCode) {
+      const favBtn = document.getElementById("fav-btn-" + lineCode);
+      const favIconSpan = document.getElementById("fav-icon-" + lineCode);
+      const panel = panels[lineCode];
+      const fav = getFavorite(lineCode);
+      if (fav && fav.id === panel.currentStopId) {
+        favIconSpan.textContent = "★";
+        favBtn.classList.add("selected");
+      } else {
+        favIconSpan.textContent = "☆";
+        favBtn.classList.remove("selected");
+      }
+    }
+    function toggleFavorite(lineCode) {
+      const panel = panels[lineCode];
+      if (getFavorite(lineCode) && getFavorite(lineCode).id === panel.currentStopId) {
+        removeFavorite(lineCode);
+      } else {
+        setFavorite(lineCode, { id: panel.currentStopId, name: panel.currentStopName });
+      }
+      updateFavIcon(lineCode);
+    }
+    
+    const lines = [
+      { code: "E1", name: "Cementerio El Salvador", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000017&idioma=ES" },
+      { code: "G1", name: "Lakua - Abetxuko", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000019&idioma=ES" },
+      { code: "G2", name: "Adurtza - Salburua", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000018&idioma=ES" },
+      { code: "G3", name: "Armentia - Zabalgana", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000015&idioma=ES" },
+      { code: "G4", name: "Sansomendi - Lakua", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000014&idioma=ES" },
+      { code: "G6", name: "Salburua - Aranbizkarra", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000016&idioma=ES" },
+      { code: "L1", name: "Circular", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000004&idioma=ES" },
+      { code: "L2A", name: "BEI A", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000012&idioma=ES" },
+      { code: "L2B", name: "BEI B", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000013&idioma=ES" },
+      { code: "L3", name: "Betoño - Goikolarra", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000002&idioma=ES" },
+      { code: "L4", name: "Lakua - Mariturri", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000022&idioma=ES" },
+      { code: "L5", name: "Arkaiate - Elejalde", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000007&idioma=ES" },
+      { code: "L5A", name: "Arkaiate - Astegieta", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
+      { code: "L5B", name: "Arkaiate - Ariñez", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
+      { code: "L5C", name: "Arkaiate - Júndiz-ITV", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000010&idioma=ES" },
+      { code: "L5D", name: "Arkaiate - Ariñez-ITV", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000011&idioma=ES" },
+      { code: "L6", name: "Zabalgana - Arkaiate", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000006&idioma=ES" },
+      { code: "L7", name: "Borinbizkarra - Paz", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000005&idioma=ES" },
+      { code: "L8", name: "Unibertsitatea", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000001&idioma=ES" },
+      { code: "L9", name: "Gamarra - Goikolarra", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000000&idioma=ES" },
+      { code: "L10", name: "Aldaia - Larrein", type: "bus", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000003&idioma=ES" },
+      { code: "TG1", name: "Abetxuko-Unibertsitatea", type: "tram", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000021&idioma=ES" },
+      { code: "TG2", name: "Ibaiondo-Salburua", type: "tram", stopsUrl: "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000020&idioma=ES" }
+    ];
+    
+    const panels = {};
+    let currentStopSelectionPanel = null;
+    const arrivalApiUrlTemplate = "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_PARADAS&idParada={stopId}&idRuta={lineCode}";
+    const proxyUrl = "https://api.allorigins.win/raw?url=";
+    
+    let busMapInterval = null, map, busMarkers = {};
+    let stopMarkers = {}; // Marcadores para paradas
+    let currentBusMapLine = null;
+    
+    function getPinnedLines() {
+      const pinned = localStorage.getItem("pinned_lines");
+      return pinned ? JSON.parse(pinned) : [];
+    }
+    function setPinnedLines(pinnedArray) {
+      localStorage.setItem("pinned_lines", JSON.stringify(pinnedArray));
+    }
+    // Actualiza el ícono del botón de fijar
+    function updatePinIcon(lineCode) {
+      const pinBtn = document.getElementById("pin-btn-" + lineCode);
+      const pinned = getPinnedLines();
+      if (pinned.includes(lineCode)) {
+        pinBtn.style.backgroundColor = "var(--color-primary)";
+        pinBtn.innerHTML = '<i class="material-icons" style="color:var(--color-white);">push_pin</i>';
+      } else {
+        pinBtn.style.backgroundColor = "var(--color-white)";
+        pinBtn.innerHTML = '<i class="material-icons" style="color:var(--color-primary);">push_pin</i>';
+      }
+    }
+    function togglePin(lineCode) {
+      let pinned = getPinnedLines();
+      if (pinned.includes(lineCode)) {
+        pinned = pinned.filter(code => code !== lineCode);
+      } else {
+        pinned.push(lineCode);
+      }
+      setPinnedLines(pinned);
+      updatePinIcon(lineCode);
+    }
+    
+    function updateEmptyMessage() {
+      const container = document.getElementById("panels-container");
+      const emptyMessage = document.getElementById("empty-message");
+      emptyMessage.style.display = container.childElementCount === 0 ? "block" : "none";
+    }
+    
+    function loadPinnedPanels() {
+      const pinned = getPinnedLines();
+      pinned.forEach(lineCode => {
+        const line = lines.find(l => l.code === lineCode);
+        if (line && !panels[line.code]) {
+          createPanel(line);
+        }
+      });
+      updateEmptyMessage();
+    }
+    
+    function openAddLineModal(type) {
+      currentAddLineType = type;
+      const modal = document.getElementById("lineModal");
+      const title = document.getElementById("lineModalTitle");
+      const listEl = document.getElementById("lineList");
+      // Reiniciamos el buscador
+      document.getElementById("lineSearchInput").value = "";
+      let filtered = lines.filter(l => l.type === type && !panels[l.code]);
+      filtered.sort((a, b) => a.code.localeCompare(b.code));
+      if(filtered.length === 0) {
+        title.textContent = "No quedan líneas disponibles para agregar.";
+        listEl.innerHTML = "";
+      } else {
+        title.textContent = "Seleccione una línea de " + (type === "bus" ? "autobús" : "tranvía");
+        listEl.innerHTML = "";
+        filtered.forEach(line => {
+          const li = document.createElement("li");
+          li.textContent = line.code + " - " + line.name;
+          li.onclick = function() { addSelectedLineFromList(line.code); };
+          listEl.appendChild(li);
+        });
+      }
+      modal.style.display = "block";
+    }
+    
+    function closeLineModal() {
+      document.getElementById("lineModal").style.display = "none";
+    }
+    
+    function addSelectedLineFromList(lineCode) {
+      const line = lines.find(l => l.code === lineCode);
+      if(line && !panels[line.code]) {
+        createPanel(line);
+      }
+      closeLineModal();
+      updateEmptyMessage();
+    }
+    
+    function createPanel(line) {
+      const container = document.getElementById("panels-container");
+      const panelDiv = document.createElement("div");
+      panelDiv.className = "card";
+      panelDiv.id = "panel-" + line.code;
+      const icon = (line.type === "bus") ? "directions_bus" : "tram";
+      // Se incluye el botón de mapa para ambas líneas
+      const btnGroup = `
+        <div style="display:flex; gap: var(--spacing-sm); justify-content: center; margin-top: var(--spacing-sm);">
+          <div class="btn-container">
+            <button class="panel-btn" onclick="showStopsList('${line.code}')">
+              <i class="material-icons">search</i>
+            </button>
+            <div class="btn-label">Paradas</div>
+          </div>
+          <div class="btn-container">
+            <button class="panel-btn" onclick="openMap('${line.code}')">
+              <i class="material-icons">location_on</i>
+            </button>
+            <div class="btn-label">Mapa</div>
+          </div>
+          <div class="btn-container">
+            <button class="panel-btn" id="pin-btn-${line.code}" onclick="togglePin('${line.code}')">
+              <i class="material-icons">push_pin</i>
+            </button>
+            <div class="btn-label">Fijar</div>
+          </div>
+          <div class="btn-container">
+            <button class="panel-btn" onclick="deletePanel('${line.code}')">
+              <i class="material-icons">delete</i>
+            </button>
+            <div class="btn-label">Borrar</div>
+          </div>
+        </div>`;
+      panelDiv.innerHTML = `
+        <div class="line-title-container">
+          <div class="line-icon ${line.type === "bus" ? "bus-icon" : "tram-icon"}">
+            <i class="material-icons">${icon}</i>
+          </div>
+          <div class="line-title">${line.code} - ${line.name}</div>
+        </div>
+        ${btnGroup}
+        <div class="stop-info-container">
+          <span class="stop-name" id="stop-info-${line.code}">Cargando parada...</span>
+          <button class="fav-btn" id="fav-btn-${line.code}" onclick="toggleFavorite('${line.code}')">
+            <span id="fav-icon-${line.code}"></span>
+          </button>
+        </div>
+        <div id="info-${line.code}" class="loading">Cargando información...</div>
+        <div id="list-${line.code}" class="arrival-list"></div>
+      `;
+      container.appendChild(panelDiv);
+      panels[line.code] = {
+        line: line,
+        currentStopId: null,
+        currentStopName: null,
+        countdownIntervals: {},
+        countdownInterval: null
+      };
+      loadStopsForPanel(line.code);
+      updatePinIcon(line.code);
+      updateEmptyMessage();
+      // Si estamos en un dispositivo móvil, se hace scroll hasta el nuevo panel
+      if(window.innerWidth < 768) {
+        panelDiv.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    
+    async function loadStopsForPanel(lineCode) {
+      const panel = panels[lineCode];
+      const line = panel.line;
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(line.stopsUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de paradas");
+        const data = await response.json();
+        if (!data.recorrido || !Array.isArray(data.recorrido)) throw new Error("Formato de paradas no esperado");
+        const favorite = getFavorite(line.code);
+        if (favorite) {
+          panel.currentStopId = favorite.id;
+          panel.currentStopName = favorite.name;
+          document.getElementById("stop-info-" + lineCode).textContent = "📍 " + favorite.name;
+        } else {
+          if (data.recorrido.length > 0) {
+            const defaultStop = data.recorrido[0];
+            panel.currentStopId = defaultStop.idParada;
+            panel.currentStopName = defaultStop.nombre;
+            document.getElementById("stop-info-" + lineCode).textContent = "📍 " + defaultStop.nombre;
+          } else {
+            document.getElementById("stop-info-" + lineCode).textContent = "No hay paradas disponibles";
+          }
+        }
+        refreshPanel(lineCode);
+        updateFavIcon(lineCode);
+      } catch (error) {
+        console.error("Error al cargar paradas para " + lineCode, error);
+        document.getElementById("stop-info-" + lineCode).textContent = "Error al cargar paradas";
+      }
+    }
+    
+    async function showStopsList(lineCode) {
+      currentStopSelectionPanel = lineCode;
+      const panel = panels[lineCode];
+      const line = panel.line;
+      // Reiniciamos el buscador de paradas
+      document.getElementById("stopSearchInput").value = "";
+      document.getElementById("stopsModalTitle").textContent = `Selecciona una parada para ${line.code} - ${line.name}`;
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(line.stopsUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de paradas");
+        const data = await response.json();
+        if (!data.recorrido || !Array.isArray(data.recorrido)) throw new Error("Formato de paradas no esperado");
+        const stopsListContainer = document.getElementById("stopsListContainer");
+        stopsListContainer.innerHTML = data.recorrido.map(stop => {
+          const selectedClass = (stop.idParada === panel.currentStopId) ? " selected-stop" : "";
+          return `<div class="stop-item${selectedClass}" onclick="selectStop('${stop.idParada}', '${stop.nombre.replace(/'/g, "\\'")}')">
+                    ${stop.nombre}
+                  </div>`;
+        }).join("");
+        document.getElementById("stopsModal").style.display = "block";
+      } catch (error) {
+        console.error("Error obteniendo paradas:", error);
+      }
+    }
+    
+    function closeStopsModal() {
+      document.getElementById("stopsModal").style.display = "none";
+    }
+    
+    function selectStop(stopId, stopName) {
+      if (currentStopSelectionPanel) {
+        const panel = panels[currentStopSelectionPanel];
+        panel.currentStopId = stopId;
+        panel.currentStopName = stopName;
+        document.getElementById("stop-info-" + currentStopSelectionPanel).textContent = "📍 " + stopName;
+        closeStopsModal();
+        refreshPanel(currentStopSelectionPanel);
+        updateFavIcon(currentStopSelectionPanel);
+      }
+    }
+    
+    async function refreshPanel(lineCode) {
+      const panel = panels[lineCode];
+      if (!panel.currentStopId) return;
+      const line = panel.line;
+      const infoDiv = document.getElementById("info-" + lineCode);
+      const listDiv = document.getElementById("list-" + lineCode);
+      
+      if (line.type === "tram") {
+        const apiUrl = arrivalApiUrlTemplate
+                         .replace("{stopId}", panel.currentStopId)
+                         .replace("{lineCode}", line.code);
+        try {
+          const apiUrlWithCacheBuster = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+          const response = await fetch(proxyUrl + encodeURIComponent(apiUrlWithCacheBuster), { cache: 'no-store' });
+          if (!response.ok) throw new Error("Error en la API de llegadas.");
+          const data = await response.json();
+          console.log(`Datos obtenidos (${line.code}):`, data);
+          if (!data.llegadas || !Array.isArray(data.llegadas)) {
+            throw new Error("El formato de datos recibido no es el esperado.");
+          }
+          let arrivals = data.llegadas.filter(l => l.line === line.code);
+          if (arrivals.length > 0) {
+            let groups = {};
+            arrivals.forEach(a => {
+              let dest = a.destination || "Destino";
+              if (!groups[dest]) groups[dest] = [];
+              groups[dest].push(a);
+            });
+            for (const dest in groups) {
+              groups[dest].sort((a, b) => a.seconds - b.seconds);
+            }
+            let groupsHtml = "";
+            for (const dest in groups) {
+              const group = groups[dest];
+              const nextArrival = group[0];
+              let nextFormatted = "";
+              if (nextArrival.seconds < 60) {
+                if (!panel.countdownIntervals) panel.countdownIntervals = {};
+                clearInterval(panel.countdownIntervals[dest]);
+                nextFormatted = `<span id="time-display-${line.code}-${dest}">${nextArrival.seconds}</span>`;
+                panel.countdownIntervals[dest] = setInterval(() => {
+                  const td = document.getElementById(`time-display-${line.code}-${dest}`);
+                  if (!td) { clearInterval(panel.countdownIntervals[dest]); return; }
+                  let current = parseInt(td.textContent);
+                  if (current > 0) {
+                    td.textContent = current - 1;
+                  } else {
+                    td.textContent = "En la parada";
+                    clearInterval(panel.countdownIntervals[dest]);
+                  }
+                }, 1000);
+              } else {
+                clearInterval(panel.countdownIntervals ? panel.countdownIntervals[dest] : null);
+                nextFormatted = formatTime(Math.ceil(nextArrival.seconds / 60));
+              }
+              let nextHtml = `<div class="tram-next-arrival">
+                                <div class="tram-countdown">${nextFormatted}</div>
+                                <div class="tram-scheduled">Hora prevista: ${convertirHora(nextArrival.realtimeArrival)}</div>
+                              </div>`;
+              let upcomingHtml = "";
+              if (group.length > 1) {
+                const upcoming = group.slice(1);
+                upcomingHtml = upcoming.map(a => {
+                  let timeText = (a.seconds < 60) ? `${a.seconds} seg` : formatTime(Math.ceil(a.seconds/60));
+                  return `<div class="bus-arrival-badge">
+                            <div class="badge-time"><strong>${convertirHora(a.realtimeArrival)}</strong></div>
+                            <div class="badge-remaining">${timeText}</div>
+                          </div>`;
+                }).join("");
+                upcomingHtml = `<div class="tram-upcoming-arrivals">${upcomingHtml}</div>`;
+              }
+              groupsHtml += `<div class="tram-destination">
+                               <div class="tram-destination-header">${dest}</div>
+                               ${nextHtml}
+                               ${upcomingHtml}
+                             </div>`;
+            }
+            infoDiv.innerHTML = `<div class="tram-arrivals-container">${groupsHtml}</div>`;
+            listDiv.innerHTML = "";
+          } else {
+            infoDiv.innerHTML = "🚊 No hay más llegadas hoy.";
+            listDiv.innerHTML = "";
+          }
+        } catch (error) {
+          console.error(`Error obteniendo datos (${line.code}):`, error);
+          infoDiv.innerHTML = "⚠️ Error al obtener la información.";
+        }
+      } else {
+        let expectedLine;
+        if (line.type === "bus" && line.code.startsWith("L") && line.code !== "L2A" && line.code !== "L2B") {
+          expectedLine = line.code.substring(1);
+        } else {
+          expectedLine = line.code;
+        }
+        const apiUrl = arrivalApiUrlTemplate
+                         .replace("{stopId}", panel.currentStopId)
+                         .replace("{lineCode}", expectedLine);
+        try {
+          const apiUrlWithCacheBuster = apiUrl + (apiUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+          const response = await fetch(proxyUrl + encodeURIComponent(apiUrlWithCacheBuster), { cache: 'no-store' });
+          if (!response.ok) throw new Error("Error en la API de llegadas.");
+          const data = await response.json();
+          console.log(`Datos obtenidos (${line.code}):`, data);
+          if (!data.llegadas || !Array.isArray(data.llegadas)) {
+            throw new Error("El formato de datos recibido no es el esperado.");
+          }
+          let arrivals = data.llegadas.filter(l => l.line === expectedLine);
+          if (arrivals.length > 0) {
+            let listArrivals = arrivals.slice(1);
+            let listHtml = listArrivals.map(l => {
+              let formattedTime = (l.seconds < 60) ? `${l.seconds} seg` : formatTime(Math.ceil(l.seconds/60));
+              return `<div class="bus-arrival-badge">
+                        <div class="badge-time"><strong>${convertirHora(l.realtimeArrival)}</strong></div>
+                        <div class="badge-remaining">${formattedTime}</div>
+                      </div>`;
+            }).join("");
+            listDiv.innerHTML = `<div class="upcoming-arrivals">${listHtml}</div>`;
+            let nextArrival = arrivals[0];
+            let nextFormatted;
+            if (nextArrival.seconds < 60) {
+              clearInterval(panel.countdownInterval);
+              nextFormatted = `<span id="time-display-${line.code}">${nextArrival.seconds}</span>`;
+              panel.countdownInterval = setInterval(() => {
+                const td = document.getElementById(`time-display-${line.code}`);
+                if (!td) { clearInterval(panel.countdownInterval); return; }
+                let current = parseInt(td.textContent);
+                if (current > 0) {
+                  td.textContent = current - 1;
+                } else {
+                  td.textContent = "En la parada";
+                  clearInterval(panel.countdownInterval);
+                }
+              }, 1000);
+            } else {
+              clearInterval(panel.countdownInterval);
+              nextFormatted = formatTime(Math.ceil(nextArrival.seconds / 60));
+            }
+            infoDiv.innerHTML = `<div class="time-display">${nextFormatted}</div>
+                                 <div class="bus-time">Hora prevista: ${convertirHora(nextArrival.realtimeArrival)}</div>`;
+          } else {
+            infoDiv.innerHTML = "🚍 No hay más llegadas hoy.";
+            listDiv.innerHTML = "";
+          }
+        } catch (error) {
+          console.error(`Error obteniendo datos (${line.code}):`, error);
+          infoDiv.innerHTML = "⚠️ Error al obtener la información.";
+        }
+      }
+    }
+    
+    function formatTime(minutes) {
+      if (minutes >= 60) {
+        let hours = Math.floor(minutes / 60);
+        let mins = minutes % 60;
+        return `${hours}h ${mins}m`;
+      }
+      return `${minutes} min`;
+    }
+    
+    function convertirHora(segundos) {
+      let horas = Math.floor(segundos / 3600);
+      let minutos = Math.floor((segundos % 3600) / 60);
+      return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+    }
+    
+    // Renombramos updateBusPositions a updateVehiclePositions para usarse en autobuses y tranvía
+    async function updateVehiclePositions(lineCode) {
+      try {
+        const positionsUrl = `https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RUTA&idRuta=${lineCode}&type=positions`;
+        const response = await fetch(proxyUrl + encodeURIComponent(positionsUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de posiciones");
+        const data = await response.json();
+        console.log("Posiciones de vehículos:", data);
+        if (!data.posiciones || !Array.isArray(data.posiciones)) {
+          throw new Error("Formato de posiciones no esperado");
+        }
+        data.posiciones.forEach(pos => {
+          const vehiculo = pos.vehiculo;
+          const latLng = { lat: parseFloat(pos.latitud), lng: parseFloat(pos.longitud) };
+          if (busMarkers[vehiculo]) {
+            busMarkers[vehiculo].setPosition(latLng);
+          } else {
+            busMarkers[vehiculo] = new google.maps.Marker({
+              position: latLng,
+              map: map,
+              title: `Vehículo ${vehiculo}`,
+              icon: { url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png" }
+            });
+          }
+        });
+      } catch (error) {
+        console.error("Error actualizando posiciones:", error);
+      }
+    }
+    
+    // Función para actualizar marcadores de paradas (se usa la misma URL que para las paradas)
+    async function updateStopMarkers(lineCode) {
+      const panel = panels[lineCode];
+      const line = panel.line;
+      try {
+        const response = await fetch(proxyUrl + encodeURIComponent(line.stopsUrl), { cache: 'no-store' });
+        if (!response.ok) throw new Error("Error en la API de paradas");
+        const data = await response.json();
+        if (!data.recorrido || !Array.isArray(data.recorrido)) throw new Error("Formato de paradas no esperado");
+        data.recorrido.forEach(stop => {
+          const lat = parseFloat(stop.latitud);
+          const lng = parseFloat(stop.longitud);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            if (stopMarkers[stop.idParada]) {
+              stopMarkers[stop.idParada].setPosition({ lat: lat, lng: lng });
+            } else {
+              stopMarkers[stop.idParada] = new google.maps.Marker({
+                position: { lat: lat, lng: lng },
+                map: map,
+                title: stop.nombre,
+                icon: { url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png" }
+              });
+            }
+          }
+        });
+      } catch (error) {
+        console.error("Error actualizando posiciones de paradas:", error);
+      }
+    }
+    
+    function initMap() {
+      const vitCoords = { lat: 42.846, lng: -2.671 };
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: vitCoords,
+        zoom: 14,
+      });
+    }
+    
+    // Función unificada para abrir el mapa en líneas de autobús y tranvía
+    function openMap(lineCode) {
+      currentBusMapLine = lineCode;
+      document.getElementById("mapModal").style.display = "block";
+      initMap();
+      updateVehiclePositions(lineCode);
+      updateStopMarkers(lineCode);
+      busMapInterval = setInterval(() => updateVehiclePositions(lineCode), 5000);
+    }
+    
+    // Se actualiza closeMap para limpiar ambos tipos de marcadores
+    function closeMap() {
+      document.getElementById("mapModal").style.display = "none";
+      if (busMapInterval) {
+        clearInterval(busMapInterval);
+        busMapInterval = null;
+      }
+      for (let key in busMarkers) {
+        busMarkers[key].setMap(null);
+      }
+      busMarkers = {};
+      for (let key in stopMarkers) {
+        stopMarkers[key].setMap(null);
+      }
+      stopMarkers = {};
+    }
+    
+    function refreshAllPanels() {
+      for (let lineCode in panels) {
+        refreshPanel(lineCode);
+      }
+    }
+    document.getElementById("globalRefreshBtn").addEventListener("click", refreshAllPanels);
+    
+    function deletePanel(lineCode) {
+      const panelDiv = document.getElementById("panel-" + lineCode);
+      if (panelDiv) {
+        panelDiv.remove();
+      }
+      delete panels[lineCode];
+      let pinned = getPinnedLines();
+      if (pinned.includes(lineCode)) {
+        pinned = pinned.filter(code => code !== lineCode);
+        setPinnedLines(pinned);
+      }
+      updateEmptyMessage();
+    }
+    
+    setInterval(refreshAllPanels, 30000);
+    
+    window.onload = function() {
+      document.getElementById("addBusLineBtn").addEventListener("click", () => openAddLineModal("bus"));
+      document.getElementById("addTramLineBtn").addEventListener("click", () => openAddLineModal("tram"));
+      loadPinnedPanels();
+      
+      // Listener para el buscador en la selección de líneas
+      const lineSearchInput = document.getElementById("lineSearchInput");
+      lineSearchInput.addEventListener("input", function() {
+        const filter = this.value.toLowerCase();
+        const liElements = document.querySelectorAll("#lineList li");
+        liElements.forEach(li => {
+          if (li.textContent.toLowerCase().includes(filter)) {
+            li.style.display = "";
+          } else {
+            li.style.display = "none";
+          }
+        });
+      });
+      
+      // Listener para el buscador en la selección de paradas
+      const stopSearchInput = document.getElementById("stopSearchInput");
+      stopSearchInput.addEventListener("input", function() {
+        const filter = this.value.toLowerCase();
+        const stopItems = document.querySelectorAll("#stopsListContainer .stop-item");
+        stopItems.forEach(item => {
+          if (item.textContent.toLowerCase().includes(filter)) {
+            item.style.display = "";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      });
+    };
+    
+    // Versión duplicada de openAddLineModal (se podría eliminar si ya existe)
+    function openAddLineModal(type) {
+      currentAddLineType = type;
+      const modal = document.getElementById("lineModal");
+      const title = document.getElementById("lineModalTitle");
+      const listEl = document.getElementById("lineList");
+      // Reiniciamos el buscador
+      document.getElementById("lineSearchInput").value = "";
+      let filtered = lines.filter(l => l.type === type && !panels[l.code]);
+      filtered.sort((a, b) => a.code.localeCompare(b.code));
+      if(filtered.length === 0) {
+        title.textContent = "No quedan líneas disponibles para agregar.";
+        listEl.innerHTML = "";
+      } else {
+        title.textContent = "Seleccione una línea de " + (type === "bus" ? "autobús" : "tranvía");
+        listEl.innerHTML = "";
+        filtered.forEach(line => {
+          const li = document.createElement("li");
+          li.textContent = line.code + " - " + line.name;
+          li.onclick = function() { addSelectedLineFromList(line.code); };
+          listEl.appendChild(li);
+        });
+      }
+      modal.style.display = "block";
+    }
+    
+    function closeLineModal() {
+      document.getElementById("lineModal").style.display = "none";
+    }
+    
+    function addSelectedLineFromList(lineCode) {
+      const line = lines.find(l => l.code === lineCode);
+      if(line && !panels[line.code]) {
+        createPanel(line);
+      }
+      closeLineModal();
+      updateEmptyMessage();
+    }
+  </script>
+</body>
+</html>
