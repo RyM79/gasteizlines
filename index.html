@@ -22,10 +22,10 @@
       --text:#0f172a;
       --muted:#5b6b82;
       --primary:#0b63ff;
-      --primary-600:#0751d0;
       --accent-bus:#22c55e;
       --accent-tram:#e11d48;
       --danger:#ef4444;
+      --warn:#f59e0b;
       --radius:18px;
       --shadow:0 12px 40px rgba(16,24,40,.12);
       --ring:0 0 0 3px rgba(11,99,255,.25);
@@ -40,8 +40,8 @@
       --text:#e5e7eb;
       --muted:#a8b6c7;
       --primary:#3b82f6;
-      --primary-600:#2563eb;
       --danger:#f87171;
+      --warn:#fbbf24;
       --shadow:0 18px 52px rgba(0,0,0,.45);
       --ring:0 0 0 3px rgba(59,130,246,.25);
       color-scheme:dark;
@@ -58,14 +58,13 @@
     }
     body.modal-open{overflow:hidden;height:100%}
     html.theme-switching *{transition:background-color .25s,color .25s,border-color .25s,box-shadow .25s}
-    .app{max-width:1080px;margin:0 auto;padding:16px clamp(12px,4vw,24px) 92px;display:grid;gap:14px}
+
+    .app{max-width:1080px;margin:0 auto;padding:16px clamp(12px,4vw,24px) 104px;display:grid;gap:14px}
 
     header.appbar{
       position:sticky;top:0;z-index:50;
-      display:grid;
-      grid-template-columns: 1fr auto;
-      gap:12px;
-      align-items:center;
+      display:grid;grid-template-columns: 1fr auto;
+      gap:12px;align-items:center;
       padding:14px clamp(12px,4vw,24px);
       margin:-16px calc(clamp(12px,4vw,24px)*-1) 0;
       background:color-mix(in oklab,var(--surface) 72%,transparent);
@@ -101,17 +100,30 @@
     }
     .btn i{font-size:20px}
     .btn span{font-size:12px;color:var(--muted)}
+    .btn.primary{border-color:color-mix(in oklab,var(--primary) 40%, var(--glass-border));background:color-mix(in oklab,var(--primary) 14%, var(--surface))}
+    .btn:active{transform:scale(.98)}
     @media (hover:hover) and (pointer:fine){
-      .btn:hover,.icon:hover,.nav-btn:hover,.chip:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+      .btn:hover,.icon:hover,.nav-btn:hover,.chip:hover,.edit-pill:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
     }
     @media (hover:none) and (pointer:coarse){
-      .btn:hover,.icon:hover,.nav-btn:hover,.chip:hover{transform:none;box-shadow:0 1px 0 rgba(16,24,40,.03)}
+      .btn:hover,.icon:hover,.nav-btn:hover,.chip:hover,.edit-pill:hover{transform:none;box-shadow:0 1px 0 rgba(16,24,40,.03)}
     }
-    .btn:active,.icon:active,.nav-btn:active{transform:scale(.98)}
-    .icon{
-      width:42px;height:42px;display:grid;place-items:center;border-radius:12px;
-      border:1px solid var(--glass-border);background:var(--surface);cursor:pointer;
-      transition:transform .06s,box-shadow .2s;color:var(--text)
+
+    .edit-pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
+      border:1px solid var(--glass-border);
+      background:var(--surface);
+      cursor:pointer;
+      font-size:12px;font-weight:950;color:var(--text);
+      min-height:40px;
+      transition:transform .06s,box-shadow .2s, background .2s;
+      user-select:none;
+    }
+    .edit-pill i{font-size:20px;color:var(--muted)}
+    .edit-pill.active{
+      border-color:color-mix(in oklab,var(--warn) 50%, var(--glass-border));
+      background:color-mix(in oklab,var(--warn) 16%, var(--surface));
     }
 
     .offline-banner{
@@ -140,11 +152,7 @@
       box-shadow:0 0 0 3px color-mix(in oklab, var(--line-accent) 35%, transparent), var(--shadow);
       animation:flash 1.2s ease-out;
     }
-    @keyframes flash{
-      0%{transform:translateY(0)}
-      20%{transform:translateY(-2px)}
-      100%{transform:translateY(0)}
-    }
+    @keyframes flash{0%{transform:translateY(0)}20%{transform:translateY(-2px)}100%{transform:translateY(0)}}
 
     .card-top{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
     .line-row{display:flex;align-items:center;gap:10px;min-width:0}
@@ -157,38 +165,70 @@
     }
     .line-pill i{font-size:16px;color:color-mix(in oklab, var(--line-accent) 80%, var(--text));}
     .line-name{font-weight:950;letter-spacing:-.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;min-width:0}
+
     .meta-small{
       margin-top:2px;
       font-size:12px;color:var(--muted);
       display:flex;gap:8px;flex-wrap:wrap;align-items:center;
     }
 
-    .kebab{position:relative}
-    .menu{
-      position:absolute;right:0;top:46px;z-index:20;
-      min-width:200px;
-      background:var(--surface);
+    .icon{
+      width:42px;height:42px;display:grid;place-items:center;border-radius:12px;
+      border:1px solid var(--glass-border);background:var(--surface);cursor:pointer;
+      transition:transform .06s,box-shadow .2s;color:var(--text)
+    }
+    .icon:active{transform:scale(.98)}
+
+    /* Pin visible */
+    .pin-btn{
+      position:relative;
+      width:42px;height:42px;
+      display:grid;place-items:center;
+      border-radius:12px;
       border:1px solid var(--glass-border);
-      border-radius:14px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-      display:none;
-      backdrop-filter:blur(12px) saturate(1.2);
-    }
-    .menu.open{display:block}
-    .menu button{
-      width:100%;
-      display:flex;align-items:center;gap:10px;
-      padding:12px 12px;
-      background:transparent;border:none;
-      color:var(--text);
+      background:var(--surface);
       cursor:pointer;
-      font-size:13px;
+      transition:transform .06s,box-shadow .2s, background .2s, border-color .2s;
     }
-    .menu button i{font-size:20px;color:var(--muted)}
-    .menu button:hover{background:color-mix(in oklab,var(--surface) 88%,transparent)}
-    .menu hr{border:none;border-top:1px solid var(--glass-border);margin:0}
-    .danger-text{color:var(--danger);font-weight:900}
+    .pin-btn i{font-size:20px;color:var(--muted)}
+    .pin-btn.pinned{
+      border-color:color-mix(in oklab,var(--line-accent) 45%, var(--glass-border));
+      background:color-mix(in oklab,var(--line-accent) 14%, var(--surface));
+    }
+    .pin-btn.pinned i{color:color-mix(in oklab,var(--line-accent) 80%, var(--text))}
+    .pin-btn:active{transform:scale(.98)}
+
+    /* Edit mode overlay actions */
+    .edit-actions{
+      display:none;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--glass-border);
+      background:color-mix(in oklab,var(--surface) 80%, transparent);
+      backdrop-filter:blur(10px) saturate(1.2);
+    }
+    body.edit-mode .edit-actions{display:grid}
+    .action-btn{
+      border:1px solid var(--glass-border);
+      background:var(--surface);
+      border-radius:14px;
+      min-height:44px;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      cursor:pointer;
+      font-weight:950;
+    }
+    .action-btn i{font-size:20px}
+    .action-btn.pin{
+      border-color:color-mix(in oklab,var(--line-accent) 45%, var(--glass-border));
+      background:color-mix(in oklab,var(--line-accent) 12%, var(--surface));
+    }
+    .action-btn.danger{
+      border-color:color-mix(in oklab,var(--danger) 45%, var(--glass-border));
+      background:color-mix(in oklab,var(--danger) 12%, var(--surface));
+      color:color-mix(in oklab,var(--danger) 75%, var(--text));
+    }
 
     .stop-row{
       display:grid;
@@ -363,6 +403,44 @@
       display:flex;align-items:center;gap:8px;
     }
     .divider{height:1px;background:var(--glass-border);margin:10px 0}
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
+      z-index:80;
+      display:none;
+      background:color-mix(in oklab,var(--surface) 82%, transparent);
+      border:1px solid var(--glass-border);
+      backdrop-filter:blur(14px) saturate(1.3);
+      box-shadow:var(--shadow);
+      border-radius:18px;
+      padding:12px 12px;
+      align-items:center;
+      gap:10px;
+      max-width:860px;
+      margin:0 auto;
+    }
+    .toast.show{display:flex;animation:toastIn .15s ease}
+    @keyframes toastIn{from{transform:translateY(8px);opacity:0}}
+    .toast .msg{min-width:0;flex:1;color:var(--text);font-weight:700;font-size:13px}
+    .toast .msg small{display:block;color:var(--muted);font-weight:600;margin-top:2px}
+    .toast .tbtn{
+      border:1px solid var(--glass-border);
+      background:var(--surface);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:950;
+      font-size:12px;
+      min-height:40px;
+      display:inline-flex;align-items:center;gap:8px;
+      white-space:nowrap;
+    }
+    .toast .tbtn.primary{
+      border-color:color-mix(in oklab,var(--primary) 42%, var(--glass-border));
+      background:color-mix(in oklab,var(--primary) 12%, var(--surface));
+    }
   </style>
 </head>
 
@@ -382,6 +460,11 @@
       </div>
 
       <div class="actions">
+        <div class="edit-pill" id="editToggle" role="button" tabindex="0" aria-pressed="false" title="Gestionar tarjetas">
+          <i class="material-icons" aria-hidden="true">edit</i>
+          <span id="editToggleLabel">Editar</span>
+        </div>
+
         <button class="btn" id="themeToggle" aria-label="Cambiar tema">
           <i id="themeIcon" class="material-icons">dark_mode</i><span>Tema</span>
         </button>
@@ -402,6 +485,13 @@
     <button class="nav-btn primary" id="navAdd"><i class="material-icons">add</i><span>Añadir</span></button>
     <button class="nav-btn" id="navRefresh"><i class="material-icons">refresh</i><span>Actualizar</span></button>
   </nav>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <div class="msg" id="toastMsg">—</div>
+    <button class="tbtn primary" id="toastActionBtn" type="button" style="display:none">Acción</button>
+    <button class="tbtn" id="toastCloseBtn" type="button" aria-label="Cerrar">Cerrar</button>
+  </div>
 
   <!-- Modal añadir línea -->
   <div id="addModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
@@ -452,6 +542,12 @@
   let autoRefreshTimer = null;
   let globalLastRefresh = 0;
   let globalTickTimer = null;
+
+  let isEditMode = false;
+
+  // Undo delete
+  let undoTimer = null;
+  let lastDeleted = null; // { line, panelState, pinnedBefore, domIndex }
 
   // cache colores por línea (para Add list) y por panel
   const colorCache = loadJSON("line_colors", {});
@@ -523,7 +619,17 @@
     return tryParseJSON(t);
   }
 
-  /* ========= Persistencia ========= */
+  /* ========= Storage ========= */
+  function loadJSON(key, fallback){
+    try{
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    }catch{ return fallback; }
+  }
+  function saveJSON(key, value){
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
   const getPinnedLines = () => loadJSON("pinned_lines", []);
   const setPinnedLines = arr => saveJSON("pinned_lines", arr);
 
@@ -539,16 +645,6 @@
     r.unshift(stop);
     r = r.slice(0, 6);
     saveJSON(recKey(line), r);
-  }
-
-  function loadJSON(key, fallback){
-    try{
-      const v = localStorage.getItem(key);
-      return v ? JSON.parse(v) : fallback;
-    }catch{ return fallback; }
-  }
-  function saveJSON(key, value){
-    localStorage.setItem(key, JSON.stringify(value));
   }
 
   /* ========= UI utils ========= */
@@ -605,47 +701,101 @@
     $("#globalUpdated").textContent = `Actualizado: ${relTime(globalLastRefresh)}`;
   }
 
-  /* ========= Menús ========= */
-  function closeAllMenus(){ $$(".menu.open").forEach(m=>m.classList.remove("open")); }
-  function toggleMenu(code){
-    const m = $("#menu-"+code);
-    const isOpen = m.classList.contains("open");
-    closeAllMenus();
-    if (!isOpen) m.classList.add("open");
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
-  document.addEventListener("click", ()=> closeAllMenus());
-  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeAllMenus(); });
 
-  /* ========= Orden: fijadas arriba ========= */
+  /* ========= Toast ========= */
+  function hideToast(){
+    const t = $("#toast");
+    t.classList.remove("show");
+    $("#toastActionBtn").style.display = "none";
+    $("#toastActionBtn").onclick = null;
+    $("#toastMsg").innerHTML = "—";
+  }
+
+  function showToast({title, detail="", actionText=null, onAction=null, duration=5200}){
+    const t = $("#toast");
+    $("#toastMsg").innerHTML = `${escapeHtml(title)}${detail ? `<small>${escapeHtml(detail)}</small>` : ""}`;
+
+    const ab = $("#toastActionBtn");
+    if (actionText && typeof onAction === "function"){
+      ab.style.display = "inline-flex";
+      ab.textContent = actionText;
+      ab.onclick = ()=>{ onAction(); hideToast(); };
+    } else {
+      ab.style.display = "none";
+      ab.onclick = null;
+    }
+
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=> hideToast(), duration);
+  }
+
+  /* ========= Edit mode ========= */
+  function setEditMode(v){
+    isEditMode = v;
+    document.body.classList.toggle("edit-mode", v);
+    $("#editToggle").classList.toggle("active", v);
+    $("#editToggle").setAttribute("aria-pressed", String(v));
+    $("#editToggleLabel").textContent = v ? "Hecho" : "Editar";
+
+    // hint la primera vez
+    if (v && !loadJSON("seen_edit_hint", false)){
+      saveJSON("seen_edit_hint", true);
+      showToast({
+        title: "Modo editar",
+        detail: "Ahora puedes desfijar o eliminar tarjetas con botones grandes.",
+        duration: 4500
+      });
+    }
+  }
+
+  /* ========= Order: pinned first ========= */
   function renderPanelsOrder(){
     const container = $("#panels-container");
     const allCodes = Object.keys(panels);
     const pinned = getPinnedLines();
-
     const ordered = [
       ...pinned.filter(c => allCodes.includes(c)),
       ...allCodes.filter(c => !pinned.includes(c)).sort((a,b)=>a.localeCompare(b))
     ];
-
     ordered.forEach(c=>{
       const el = $("#panel-"+c);
       if (el) container.appendChild(el);
     });
   }
 
-  function togglePin(code){
+  function isPinned(code){ return getPinnedLines().includes(code); }
+
+  function setPinned(code, pinned){
     let p = getPinnedLines();
-    p = p.includes(code) ? p.filter(x=>x!==code) : [...p, code];
+    const has = p.includes(code);
+    if (pinned && !has) p = [...p, code];
+    if (!pinned && has) p = p.filter(x=>x!==code);
     setPinnedLines(p);
-    updatePinLabel(code);
+    updatePinUI(code);
     renderPanelsOrder();
   }
-  function updatePinLabel(code){
-    const pinned = getPinnedLines().includes(code);
-    $("#pin-label-"+code).textContent = pinned ? "Desfijar" : "Fijar";
+
+  function togglePin(code){
+    setPinned(code, !isPinned(code));
   }
 
-  /* ========= Favoritos ========= */
+  function updatePinUI(code){
+    const pinned = isPinned(code);
+    const btn = $("#pin-btn-"+code);
+    if (btn){
+      btn.classList.toggle("pinned", pinned);
+      btn.setAttribute("aria-pressed", String(pinned));
+      btn.title = pinned ? "Desfijar" : "Fijar";
+    }
+    const txt = $("#edit-pin-label-"+code);
+    if (txt) txt.textContent = pinned ? "Desfijar" : "Fijar";
+  }
+
+  /* ========= Favorites ========= */
   function toggleFavorite(code){
     const p = panels[code]; if(!p) return;
     const fav = getFavorite(code);
@@ -693,12 +843,14 @@
       if (col){
         colorCache[line.code] = col;
         saveJSON("line_colors", colorCache);
+
         // actualizar chips visibles en add list
         $$(".add-item").forEach(it=>{
           if (it.dataset.code === line.code){
             it.style.setProperty("--chip-accent", col);
           }
         });
+
         // actualizar el panel si ya existe
         const panel = $("#panel-"+line.code);
         if (panel) panel.style.setProperty("--line-accent", col);
@@ -710,8 +862,8 @@
     }
   }
 
-  /* ========= Crear panel ========= */
-  function createPanel(line, {focus=false} = {}){
+  /* ========= Create panel ========= */
+  function createPanel(line, {focus=false, pinOnAdd=false} = {}){
     if ($("#panel-"+line.code)) return;
 
     const card = document.createElement('section');
@@ -732,7 +884,9 @@
       <div class="card-top">
         <div>
           <div class="line-row">
-            <span class="line-pill"><i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}</span>
+            <span class="line-pill">
+              <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}
+            </span>
             <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
           </div>
           <div class="meta-small">
@@ -742,22 +896,10 @@
           </div>
         </div>
 
-        <div class="kebab">
-          <button class="icon" id="menu-btn-${line.code}" type="button" aria-label="Menú">
-            <i class="material-icons">more_vert</i>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="pin-btn" id="pin-btn-${line.code}" type="button" aria-pressed="false" title="Fijar">
+            <i class="material-icons">push_pin</i>
           </button>
-          <div class="menu" id="menu-${line.code}" role="menu" aria-label="Acciones">
-            <button type="button" id="pin-act-${line.code}">
-              <i class="material-icons">push_pin</i><span id="pin-label-${line.code}">Fijar</span>
-            </button>
-            <button type="button" id="retry-act-${line.code}">
-              <i class="material-icons">refresh</i>Reintentar
-            </button>
-            <hr>
-            <button type="button" id="del-act-${line.code}">
-              <i class="material-icons">delete</i><span class="danger-text">Eliminar</span>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -780,6 +922,17 @@
         </div>
         <div id="list-${line.code}" class="badges"></div>
       </div>
+
+      <div class="edit-actions" aria-label="Acciones de edición">
+        <button class="action-btn pin" type="button" id="edit-pin-${line.code}">
+          <i class="material-icons">push_pin</i>
+          <span id="edit-pin-label-${line.code}">Fijar</span>
+        </button>
+        <button class="action-btn danger" type="button" id="edit-del-${line.code}">
+          <i class="material-icons">delete</i>
+          <span>Eliminar</span>
+        </button>
+      </div>
     `;
 
     $("#panels-container").appendChild(card);
@@ -795,29 +948,41 @@
 
     $("#stop-picker-"+line.code).addEventListener('click', ()=> showStopsList(line.code));
     $("#fav-btn-"+line.code).addEventListener('click', ()=> toggleFavorite(line.code));
-
-    $("#menu-btn-"+line.code).addEventListener('click', (e)=>{
-      e.stopPropagation();
-      toggleMenu(line.code);
-    });
-    $("#pin-act-"+line.code).addEventListener('click', ()=>{
+    $("#pin-btn-"+line.code).addEventListener('click', ()=> {
       togglePin(line.code);
-      closeAllMenus();
-    });
-    $("#retry-act-"+line.code).addEventListener('click', ()=>{
-      refreshPanel(line.code);
-      closeAllMenus();
-    });
-    $("#del-act-"+line.code).addEventListener('click', ()=>{
-      deletePanel(line.code);
-      closeAllMenus();
+      const pinned = isPinned(line.code);
+      showToast({
+        title: pinned ? `${line.code} fijada` : `${line.code} desfijada`,
+        detail: pinned ? "Aparecerá arriba del todo." : "Seguirá en tu lista.",
+        duration: 2400
+      });
     });
 
-    updatePinLabel(line.code);
+    $("#edit-pin-"+line.code).addEventListener('click', ()=> {
+      togglePin(line.code);
+      const pinned = isPinned(line.code);
+      showToast({
+        title: pinned ? `${line.code} fijada` : `${line.code} desfijada`,
+        detail: pinned ? "Aparecerá arriba del todo." : "Seguirá en tu lista.",
+        duration: 2400
+      });
+    });
+
+    $("#edit-del-"+line.code).addEventListener('click', ()=> {
+      deletePanelWithUndo(line.code);
+    });
+
     updateFavIcon(line.code);
 
     // si bus, intentar conseguir color real (cache)
     ensureLineColor(line);
+
+    // pin al añadir (tu preferencia)
+    if (pinOnAdd){
+      setPinned(line.code, true);
+    } else {
+      updatePinUI(line.code);
+    }
 
     loadStopsForPanel(line.code).then(()=>{
       renderPanelsOrder();
@@ -839,24 +1004,6 @@
     setTimeout(()=>el.classList.remove("flash"), 1400);
   }
 
-  function deletePanel(code){
-    const p = panels[code];
-    if (p?.countdownInterval) clearInterval(p.countdownInterval);
-    Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
-    delete panels[code];
-    $("#panel-"+code)?.remove();
-
-    const pins = getPinnedLines();
-    if (pins.includes(code)) setPinnedLines(pins.filter(x=>x!==code));
-
-    renderPanelsOrder();
-    updateEmpty();
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
   function setStatus(code, text){
     const el = $("#status-"+code);
     if (el) el.textContent = "Estado: " + text;
@@ -866,7 +1013,88 @@
     if (el) el.textContent = "Actualizado: " + relTime(ts);
   }
 
-  /* ========= Paradas ========= */
+  /* ========= Delete with undo ========= */
+  function snapshotPanelState(code){
+    const p = panels[code];
+    if (!p) return null;
+    return {
+      currentStopId: p.currentStopId,
+      currentStopName: p.currentStopName,
+      lastUpdated: p.lastUpdated
+    };
+  }
+
+  function deletePanelWithUndo(code){
+    const p = panels[code];
+    if (!p) return;
+
+    // guarda undo
+    const line = p.line;
+    const pinnedBefore = isPinned(code);
+    const panelState = snapshotPanelState(code);
+
+    // posición DOM
+    const el = $("#panel-"+code);
+    const container = $("#panels-container");
+    const domIndex = Array.from(container.children).indexOf(el);
+
+    // borrar real
+    deletePanel(code);
+
+    lastDeleted = { line, panelState, pinnedBefore, domIndex };
+
+    // toast undo
+    clearTimeout(undoTimer);
+    showToast({
+      title: `${line.code} eliminada`,
+      detail: "Puedes deshacer durante unos segundos.",
+      actionText: "Deshacer",
+      onAction: undoDelete,
+      duration: 5200
+    });
+    undoTimer = setTimeout(()=> { lastDeleted=null; }, 5200);
+  }
+
+  function undoDelete(){
+    if (!lastDeleted) return;
+    const { line, panelState, pinnedBefore } = lastDeleted;
+    lastDeleted = null;
+
+    // recrear panel
+    createPanel(line, {focus:true, pinOnAdd: pinnedBefore});
+    // restaurar estado cuando exista
+    const tryRestore = ()=>{
+      const p = panels[line.code];
+      if (!p) return;
+      if (panelState?.currentStopId){
+        p.currentStopId = panelState.currentStopId;
+        p.currentStopName = panelState.currentStopName;
+        const sn = $("#stop-name-"+line.code);
+        if (sn) sn.textContent = panelState.currentStopName || "Parada";
+        updateFavIcon(line.code);
+        refreshPanel(line.code);
+      }
+    };
+    setTimeout(tryRestore, 250);
+    showToast({ title: "Restaurada", detail: `${line.code} vuelve a tu lista.`, duration: 2300 });
+  }
+
+  function deletePanel(code){
+    const p = panels[code];
+    if (p?.countdownInterval) clearInterval(p.countdownInterval);
+    Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
+    delete panels[code];
+    $("#panel-"+code)?.remove();
+
+    // quitar de pinned
+    const pins = getPinnedLines();
+    if (pins.includes(code)) setPinnedLines(pins.filter(x=>x!==code));
+
+    renderPanelsOrder();
+    updateEmpty();
+  }
+
+  /* ========= Stops ========= */
   async function loadStopsForPanel(code){
     const panel = panels[code]; if(!panel) return;
     const line = panel.line;
@@ -885,6 +1113,7 @@
             colorCache[line.code] = col;
             saveJSON("line_colors", colorCache);
           }
+          updatePinUI(code);
         }
       }
 
@@ -905,7 +1134,7 @@
     }
   }
 
-  /* ========= Modal paradas (sin ID interno visible) ========= */
+  /* ========= Stops modal (no internal IDs) ========= */
   async function showStopsList(code){
     currentStopsForLine = code;
     const panel = panels[code]; if(!panel) return;
@@ -913,8 +1142,7 @@
     $("#stop-picker-"+code)?.setAttribute('aria-expanded','true');
 
     $("#stopsModalTitle").textContent = `Paradas • ${panel.line.code} — ${panel.line.name}`;
-    $("#stopsListContainer").innerHTML =
-      `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
+    $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
     $("#stopSearchInput").value = "";
     $("#stopsModal").classList.add('open');
     lockBodyScroll();
@@ -934,8 +1162,7 @@
       if (fav && fav.id) {
         cont.insertAdjacentHTML("beforeend", `<div class="section-title">⭐ Favorita</div>`);
         cont.appendChild(renderStopItem({
-          id: fav.id,
-          nombre: fav.name,
+          id: fav.id, nombre: fav.name,
           selected: fav.id === panel.currentStopId,
           isFav: true
         }));
@@ -946,8 +1173,7 @@
         cont.insertAdjacentHTML("beforeend", `<div class="section-title">🕘 Recientes</div>`);
         recents.forEach(r=>{
           cont.appendChild(renderStopItem({
-            id: r.id,
-            nombre: r.name,
+            id: r.id, nombre: r.name,
             selected: r.id === panel.currentStopId,
             isRecent: true
           }));
@@ -987,14 +1213,14 @@
     if (latitud) div.dataset.lat = latitud;
     if (longitud) div.dataset.lng = longitud;
 
-    const right = [];
-    if (isFav) right.push("★");
-    if (isRecent) right.push("reciente");
+    const tags = [];
+    if (isFav) tags.push("★ favorita");
+    if (isRecent) tags.push("reciente");
 
     div.innerHTML = `
       <div class="row-main">
         <div class="row-title">${escapeHtml(nombre)}</div>
-        <div class="row-sub">${right.length ? escapeHtml(right.join(" · ")) : ""}</div>
+        <div class="row-sub">${tags.length ? escapeHtml(tags.join(" · ")) : ""}</div>
       </div>
       <div class="row-right"><i class="material-icons" style="font-size:18px;color:var(--muted)">chevron_right</i></div>
     `;
@@ -1025,18 +1251,16 @@
     updateFavIcon(code);
   }
 
-  /* ========= Llegadas (refresco suave) ========= */
+  /* ========= Llegadas (smooth) ========= */
   async function refreshPanel(code){
     const p = panels[code]; if(!p || !p.currentStopId) return;
     const { line } = p;
 
-    // limpiar timers previos
     if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
     Object.values(p.countdownIntervals||{}).forEach(id=>clearInterval(id));
     p.countdownIntervals = {};
 
     setStatus(code, "Actualizando…");
-
     const started = Date.now();
 
     try{
@@ -1049,17 +1273,13 @@
           $("#info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚊 No hay más llegadas hoy.</div>`;
           $("#list-"+code).innerHTML = "";
           setStatus(code, "Sin llegadas");
-          p.lastUpdated = started;
-          setUpdated(code, started);
+          p.lastUpdated = started; setUpdated(code, started);
           return;
         }
 
-        // agrupado por destino
         const groups = {};
         arr.forEach(a=>{ (groups[a.destination||"Destino"] ??= []).push(a); });
         Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
-
-        // Mostrar el destino con menor ETA como principal y el resto como badges
         const dests = Object.keys(groups);
         const bestDest = dests.sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds)[0];
         const nx = groups[bestDest][0];
@@ -1079,7 +1299,6 @@
           </div>
         `;
 
-        // countdown bajo 60s
         const cdEl = $("#count-"+code);
         if (nx.seconds < 60){
           cdEl.innerHTML = `<span id="sec-${code}">${nx.seconds}</span> s`;
@@ -1091,8 +1310,7 @@
           }, 1000);
         }
 
-        // próximas (del destino principal)
-        const nextBadges = groups[bestDest].slice(1,4).map(a=>{
+        $("#list-"+code).innerHTML = groups[bestDest].slice(1,4).map(a=>{
           const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
                   : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
           const left = a.seconds < 60 ? `${a.seconds} s` : `${Math.ceil(a.seconds/60)} min`;
@@ -1103,12 +1321,9 @@
           </div>`;
         }).join("");
 
-        $("#list-"+code).innerHTML = nextBadges;
         animateTick($("#panel-"+code+" .next-time"));
-
         setStatus(code, "OK");
-        p.lastUpdated = started;
-        setUpdated(code, started);
+        p.lastUpdated = started; setUpdated(code, started);
       } else {
         const expected = (line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code;
         const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", expected);
@@ -1119,8 +1334,7 @@
           $("#info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚍 No hay más llegadas hoy.</div>`;
           $("#list-"+code).innerHTML = "";
           setStatus(code, "Sin llegadas");
-          p.lastUpdated = started;
-          setUpdated(code, started);
+          p.lastUpdated = started; setUpdated(code, started);
           return;
         }
 
@@ -1163,18 +1377,17 @@
 
         animateTick($("#panel-"+code+" .next-time"));
         setStatus(code, "OK");
-        p.lastUpdated = started;
-        setUpdated(code, started);
+        p.lastUpdated = started; setUpdated(code, started);
       }
     }catch(e){
-      $("#info-"+code).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa ⋯ → Reintentar</div>`;
+      $("#info-"+code).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa “Actualizar” o revisa conexión.</div>`;
       $("#list-"+code).innerHTML = "";
       setStatus(code, "Error");
       console.warn('Arrivals error', e);
     }
   }
 
-  /* ========= Modal Añadir ========= */
+  /* ========= Add modal ========= */
   function openAddModal(){
     $("#addModal").classList.add("open");
     lockBodyScroll();
@@ -1182,6 +1395,16 @@
     $("#addSearchInput").value = "";
     renderAddList();
     setTimeout(()=>$("#addSearchInput")?.focus({preventScroll:true}), 50);
+
+    // tutorial suave: la primera vez que abren "añadir"
+    if (!loadJSON("seen_add_pin_hint", false)){
+      saveJSON("seen_add_pin_hint", true);
+      showToast({
+        title: "Tip",
+        detail: "Al añadir una línea queda fijada automáticamente. Puedes desfijarla con el pin.",
+        duration: 5200
+      });
+    }
   }
   function closeAddModal(){
     $("#addModal").classList.remove("open");
@@ -1221,7 +1444,6 @@
         l.type==="tram" ? "var(--accent-tram)" :
         (colorCache[l.code] ? colorCache[l.code] : "var(--accent-bus)");
 
-      // guardamos en --chip-accent para poder actualizarlo luego
       return `
         <div class="add-item" role="option" tabindex="0" data-code="${escapeHtml(l.code)}" style="--chip-accent:${accent}">
           <span class="line-pill" style="--line-accent:var(--chip-accent)">
@@ -1229,14 +1451,13 @@
           </span>
           <div class="row-main">
             <div class="row-title">${escapeHtml(l.name)}</div>
-            <div class="row-sub">${l.type==="bus" ? "Autobús" : "Tranvía"}</div>
+            <div class="row-sub">${l.type==="bus" ? "Autobús" : "Tranvía"} · Se fijará al añadir</div>
           </div>
           <div class="row-right">Añadir</div>
         </div>
       `;
     }).join("");
 
-    // cargar colores reales en segundo plano (solo para los items visibles)
     filtered.forEach(l => ensureLineColor(l));
 
     host.onclick = (e)=>{
@@ -1245,8 +1466,15 @@
       const code = it.dataset.code;
       const line = lines.find(x=>x.code===code);
       if (line){
-        createPanel(line, {focus:true});
+        createPanel(line, {focus:true, pinOnAdd:true});
         closeAddModal();
+        showToast({
+          title: `${line.code} añadida y fijada`,
+          detail: "Puedes desfijarla con el icono del pin.",
+          actionText: "Desfijar",
+          onAction: ()=> setPinned(line.code, false),
+          duration: 5200
+        });
       }
     };
     host.onkeydown = (e)=>{
@@ -1256,14 +1484,21 @@
         const code = it.dataset.code;
         const line = lines.find(x=>x.code===code);
         if (line){
-          createPanel(line, {focus:true});
+          createPanel(line, {focus:true, pinOnAdd:true});
           closeAddModal();
+          showToast({
+            title: `${line.code} añadida y fijada`,
+            detail: "Puedes desfijarla con el icono del pin.",
+            actionText: "Desfijar",
+            onAction: ()=> setPinned(line.code, false),
+            duration: 5200
+          });
         }
       }
     };
   }
 
-  /* ========= Tema ========= */
+  /* ========= Theme ========= */
   function pref(){ return localStorage.getItem('theme_pref')||'auto'; }
   function sysDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
   function applyTheme(p){
@@ -1302,17 +1537,19 @@
     const pinned = getPinnedLines();
     pinned.forEach(code=>{
       const line = lines.find(l=>l.code===code);
-      if (line) createPanel(line);
+      if (line) createPanel(line, {pinOnAdd:false});
     });
 
-    // compatibilidad: lineas añadidas previamente (si existían en tu versión anterior)
+    // compatibilidad: lineas añadidas previamente
     const storedAll = loadJSON("all_lines", []);
     storedAll.forEach(code=>{
       if ($("#panel-"+code)) return;
       const line = lines.find(l=>l.code===code);
-      if (line) createPanel(line);
+      if (line) createPanel(line, {pinOnAdd:false});
     });
 
+    // actualizar UI de pins
+    Object.keys(panels).forEach(c=> updatePinUI(c));
     renderPanelsOrder();
     updateEmpty();
   }
@@ -1321,7 +1558,25 @@
     saveJSON("all_lines", Object.keys(panels));
   }
 
+  /* ========= Modals close ========= */
+  function closeStops(){
+    const modal = $("#stopsModal");
+    modal.classList.remove('open');
+    detachViewportShim(modal);
+    unlockBodyScroll();
+    const code = currentStopsForLine;
+    if (code) $("#stop-picker-"+code)?.setAttribute('aria-expanded','false');
+  }
+
   document.addEventListener('DOMContentLoaded', ()=>{
+    // Toast close
+    $("#toastCloseBtn").addEventListener("click", hideToast);
+
+    // Edit toggle (click + keyboard)
+    const et = $("#editToggle");
+    et.addEventListener("click", ()=> setEditMode(!isEditMode));
+    et.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setEditMode(!isEditMode); } });
+
     $("#navAdd").addEventListener("click", openAddModal);
     $("#navRefresh").addEventListener('click', ()=>{
       const ic=$("#navRefresh i");
@@ -1346,6 +1601,8 @@
       if(e.key==='Escape'){
         closeAddModal();
         closeStops();
+        hideToast();
+        if (isEditMode) setEditMode(false);
       }
     });
 
