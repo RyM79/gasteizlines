@@ -152,10 +152,7 @@
       display:flex;gap:8px;flex-wrap:wrap;align-items:center;
     }
 
-    /* Action buttons area on card */
     .card-actions{display:flex;gap:10px;align-items:center}
-
-    /* Pin visible */
     .pin-btn, .del-btn{
       width:42px;height:42px;
       display:grid;place-items:center;
@@ -227,16 +224,66 @@
       display:flex;gap:8px;flex-wrap:wrap;
       justify-content:center;align-items:center;
     }
-    .badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-    .badge{
+
+    /* ===== NUEVO: lista ordenada de próximas llegadas ===== */
+    .arrivals{
+      width:100%;
+      max-width:520px;
+      display:grid;
+      gap:10px;
+    }
+    .arrivals-title{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:950;
+      letter-spacing:.2px;
+      text-align:left;
+      width:100%;
+      max-width:520px;
+      padding:0 2px;
+    }
+    .arrivals-list{
+      width:100%;
+      max-width:520px;
+      display:grid;
+      gap:8px;
       border:1px solid var(--glass-border);
       background:var(--surface-2);
-      padding:8px 10px;border-radius:999px;
-      font-size:12px;display:grid;gap:2px;text-align:center;
-      backdrop-filter:blur(8px) saturate(1.2)
+      border-radius:16px;
+      padding:10px;
+      backdrop-filter:blur(10px) saturate(1.2);
     }
-    .badge .time{font-weight:900}
-    .badge .left{color:var(--muted);font-size:11px}
+    .arrival-row{
+      display:grid;
+      grid-template-columns: 72px 1fr auto;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      border-radius:14px;
+      border:1px solid color-mix(in oklab, var(--glass-border) 85%, transparent);
+      background:color-mix(in oklab, var(--surface) 72%, transparent);
+    }
+    .arrival-row .t{
+      font-weight:950;
+      font-variant-numeric:tabular-nums;
+      text-align:left;
+    }
+    .arrival-row .eta{
+      color:var(--muted);
+      font-weight:800;
+      text-align:left;
+      white-space:nowrap;
+    }
+    .arrival-row .right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      justify-content:flex-end;
+    }
+    @media (max-width:420px){
+      .arrival-row{ grid-template-columns: 66px 1fr auto; }
+      .arrival-row .eta{ font-size:12px; }
+    }
 
     .is-urgent{animation:pulse 1.2s ease-in-out infinite}
     @keyframes pulse{
@@ -356,7 +403,6 @@
     }
     .divider{height:1px;background:var(--glass-border);margin:10px 0}
 
-    /* Toast */
     .toast{
       position:fixed;
       left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
@@ -433,14 +479,12 @@
     <button class="nav-btn" id="navRefresh"><i class="material-icons">refresh</i><span>Actualizar</span></button>
   </nav>
 
-  <!-- Toast -->
   <div id="toast" class="toast" role="status" aria-live="polite">
     <div class="msg" id="toastMsg">—</div>
     <button class="tbtn primary" id="toastActionBtn" type="button" style="display:none">Acción</button>
     <button class="tbtn" id="toastCloseBtn" type="button" aria-label="Cerrar">Cerrar</button>
   </div>
 
-  <!-- Modal añadir línea -->
   <div id="addModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="sheet">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -462,7 +506,6 @@
     </div>
   </div>
 
-  <!-- Modal paradas -->
   <div id="stopsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="stopsModalTitle">
     <div class="sheet">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -484,17 +527,15 @@
   <script>
   /* ========= State ========= */
   let currentStopsForLine = null;
-  let addFilter = "all"; // all | bus | tram
-  const panels = {}; // code -> state
+  let addFilter = "all";
+  const panels = {};
   let autoRefreshTimer = null;
   let globalLastRefresh = 0;
   let globalTickTimer = null;
 
-  // Undo delete
   let undoTimer = null;
-  let lastDeleted = null; // { line, panelState, pinnedBefore }
+  let lastDeleted = null;
 
-  // cache colores por línea (para Add list) y por panel
   const colorCache = loadJSON("line_colors", {});
   const inflightColor = new Set();
 
@@ -526,9 +567,7 @@
     { code:"TG2", name:"Ibaiondo-Salburua",      type:"tram", stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000020&idioma=ES" }
   ];
 
-  /* ============================================================
-     Cloudflare Pages Functions proxy: /api/*
-     ============================================================ */
+  /* ==== Cloudflare Pages Functions proxy: /api/* ==== */
   const API_BASE = "/api";
   const API_TARGET_ORIGIN = "https://www.vitoria-gasteiz.org";
 
@@ -542,14 +581,12 @@
     }
     return API_BASE + u.pathname + u.search;
   }
-
   async function getText(url){
     const toFetch = toProxiedUrl(url);
     const res = await fetch(toFetch, { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status + " en " + toFetch);
     return await res.text();
   }
-
   function tryParseJSON(text){
     try{ return JSON.parse(text); }catch(_){}
     const m = text.match(/\{[\s\S]*"(recorrido|llegadas|posiciones|color)"[\s\S]*\}/);
@@ -558,7 +595,6 @@
     try{ return JSON.parse(stripped); }catch(_){}
     throw new Error("Respuesta no es JSON");
   }
-
   async function getJSON(url){
     const t = await getText(url);
     return tryParseJSON(t);
@@ -690,7 +726,6 @@
     updatePinUI(code);
     renderPanelsOrder();
   }
-
   function togglePin(code){ setPinned(code, !isPinned(code)); }
 
   function updatePinUI(code){
@@ -779,11 +814,7 @@
   function snapshotPanelState(code){
     const p = panels[code];
     if (!p) return null;
-    return {
-      currentStopId: p.currentStopId,
-      currentStopName: p.currentStopName,
-      lastUpdated: p.lastUpdated
-    };
+    return { currentStopId: p.currentStopId, currentStopName: p.currentStopName, lastUpdated: p.lastUpdated };
   }
 
   function deletePanelWithUndo(code){
@@ -823,7 +854,7 @@
       if (panelState?.currentStopId){
         p.currentStopId = panelState.currentStopId;
         p.currentStopName = panelState.currentStopName;
-        const sn = $("#stop-name-"+line.code);
+        const sn = document.getElementById("stop-name-"+line.code);
         if (sn) sn.textContent = panelState.currentStopName || "Parada";
         updateFavIcon(line.code);
         refreshPanel(line.code);
@@ -838,7 +869,7 @@
     if (p?.countdownInterval) clearInterval(p.countdownInterval);
     Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
     delete panels[code];
-    $("#panel-"+code)?.remove();
+    document.getElementById("panel-"+code)?.remove();
 
     const pins = getPinnedLines();
     if (pins.includes(code)) setPinnedLines(pins.filter(x=>x!==code));
@@ -849,7 +880,7 @@
 
   /* ========= Create panel ========= */
   function createPanel(line, {focus=false, pinOnAdd=false} = {}){
-    if ($("#panel-"+line.code)) return;
+    if (document.getElementById("panel-"+line.code)) return;
 
     const card = document.createElement('section');
     card.className='card';
@@ -908,11 +939,15 @@
           <div class="next-time">—</div>
           <div class="hint">Cargando…</div>
         </div>
-        <div id="list-${line.code}" class="badges"></div>
+
+        <div class="arrivals" id="arrivals-${line.code}" style="display:none">
+          <div class="arrivals-title">Próximas</div>
+          <div class="arrivals-list" id="list-${line.code}"></div>
+        </div>
       </div>
     `;
 
-    $("#panels-container").appendChild(card);
+    document.getElementById("panels-container").appendChild(card);
 
     panels[line.code] = {
       line,
@@ -923,37 +958,25 @@
       lastUpdated: 0
     };
 
-    $("#stop-picker-"+line.code).addEventListener('click', ()=> showStopsList(line.code));
-    $("#fav-btn-"+line.code).addEventListener('click', ()=> toggleFavorite(line.code));
-
-    $("#pin-btn-"+line.code).addEventListener('click', ()=> {
+    document.getElementById("stop-picker-"+line.code).addEventListener('click', ()=> showStopsList(line.code));
+    document.getElementById("fav-btn-"+line.code).addEventListener('click', ()=> toggleFavorite(line.code));
+    document.getElementById("pin-btn-"+line.code).addEventListener('click', ()=> {
       togglePin(line.code);
       const pinned = isPinned(line.code);
-      showToast({
-        title: pinned ? `${line.code} fijada` : `${line.code} desfijada`,
-        detail: pinned ? "Aparecerá arriba del todo." : "Seguirá en tu lista.",
-        duration: 2200
-      });
+      showToast({ title: pinned ? `${line.code} fijada` : `${line.code} desfijada`, detail: pinned ? "Aparecerá arriba del todo." : "Seguirá en tu lista.", duration: 2200 });
     });
-
-    $("#del-btn-"+line.code).addEventListener('click', ()=> {
-      deletePanelWithUndo(line.code);
-    });
+    document.getElementById("del-btn-"+line.code).addEventListener('click', ()=> deletePanelWithUndo(line.code));
 
     updateFavIcon(line.code);
-
     ensureLineColor(line);
 
-    if (pinOnAdd){
-      setPinned(line.code, true);
-    } else {
-      updatePinUI(line.code);
-    }
+    if (pinOnAdd) setPinned(line.code, true);
+    else updatePinUI(line.code);
 
     loadStopsForPanel(line.code).then(()=>{
       renderPanelsOrder();
       updateEmpty();
-      if (focus){ focusPanel(line.code); }
+      if (focus) focusPanel(line.code);
     });
 
     renderPanelsOrder();
@@ -961,7 +984,7 @@
   }
 
   function focusPanel(code){
-    const el = $("#panel-"+code);
+    const el = document.getElementById("panel-"+code);
     if (!el) return;
     el.classList.add("flash");
     el.scrollIntoView({behavior:"smooth", block:"start"});
@@ -969,11 +992,11 @@
   }
 
   function setStatus(code, text){
-    const el = $("#status-"+code);
+    const el = document.getElementById("status-"+code);
     if (el) el.textContent = "Estado: " + text;
   }
   function setUpdated(code, ts){
-    const el = $("#updated-"+code);
+    const el = document.getElementById("updated-"+code);
     if (el) el.textContent = "Actualizado: " + relTime(ts);
   }
 
@@ -990,7 +1013,7 @@
       if (line.type==='bus' && data.color){
         const col = parseHexColor(data.color);
         if (col){
-          $("#panel-"+code).style.setProperty('--line-accent', col);
+          document.getElementById("panel-"+code).style.setProperty('--line-accent', col);
           if (!colorCache[line.code]){
             colorCache[line.code] = col;
             saveJSON("line_colors", colorCache);
@@ -1003,14 +1026,14 @@
       if (fav){ panel.currentStopId=fav.id; panel.currentStopName=fav.name; }
       else { const s=data.recorrido[0]; panel.currentStopId=s.idParada; panel.currentStopName=s.nombre; }
 
-      $("#stop-name-"+code).textContent = panel.currentStopName || "Parada no disponible";
+      document.getElementById("stop-name-"+code).textContent = panel.currentStopName || "Parada no disponible";
       updateFavIcon(code);
 
       await refreshPanel(code);
     }catch(err){
-      $("#stop-name-"+code).textContent = "Error al cargar paradas";
-      $("#info-"+code).innerHTML = `<div class="danger-text">⚠️ No se pudieron cargar las paradas.</div>`;
-      $("#list-"+code).innerHTML = "";
+      document.getElementById("stop-name-"+code).textContent = "Error al cargar paradas";
+      document.getElementById("info-"+code).innerHTML = `<div class="danger-text">⚠️ No se pudieron cargar las paradas.</div>`;
+      document.getElementById("list-"+code).innerHTML = "";
       setStatus(code, "Error");
       console.warn('Paradas -', line.code, err);
     }
@@ -1021,15 +1044,15 @@
     currentStopsForLine = code;
     const panel = panels[code]; if(!panel) return;
 
-    $("#stop-picker-"+code)?.setAttribute('aria-expanded','true');
+    document.getElementById("stop-picker-"+code)?.setAttribute('aria-expanded','true');
 
-    $("#stopsModalTitle").textContent = `Paradas • ${panel.line.code} — ${panel.line.name}`;
-    $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
-    $("#stopSearchInput").value = "";
-    $("#stopsModal").classList.add('open');
+    document.getElementById("stopsModalTitle").textContent = `Paradas • ${panel.line.code} — ${panel.line.name}`;
+    document.getElementById("stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
+    document.getElementById("stopSearchInput").value = "";
+    document.getElementById("stopsModal").classList.add('open');
     lockBodyScroll();
-    attachViewportShim($("#stopsModal"));
-    setTimeout(()=>{ $("#stopSearchInput")?.focus({preventScroll:true}); }, 50);
+    attachViewportShim(document.getElementById("stopsModal"));
+    setTimeout(()=>{ document.getElementById("stopSearchInput")?.focus({preventScroll:true}); }, 50);
 
     try{
       const data = await getJSON(panel.line.stopsUrl);
@@ -1038,27 +1061,19 @@
       const fav = getFavorite(panel.line.code);
       const recents = getRecents(panel.line.code);
 
-      const cont = $("#stopsListContainer");
+      const cont = document.getElementById("stopsListContainer");
       cont.innerHTML = "";
 
       if (fav && fav.id) {
         cont.insertAdjacentHTML("beforeend", `<div class="section-title">⭐ Favorita</div>`);
-        cont.appendChild(renderStopItem({
-          id: fav.id, nombre: fav.name,
-          selected: fav.id === panel.currentStopId,
-          isFav: true
-        }));
+        cont.appendChild(renderStopItem({ id: fav.id, nombre: fav.name, selected: fav.id === panel.currentStopId, isFav: true }));
         cont.insertAdjacentHTML("beforeend", `<div class="divider"></div>`);
       }
 
       if (recents.length) {
         cont.insertAdjacentHTML("beforeend", `<div class="section-title">🕘 Recientes</div>`);
         recents.forEach(r=>{
-          cont.appendChild(renderStopItem({
-            id: r.id, nombre: r.name,
-            selected: r.id === panel.currentStopId,
-            isRecent: true
-          }));
+          cont.appendChild(renderStopItem({ id: r.id, nombre: r.name, selected: r.id === panel.currentStopId, isRecent: true }));
         });
         cont.insertAdjacentHTML("beforeend", `<div class="divider"></div>`);
       }
@@ -1082,7 +1097,7 @@
         selectStop(it.dataset.id, it.dataset.name);
       };
     }catch(err){
-      $("#stopsListContainer").innerHTML = `<div class="danger-text" style="padding:12px">⚠️ No se pudieron cargar las paradas.</div>`;
+      document.getElementById("stopsListContainer").innerHTML = `<div class="danger-text" style="padding:12px">⚠️ No se pudieron cargar las paradas.</div>`;
       console.warn('Stops modal error', err);
     }
   }
@@ -1110,12 +1125,12 @@
   }
 
   function closeStops(){
-    const modal = $("#stopsModal");
+    const modal = document.getElementById("stopsModal");
     modal.classList.remove('open');
     detachViewportShim(modal);
     unlockBodyScroll();
     const code = currentStopsForLine;
-    if (code) $("#stop-picker-"+code)?.setAttribute('aria-expanded','false');
+    if (code) document.getElementById("stop-picker-"+code)?.setAttribute('aria-expanded','false');
   }
 
   function selectStop(stopId, name){
@@ -1125,12 +1140,29 @@
     p.currentStopId = stopId;
     p.currentStopName = name;
 
-    $("#stop-name-"+code).textContent = name;
+    document.getElementById("stop-name-"+code).textContent = name;
 
     pushRecent(p.line.code, {id: stopId, name});
     closeStops();
     refreshPanel(code);
     updateFavIcon(code);
+  }
+
+  /* ========= NUEVO: renderer de lista compacta ========= */
+  function renderNextRowsHtml(items){
+    // items: [{hourText, etaText, delayLabel, delayCls}]
+    return items.map(it=>{
+      return `
+        <div class="arrival-row">
+          <div class="t">${escapeHtml(it.hourText)}</div>
+          <div class="eta">${escapeHtml(it.etaText)}</div>
+          <div class="right">
+            ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
+            <i class="material-icons" style="font-size:18px;color:var(--muted)">chevron_right</i>
+          </div>
+        </div>
+      `;
+    }).join("");
   }
 
   /* ========= Arrivals ========= */
@@ -1152,13 +1184,15 @@
 
         const arr = (data.llegadas||[]).filter(x=>x.line===line.code);
         if (!arr.length){
-          $("#info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚊 No hay más llegadas hoy.</div>`;
-          $("#list-"+code).innerHTML = "";
+          document.getElementById("info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚊 No hay más llegadas hoy.</div>`;
+          document.getElementById("list-"+code).innerHTML = "";
+          document.getElementById("arrivals-"+code).style.display = "none";
           setStatus(code, "Sin llegadas");
           p.lastUpdated = started; setUpdated(code, started);
           return;
         }
 
+        // agrupa por destino, elige el que llega antes
         const groups = {};
         arr.forEach(a=>{ (groups[a.destination||"Destino"] ??= []).push(a); });
         Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
@@ -1172,40 +1206,49 @@
                     : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
         const dly = delayInfo(nx);
 
-        $("#info-"+code).innerHTML = `
+        document.getElementById("info-"+code).innerHTML = `
           <div style="color:var(--primary);font-weight:950;margin-bottom:2px">Destino: ${escapeHtml(bestDest)}</div>
           <div class="next-time ${urgentClass}" id="count-${code}">${etaText}</div>
           <div class="hint">
-            <span>Hora: <strong>${hour}</strong></span>
-            ${dly.label ? `<span class="delay ${dly.cls}">${dly.label}</span>` : ''}
+            <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
           </div>
         `;
 
-        const cdEl = $("#count-"+code);
+        // countdown suave si < 60s
+        const cdEl = document.getElementById("count-"+code);
         if (nx.seconds < 60){
           cdEl.innerHTML = `<span id="sec-${code}">${nx.seconds}</span> s`;
           p.countdownInterval = setInterval(()=>{
-            const el = $("#sec-"+code); if(!el) return;
+            const el = document.getElementById("sec-"+code); if(!el) return;
             let n = parseInt(el.textContent,10);
             if(Number.isFinite(n)&&n>0){ el.textContent = n-1; }
             else { el.textContent="0"; clearInterval(p.countdownInterval); p.countdownInterval=null; }
           }, 1000);
         }
 
-        $("#list-"+code).innerHTML = groups[bestDest].slice(1,4).map(a=>{
+        // siguientes en lista
+        const rest = groups[bestDest].slice(1,5);
+        const rows = rest.map(a=>{
           const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
                   : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-          const left = a.seconds < 60 ? `${a.seconds} s` : `${Math.ceil(a.seconds/60)} min`;
+          const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
           const dl = delayInfo(a);
-          return `<div class="badge">
-            <div class="time"><strong>${h}</strong></div>
-            <div class="left">en ${left} ${dl.label ? `• <span class="delay ${dl.cls}">${dl.label}</span>` : ''}</div>
-          </div>`;
-        }).join("");
+          return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+        });
 
-        animateTick($("#panel-"+code+" .next-time"));
+        if (rows.length){
+          document.getElementById("arrivals-"+code).style.display = "";
+          document.getElementById("list-"+code).innerHTML = renderNextRowsHtml(rows);
+        } else {
+          document.getElementById("arrivals-"+code).style.display = "none";
+          document.getElementById("list-"+code).innerHTML = "";
+        }
+
+        animateTick(document.querySelector("#panel-"+code+" .next-time"));
         setStatus(code, "OK");
         p.lastUpdated = started; setUpdated(code, started);
+
       } else {
         const expected = (line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code;
         const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", expected);
@@ -1213,8 +1256,9 @@
 
         const arr = (data.llegadas||[]).filter(x=>x.line===expected);
         if (!arr.length){
-          $("#info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚍 No hay más llegadas hoy.</div>`;
-          $("#list-"+code).innerHTML = "";
+          document.getElementById("info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚍 No hay más llegadas hoy.</div>`;
+          document.getElementById("list-"+code).innerHTML = "";
+          document.getElementById("arrivals-"+code).style.display = "none";
           setStatus(code, "Sin llegadas");
           p.lastUpdated = started; setUpdated(code, started);
           return;
@@ -1227,43 +1271,51 @@
                     : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
         const dly = delayInfo(nx);
 
-        $("#info-"+code).innerHTML = `
+        document.getElementById("info-"+code).innerHTML = `
           <div class="next-time ${urgentClass}" id="count-${code}">${etaText}</div>
           <div class="hint">
-            <span>Hora: <strong>${hour}</strong></span>
-            ${dly.label ? `<span class="delay ${dly.cls}">${dly.label}</span>` : ''}
+            <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
           </div>
         `;
 
-        const cdEl = $("#count-"+code);
+        const cdEl = document.getElementById("count-"+code);
         if (nx.seconds < 60){
           cdEl.innerHTML = `<span id="sec-${code}">${nx.seconds}</span> s`;
           p.countdownInterval = setInterval(()=>{
-            const el = $("#sec-"+code); if(!el) return;
+            const el = document.getElementById("sec-"+code); if(!el) return;
             let n = parseInt(el.textContent,10);
             if(Number.isFinite(n)&&n>0){ el.textContent = n-1; }
             else { el.textContent="0"; clearInterval(p.countdownInterval); p.countdownInterval=null; }
           }, 1000);
         }
 
-        $("#list-"+code).innerHTML = arr.slice(1,4).map(l=>{
-          const h = typeof l.realtimeArrival === 'number' ? fmtHHMM(l.realtimeArrival)
-                  : (typeof l.scheduledArrival === 'number' ? `≈${fmtHHMM(l.scheduledArrival)}` : '—');
-          const left = l.seconds < 60 ? `${l.seconds} s` : `${Math.ceil(l.seconds/60)} min`;
-          const dl = delayInfo(l);
-          return `<div class="badge">
-            <div class="time"><strong>${h}</strong></div>
-            <div class="left">en ${left} ${dl.label ? `• <span class="delay ${dl.cls}">${dl.label}</span>` : ''}</div>
-          </div>`;
-        }).join('');
+        const rest = arr.slice(1,5);
+        const rows = rest.map(a=>{
+          const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
+                  : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
+          const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
+          const dl = delayInfo(a);
+          return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+        });
 
-        animateTick($("#panel-"+code+" .next-time"));
+        if (rows.length){
+          document.getElementById("arrivals-"+code).style.display = "";
+          document.getElementById("list-"+code).innerHTML = renderNextRowsHtml(rows);
+        } else {
+          document.getElementById("arrivals-"+code).style.display = "none";
+          document.getElementById("list-"+code).innerHTML = "";
+        }
+
+        animateTick(document.querySelector("#panel-"+code+" .next-time"));
         setStatus(code, "OK");
         p.lastUpdated = started; setUpdated(code, started);
       }
+
     }catch(e){
-      $("#info-"+code).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa “Actualizar” o revisa conexión.</div>`;
-      $("#list-"+code).innerHTML = "";
+      document.getElementById("info-"+code).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa “Actualizar” o revisa conexión.</div>`;
+      document.getElementById("list-"+code).innerHTML = "";
+      document.getElementById("arrivals-"+code).style.display = "none";
       setStatus(code, "Error");
       console.warn('Arrivals error', e);
     }
@@ -1271,37 +1323,33 @@
 
   /* ========= Add modal ========= */
   function openAddModal(){
-    $("#addModal").classList.add("open");
+    document.getElementById("addModal").classList.add("open");
     lockBodyScroll();
-    attachViewportShim($("#addModal"));
-    $("#addSearchInput").value = "";
+    attachViewportShim(document.getElementById("addModal"));
+    document.getElementById("addSearchInput").value = "";
     renderAddList();
-    setTimeout(()=>$("#addSearchInput")?.focus({preventScroll:true}), 50);
+    setTimeout(()=>document.getElementById("addSearchInput")?.focus({preventScroll:true}), 50);
 
     if (!loadJSON("seen_add_pin_hint", false)){
       saveJSON("seen_add_pin_hint", true);
-      showToast({
-        title: "Tip",
-        detail: "Al añadir una línea queda fijada automáticamente. Puedes desfijarla con el pin.",
-        duration: 5200
-      });
+      showToast({ title: "Tip", detail: "Al añadir una línea queda fijada automáticamente. Puedes desfijarla con el pin.", duration: 5200 });
     }
   }
   function closeAddModal(){
-    $("#addModal").classList.remove("open");
-    detachViewportShim($("#addModal"));
+    document.getElementById("addModal").classList.remove("open");
+    detachViewportShim(document.getElementById("addModal"));
     unlockBodyScroll();
   }
   function setAddFilter(type){
     addFilter = type;
-    $("#chipAll").classList.toggle("active", type==="all");
-    $("#chipBus").classList.toggle("active", type==="bus");
-    $("#chipTram").classList.toggle("active", type==="tram");
+    document.getElementById("chipAll").classList.toggle("active", type==="all");
+    document.getElementById("chipBus").classList.toggle("active", type==="bus");
+    document.getElementById("chipTram").classList.toggle("active", type==="tram");
     renderAddList();
   }
 
   function renderAddList(){
-    const q = ($("#addSearchInput").value || "").trim().toLowerCase();
+    const q = (document.getElementById("addSearchInput").value || "").trim().toLowerCase();
     const existing = new Set(Object.keys(panels));
 
     const filtered = lines
@@ -1313,7 +1361,7 @@
         return a.code.localeCompare(b.code);
       });
 
-    const host = $("#addList");
+    const host = document.getElementById("addList");
     if (!filtered.length){
       host.innerHTML = `<div style="padding:12px;color:var(--muted)">No hay resultados.</div>`;
       return;
@@ -1386,10 +1434,10 @@
     document.documentElement.classList.add('theme-switching');
     const t=p==='auto'?(sysDark()?'dark':'light'):p;
     document.documentElement.setAttribute('data-theme',t);
-    $("#themeIcon").textContent=t==='dark'?'light_mode':'dark_mode';
+    document.getElementById("themeIcon").textContent=t==='dark'?'light_mode':'dark_mode';
     const c=t==='dark'?'#0b1220':'#f6f8fc';
-    $('#metaThemeLight').setAttribute('content',c);
-    $('#metaThemeDark').setAttribute('content',c);
+    document.getElementById('metaThemeLight').setAttribute('content',c);
+    document.getElementById('metaThemeDark').setAttribute('content',c);
     setTimeout(()=>document.documentElement.classList.remove('theme-switching'),250);
   }
   function cycleTheme(){
@@ -1399,7 +1447,6 @@
     applyTheme(n);
   }
 
-  /* ========= Nearby ========= */
   function haversine(lat1, lon1, lat2, lon2){
     const R=6371000, toRad=d=>d*Math.PI/180;
     const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
@@ -1407,7 +1454,6 @@
     return 2*R*Math.asin(Math.sqrt(a));
   }
 
-  /* ========= App ========= */
   function refreshAll(){
     globalLastRefresh = Date.now();
     updateGlobalUpdated();
@@ -1423,7 +1469,7 @@
 
     const storedAll = loadJSON("all_lines", []);
     storedAll.forEach(code=>{
-      if ($("#panel-"+code)) return;
+      if (document.getElementById("panel-"+code)) return;
       const line = lines.find(l=>l.code===code);
       if (line) createPanel(line, {pinOnAdd:false});
     });
@@ -1438,27 +1484,27 @@
   }
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    $("#toastCloseBtn").addEventListener("click", hideToast);
+    document.getElementById("toastCloseBtn").addEventListener("click", hideToast);
 
-    $("#navAdd").addEventListener("click", openAddModal);
-    $("#navRefresh").addEventListener('click', ()=>{
-      const ic=$("#navRefresh i");
+    document.getElementById("navAdd").addEventListener("click", openAddModal);
+    document.getElementById("navRefresh").addEventListener('click', ()=>{
+      const ic=document.querySelector("#navRefresh i");
       ic.classList.add('spin');
       refreshAll();
       setTimeout(()=>ic.classList.remove('spin'), 900);
     });
 
-    $("#themeToggle").addEventListener('click', cycleTheme);
+    document.getElementById("themeToggle").addEventListener('click', cycleTheme);
 
-    $("#closeAdd").addEventListener("click", closeAddModal);
-    $("#addModal").addEventListener("click", (e)=>{ if (e.target===e.currentTarget) closeAddModal(); });
-    $("#addSearchInput").addEventListener("input", renderAddList);
-    $("#chipAll").addEventListener("click", ()=> setAddFilter("all"));
-    $("#chipBus").addEventListener("click", ()=> setAddFilter("bus"));
-    $("#chipTram").addEventListener("click", ()=> setAddFilter("tram"));
+    document.getElementById("closeAdd").addEventListener("click", closeAddModal);
+    document.getElementById("addModal").addEventListener("click", (e)=>{ if (e.target===e.currentTarget) closeAddModal(); });
+    document.getElementById("addSearchInput").addEventListener("input", renderAddList);
+    document.getElementById("chipAll").addEventListener("click", ()=> setAddFilter("all"));
+    document.getElementById("chipBus").addEventListener("click", ()=> setAddFilter("bus"));
+    document.getElementById("chipTram").addEventListener("click", ()=> setAddFilter("tram"));
 
-    $("#closeStops").addEventListener('click', closeStops);
-    $("#stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
+    document.getElementById("closeStops").addEventListener('click', closeStops);
+    document.getElementById("stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
 
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){
@@ -1468,7 +1514,7 @@
       }
     });
 
-    $("#stopSearchInput").addEventListener('input', function(){
+    document.getElementById("stopSearchInput").addEventListener('input', function(){
       const q=this.value.toLowerCase();
       $$("#stopsListContainer .stop-item").forEach(it=>{
         const name = (it.dataset.name || it.textContent || "").toLowerCase();
@@ -1476,7 +1522,7 @@
       });
     });
 
-    $("#nearbyStopsBtn").addEventListener('click', ()=>{
+    document.getElementById("nearbyStopsBtn").addEventListener('click', ()=>{
       if (!navigator.geolocation) return alert("La geolocalización no está disponible.");
       navigator.geolocation.getCurrentPosition(pos=>{
         const {latitude,longitude}=pos.coords;
@@ -1487,7 +1533,7 @@
           return {el,d};
         }).sort((a,b)=>a.d-b.d);
 
-        const cont=$("#stopsListContainer");
+        const cont=document.getElementById("stopsListContainer");
         const fixed = Array.from(cont.children).filter(ch=>!ch.classList.contains("stop-item"));
         cont.innerHTML = "";
         fixed.forEach(x=>cont.appendChild(x));
