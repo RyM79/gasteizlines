@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <script src="https://maps.googleapis.com/maps/api/js?key=xxx"></script>
 
   <style>
     :root{
@@ -53,9 +52,6 @@
 
     .offline-banner{position:sticky;top:0;z-index:49;margin:0 -16px;padding:10px 16px;background:#fee2e2;color:#991b1b;border-bottom:1px solid #fecaca;display:none;font-size:13px}
     html[data-theme=dark] .offline-banner{background:#3f1d1d;color:#fecaca;border-color:#7f1d1d}
-
-    .warn-banner{display:none;margin:-6px 0 6px;border:1px solid var(--glass-border);background:color-mix(in oklab,var(--surface) 90%,#fde68a 10%);padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.35}
-    html[data-theme=dark] .warn-banner{background:color-mix(in oklab,var(--surface) 85%,#a16207 15%)}
 
     .grid{display:grid;gap:16px}
     .card{
@@ -142,9 +138,6 @@
     .list li:hover,.stop-item:hover{background:color-mix(in oklab,var(--surface) 90%,transparent)}
     .stop-item.selected{background:color-mix(in oklab,var(--surface) 86%,transparent)}
 
-    #mapWrap{width:min(980px,96vw);height:min(80vh,700px);border-radius:18px;overflow:hidden;position:relative;border:1px solid var(--glass-border);box-shadow:var(--shadow);background:var(--surface)}
-    #map{width:100%;height:100%}.map-close{position:absolute;top:10px;right:10px;z-index:5;border:none;border-radius:12px;padding:8px 10px;background:var(--primary);color:#fff;cursor:pointer;box-shadow:var(--shadow)}
-
     .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:55;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:center;padding:10px max(12px,env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right));background:color-mix(in oklab,var(--surface) 70%,transparent);border-top:1px solid var(--glass-border);backdrop-filter:blur(16px) saturate(1.35)}
     .nav-btn{border:1px solid var(--glass-border);background:var(--surface);border-radius:14px;min-height:44px;display:grid;gap:2px;place-items:center;cursor:pointer;box-shadow:0 1px 0 rgba(16,24,40,.03);transition:transform .06s,box-shadow .2s;font-size:12px;color:var(--muted)}
     .nav-btn:active{transform:scale(.98)}.nav-btn i{font-size:22px}
@@ -158,6 +151,7 @@
     .delay-neutral{background:var(--surface-2)}
   </style>
 </head>
+
 <body>
   <div class="app">
     <header class="appbar" aria-label="Barra superior">
@@ -171,9 +165,6 @@
     </header>
 
     <div id="offlineBanner" class="offline-banner">Sin conexión. Los datos pueden estar desactualizados.</div>
-
-    <!-- Diagnóstico /api -->
-    <div id="apiWarn" class="warn-banner"></div>
 
     <div id="empty-message" class="notice">No hay ninguna línea fijada todavía.<br>Añade tu primera línea de <strong>autobús</strong> o <strong>tranvía</strong>.</div>
     <main id="panels-container" class="grid" aria-live="polite"></main>
@@ -217,17 +208,9 @@
     </div>
   </div>
 
-  <!-- Modal mapa -->
-  <div id="mapModal" class="modal" role="dialog" aria-modal="true" aria-label="Mapa en vivo">
-    <div id="mapWrap">
-      <button class="map-close" id="closeMap">Cerrar mapa</button>
-      <div id="map"></div>
-    </div>
-  </div>
-
   <script>
   /* ========= State ========= */
-  let currentAddLineType = null, currentStopsForLine = null;
+  let currentStopsForLine = null;
   const panels = {};
   let autoRefreshTimer = null;
 
@@ -262,47 +245,42 @@
   /* ============================================================
      Cloudflare Pages Functions proxy
      - Tu Function está en: functions/api/[[path]].js
-     - Por tanto, desde el frontend se llama a: /api/...
+     - Desde el frontend se llama a: /api/...
      ============================================================ */
   const API_BASE = "/api";
   const API_TARGET_ORIGIN = "https://www.vitoria-gasteiz.org";
 
   function toProxiedUrl(input){
-    // Permite pasar URLs absolutas del API original o URLs ya proxificadas (/api/..)
     const u = new URL(input, window.location.origin);
 
-    // Si ya es /api/...
+    // ya es /api/...
     if (u.origin === window.location.origin && u.pathname.startsWith(API_BASE + "/")){
       return u.pathname + u.search;
     }
 
-    // Solo proxificamos el origen permitido
+    // solo proxificamos el origen permitido
     if (u.origin !== API_TARGET_ORIGIN){
       throw new Error("URL no permitida para proxy: " + u.origin);
     }
 
-    // /api + pathname + query
     return API_BASE + u.pathname + u.search;
   }
 
   async function getText(url){
-    const proxied = toProxiedUrl(url);
-    const res = await fetch(proxied, { cache: "no-store" });
-    if (!res.ok) throw new Error("HTTP " + res.status + " en " + proxied);
+    const toFetch = toProxiedUrl(url);
+    const res = await fetch(toFetch, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status + " en " + toFetch);
     return await res.text();
   }
 
   function tryParseJSON(text){
-    // 1) JSON puro
     try{ return JSON.parse(text); }catch(_){}
 
-    // 2) JSON embebido (tu patrón original)
     const m = text.match(/\{[\s\S]*"(recorrido|llegadas|posiciones|color)"[\s\S]*\}/);
     if (m){
       try{ return JSON.parse(m[0]); }catch(_){}
     }
 
-    // 3) Último intento: quitar HTML y parsear
     const stripped = text.replace(/<[^>]*>/g,'').trim();
     try{ return JSON.parse(stripped); }catch(_){}
 
@@ -351,57 +329,11 @@
     const rt = item?.realtimeArrival;
     const sch = item?.scheduledArrival;
     if (typeof rt !== 'number' || typeof sch !== 'number') return { label: null, cls: 'delay-neutral' };
-    const diff = rt - sch; // s
+    const diff = rt - sch;
     const abs = Math.abs(diff);
     if (abs <= 60) return { label: null, cls: 'delay-neutral' };
     const mins = Math.round(abs / 60);
     return diff > 60 ? { label: `+${mins}m`, cls: 'delay-late' } : { label: `–${mins}m`, cls: 'delay-early' };
-  }
-
-  /* ========= Diagnóstico de /api ========= */
-  async function checkApiProxy(){
-    const warn = $("#apiWarn");
-    warn.style.display = "none";
-    warn.textContent = "";
-
-    // Si tu Function tiene /api/ping, lo usamos.
-    // Si no lo tienes, igualmente detectamos HTML inesperado.
-    try{
-      const r = await fetch("/api/ping", { cache: "no-store" });
-      const t = await r.text();
-
-      // Si devuelve HTML, es casi seguro que la Function no está funcionando (fallback SPA)
-      if (t.trim().startsWith("<!DOCTYPE html") || t.includes("<html")) {
-        warn.style.display = "block";
-        warn.innerHTML =
-          `<strong>⚠️ El endpoint /api no está respondiendo como Function.</strong><br>
-           Estás recibiendo HTML (probable fallback SPA). Revisa que Cloudflare Pages esté desplegando <code>functions/api/[[path]].js</code>
-           y que ningún redirect tipo <code>/* → /index.html 200</code> esté capturando <code>/api/*</code>.`;
-        return;
-      }
-
-      // Si es JSON, perfecto
-      try{
-        JSON.parse(t);
-      }catch(_){
-        // No es JSON: igualmente lo mostramos
-        warn.style.display = "block";
-        warn.innerHTML =
-          `<strong>⚠️ /api/ping respondió pero no devolvió JSON.</strong><br>
-           Respuesta: <code>${escapeHtml(t.slice(0,120))}</code>`;
-      }
-    }catch(e){
-      // Si /api/ping no existe, no lo consideramos fatal.
-      // Pero avisamos si hay fallo total.
-      warn.style.display = "block";
-      warn.innerHTML =
-        `<strong>⚠️ No se pudo comprobar /api/ping.</strong><br>
-         Esto no es necesariamente un error si no tienes implementado el ping en la Function, pero si la app no carga,
-         prueba abrir <code>/api/j16-02w/detalleAction.do?id=2000000000&idioma=ES</code> y comprueba que no devuelve tu index.html.`;
-    }
-  }
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   /* ========= Crear panel ========= */
@@ -422,9 +354,8 @@
           </div>
         </div>
         <div class="panel-menu" role="group" aria-label="Acciones del panel">
-          <button class="icon" id="map-btn-${line.code}"   type="button" title="Mapa"><i class="material-icons">location_on</i></button>
-          <button class="icon" id="pin-btn-${line.code}"   type="button" title="Fijar"><i class="material-icons">push_pin</i></button>
-          <button class="icon" id="del-btn-${line.code}"   type="button" title="Eliminar"><i class="material-icons">delete</i></button>
+          <button class="icon" id="pin-btn-${line.code}" type="button" title="Fijar"><i class="material-icons">push_pin</i></button>
+          <button class="icon" id="del-btn-${line.code}" type="button" title="Eliminar"><i class="material-icons">delete</i></button>
         </div>
       </div>
 
@@ -451,7 +382,6 @@
     panels[line.code] = { line, currentStopId:null, currentStopName:null, countdownInterval:null, countdownIntervals:{} };
 
     $("#stop-picker-"+line.code).addEventListener('click', ()=> showStopsList(line.code));
-    $("#map-btn-"+line.code).addEventListener('click',   ()=> openMap(line.code));
     $("#pin-btn-"+line.code).addEventListener('click',   ()=> togglePin(line.code));
     $("#del-btn-"+line.code).addEventListener('click',   ()=> deletePanel(line.code));
     $("#fav-btn-"+line.code).addEventListener('click',   ()=> toggleFavorite(line.code));
@@ -466,7 +396,6 @@
     p = p.includes(code) ? p.filter(x=>x!==code) : [...p, code];
     setPinnedLines(p);
     updatePinIcon(code);
-    localStorage.setItem('last_open_map_line', code);
   }
   function updatePinIcon(code){
     const btn = $("#pin-btn-"+code); if (!btn) return;
@@ -600,8 +529,6 @@
     Object.values(p.countdownIntervals||{}).forEach(id=>clearInterval(id));
     p.countdownIntervals = {};
 
-    // OJO: ARRIVALS_TPL es URL ABSOLUTA (vitoria-gasteiz.org),
-    // pero getJSON/getText la proxifican a /api/... automáticamente.
     if (line.type==='tram'){
       const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", line.code);
       try{
@@ -715,57 +642,14 @@
     }
   }
 
-  /* ========= Mapas ========= */
-  let map, busMapInterval=null, busMarkers={}, stopMarkers={};
-  function initMap(){ map = new google.maps.Map(document.getElementById("map"), { center:{lat:42.846,lng:-2.671}, zoom:14, mapTypeControl:false, streetViewControl:false, fullscreenControl:false }); }
-  async function openMap(code){
-    $("#mapModal").classList.add('open'); lockBodyScroll();
-    initMap();
-    try{
-      await Promise.all([updateStopMarkers(code), updateVehiclePositions(code)]);
-      if (busMapInterval) clearInterval(busMapInterval);
-      busMapInterval = setInterval(()=>updateVehiclePositions(code),5000);
-      localStorage.setItem('last_open_map_line', code);
-    }catch(_){}
-  }
-  function closeMap(){
-    $("#mapModal").classList.remove('open'); unlockBodyScroll();
-    if(busMapInterval){clearInterval(busMapInterval); busMapInterval=null;}
-    Object.values(busMarkers).forEach(m=>m.setMap(null)); busMarkers={};
-    Object.values(stopMarkers).forEach(m=>m.setMap(null)); stopMarkers={};
-  }
-
-  // IMPORTANTE: también proxificamos positions (antes era URL directa)
-  async function updateVehiclePositions(code){
-    try{
-      const url = `https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RUTA&idRuta=${encodeURIComponent(code)}&type=positions`;
-      const data = await getJSON(url);
-      (data.posiciones||[]).forEach(pos=>{
-        const veh=pos.vehiculo, lat=parseFloat(pos.latitud), lng=parseFloat(pos.longitud);
-        if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
-        const latLng={lat,lng};
-        if (busMarkers[veh]) busMarkers[veh].setPosition(latLng);
-        else busMarkers[veh]=new google.maps.Marker({position:latLng,map,title:`Vehículo ${veh}`,icon:{url:"https://maps.google.com/mapfiles/ms/icons/green-dot.png"}});
-      });
-    }catch(e){ console.warn('Positions error', e); }
-  }
-
-  async function updateStopMarkers(code){
-    try{
-      const line = lines.find(l=>l.code===code); if(!line) return;
-      const data = await getJSON(line.stopsUrl);
-      (data.recorrido||[]).forEach(s=>{
-        const lat=parseFloat(s.latitud), lng=parseFloat(s.longitud);
-        if(!Number.isFinite(lat)||!Number.isFinite(lng)) return;
-        const id=s.idParada;
-        if (stopMarkers[id]) stopMarkers[id].setPosition({lat,lng});
-        else stopMarkers[id]=new google.maps.Marker({position:{lat,lng},map,title:s.nombre,icon:{url:"https://maps.google.com/mapfiles/ms/icons/blue-dot.png"}});
-      });
-    }catch(e){ console.warn('Stops markers error', e); }
-  }
-
   /* ========= App: borrar/refresh/pinned ========= */
-  function deletePanel(code){ $("#panel-"+code)?.remove(); delete panels[code]; const p=getPinnedLines(); if (p.includes(code)) setPinnedLines(p.filter(x=>x!==code)); updateEmpty(); }
+  function deletePanel(code){
+    $("#panel-"+code)?.remove();
+    delete panels[code];
+    const p=getPinnedLines();
+    if (p.includes(code)) setPinnedLines(p.filter(x=>x!==code));
+    updateEmpty();
+  }
   function refreshAll(){ Object.keys(panels).forEach(refreshPanel); }
   function loadPinned(){ getPinnedLines().forEach(code=>{ const line=lines.find(l=>l.code===code); if(line) createPanel(line); }); updateEmpty(); }
   function startAuto(){ if(autoRefreshTimer) clearInterval(autoRefreshTimer); autoRefreshTimer=setInterval(()=>{ refreshAll(); },30000); }
@@ -773,7 +657,16 @@
   /* ========= Tema ========= */
   function pref(){ return localStorage.getItem('theme_pref')||'auto'; }
   function sysDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
-  function applyTheme(p){ document.documentElement.classList.add('theme-switching'); const t=p==='auto'?(sysDark()?'dark':'light'):p; document.documentElement.setAttribute('data-theme',t); $("#themeIcon").textContent=t==='dark'?'light_mode':'dark_mode'; const c=t==='dark'?'#0b1220':'#f6f8fc'; $('#metaThemeLight').setAttribute('content',c); $('#metaThemeDark').setAttribute('content',c); setTimeout(()=>document.documentElement.classList.remove('theme-switching'),250); }
+  function applyTheme(p){
+    document.documentElement.classList.add('theme-switching');
+    const t=p==='auto'?(sysDark()?'dark':'light'):p;
+    document.documentElement.setAttribute('data-theme',t);
+    $("#themeIcon").textContent=t==='dark'?'light_mode':'dark_mode';
+    const c=t==='dark'?'#0b1220':'#f6f8fc';
+    $('#metaThemeLight').setAttribute('content',c);
+    $('#metaThemeDark').setAttribute('content',c);
+    setTimeout(()=>document.documentElement.classList.remove('theme-switching'),250);
+  }
   function cycleTheme(){ const c=pref(); const n=c==='auto'?'light':c==='light'?'dark':'auto'; localStorage.setItem('theme_pref',n); applyTheme(n); }
 
   /* ========= UI eventos ========= */
@@ -793,14 +686,18 @@
 
     $("#closeLine").addEventListener('click', ()=>{ $("#lineModal").classList.remove('open'); unlockBodyScroll(); detachViewportShim($("#lineModal")); });
     $("#closeStops").addEventListener('click', closeStops);
-    $("#closeMap").addEventListener('click', closeMap);
     $("#lineModal").addEventListener('click', e=>{ if(e.target===e.currentTarget){ $("#lineModal").classList.remove('open'); unlockBodyScroll(); detachViewportShim($("#lineModal")); } });
     $("#stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
-    $("#mapModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeMap(); });
-    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ $("#lineModal").classList.remove('open'); unlockBodyScroll(); detachViewportShim($("#lineModal")); closeStops(); closeMap(); } });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ $("#lineModal").classList.remove('open'); unlockBodyScroll(); detachViewportShim($("#lineModal")); closeStops(); } });
 
-    $("#lineSearchInput").addEventListener('input', function(){ const q=this.value.toLowerCase(); $$("#lineList li").forEach(li=>{ li.style.display=li.textContent.toLowerCase().includes(q)?"": "none"; }); });
-    $("#stopSearchInput").addEventListener('input', function(){ const q=this.value.toLowerCase(); $$("#stopsListContainer .stop-item").forEach(it=>{ it.style.display=it.textContent.toLowerCase().includes(q)?"":"none"; }); });
+    $("#lineSearchInput").addEventListener('input', function(){
+      const q=this.value.toLowerCase();
+      $$("#lineList li").forEach(li=>{ li.style.display=li.textContent.toLowerCase().includes(q)?"": "none"; });
+    });
+    $("#stopSearchInput").addEventListener('input', function(){
+      const q=this.value.toLowerCase();
+      $$("#stopsListContainer .stop-item").forEach(it=>{ it.style.display=it.textContent.toLowerCase().includes(q)?"":"none"; });
+    });
 
     $("#nearbyStopsBtn").addEventListener('click', ()=>{
       if (!navigator.geolocation) return alert("La geolocalización no está disponible.");
@@ -822,10 +719,6 @@
     applyTheme(pref());
     if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if(pref()==='auto') applyTheme('auto'); });
 
-    // 1) Diagnóstico /api
-    checkApiProxy();
-
-    // 2) Cargar paneles
     loadPinned();
     startAuto();
   });
@@ -836,11 +729,40 @@
       ? list.map(l=>`<li role="option" tabindex="0" data-code="${l.code}">${l.code} — ${l.name}</li>`).join('')
       : '<li role="option" tabindex="0" aria-disabled="true">No quedan líneas disponibles.</li>';
     $("#lineModalTitle").textContent = list.length ? `Seleccione una línea de ${type==='bus'?'autobús':'tranvía'}` : "No quedan líneas disponibles para agregar.";
-    $("#lineSearchInput").value=""; $("#lineModal").classList.add('open'); lockBodyScroll(); attachViewportShim($("#lineModal"));
+    $("#lineSearchInput").value="";
+    $("#lineModal").classList.add('open');
+    lockBodyScroll();
+    attachViewportShim($("#lineModal"));
     setTimeout(()=>{ $("#lineSearchInput")?.focus({preventScroll:true}); }, 50);
 
-    $("#lineList").onclick = (e)=>{ const li=e.target.closest('li'); if(!li || li.getAttribute('aria-disabled')==='true') return; const code=li.dataset.code; const line=lines.find(x=>x.code===code); if(line) { createPanel(line); $("#lineModal").classList.remove('open'); unlockBodyScroll(); detachViewportShim($("#lineModal")); } };
-    $("#lineList").onkeydown = (e)=>{ if(e.key==='Enter'){ const li=e.target.closest('li'); if(li && li.getAttribute('aria-disabled')!=='true'){ const code=li.dataset.code; const line=lines.find(x=>x.code===code); if(line){ createPanel(line); $("#lineModal").classList.remove('open'); unlockBodyScroll(); detachViewportShim($("#lineModal")); } } } };
+    $("#lineList").onclick = (e)=>{
+      const li=e.target.closest('li');
+      if(!li || li.getAttribute('aria-disabled')==='true') return;
+      const code=li.dataset.code;
+      const line=lines.find(x=>x.code===code);
+      if(line) {
+        createPanel(line);
+        $("#lineModal").classList.remove('open');
+        unlockBodyScroll();
+        detachViewportShim($("#lineModal"));
+      }
+    };
+
+    $("#lineList").onkeydown = (e)=>{
+      if(e.key==='Enter'){
+        const li=e.target.closest('li');
+        if(li && li.getAttribute('aria-disabled')!=='true'){
+          const code=li.dataset.code;
+          const line=lines.find(x=>x.code===code);
+          if(line){
+            createPanel(line);
+            $("#lineModal").classList.remove('open');
+            unlockBodyScroll();
+            detachViewportShim($("#lineModal"));
+          }
+        }
+      }
+    };
   }
   window.openAddLineModal = openAddLineModal;
 
