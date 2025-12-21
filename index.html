@@ -25,7 +25,6 @@
       --accent-bus:#22c55e;
       --accent-tram:#e11d48;
       --danger:#ef4444;
-      --warn:#f59e0b;
       --radius:18px;
       --shadow:0 12px 40px rgba(16,24,40,.12);
       --ring:0 0 0 3px rgba(11,99,255,.25);
@@ -41,7 +40,6 @@
       --muted:#a8b6c7;
       --primary:#3b82f6;
       --danger:#f87171;
-      --warn:#fbbf24;
       --shadow:0 18px 52px rgba(0,0,0,.45);
       --ring:0 0 0 3px rgba(59,130,246,.25);
       color-scheme:dark;
@@ -100,30 +98,12 @@
     }
     .btn i{font-size:20px}
     .btn span{font-size:12px;color:var(--muted)}
-    .btn.primary{border-color:color-mix(in oklab,var(--primary) 40%, var(--glass-border));background:color-mix(in oklab,var(--primary) 14%, var(--surface))}
     .btn:active{transform:scale(.98)}
     @media (hover:hover) and (pointer:fine){
-      .btn:hover,.icon:hover,.nav-btn:hover,.chip:hover,.edit-pill:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+      .btn:hover,.pin-btn:hover,.del-btn:hover,.nav-btn:hover,.chip:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
     }
     @media (hover:none) and (pointer:coarse){
-      .btn:hover,.icon:hover,.nav-btn:hover,.chip:hover,.edit-pill:hover{transform:none;box-shadow:0 1px 0 rgba(16,24,40,.03)}
-    }
-
-    .edit-pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 12px;border-radius:999px;
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      cursor:pointer;
-      font-size:12px;font-weight:950;color:var(--text);
-      min-height:40px;
-      transition:transform .06s,box-shadow .2s, background .2s;
-      user-select:none;
-    }
-    .edit-pill i{font-size:20px;color:var(--muted)}
-    .edit-pill.active{
-      border-color:color-mix(in oklab,var(--warn) 50%, var(--glass-border));
-      background:color-mix(in oklab,var(--warn) 16%, var(--surface));
+      .btn:hover,.pin-btn:hover,.del-btn:hover,.nav-btn:hover,.chip:hover{transform:none;box-shadow:0 1px 0 rgba(16,24,40,.03)}
     }
 
     .offline-banner{
@@ -172,16 +152,11 @@
       display:flex;gap:8px;flex-wrap:wrap;align-items:center;
     }
 
-    .icon{
-      width:42px;height:42px;display:grid;place-items:center;border-radius:12px;
-      border:1px solid var(--glass-border);background:var(--surface);cursor:pointer;
-      transition:transform .06s,box-shadow .2s;color:var(--text)
-    }
-    .icon:active{transform:scale(.98)}
+    /* Action buttons area on card */
+    .card-actions{display:flex;gap:10px;align-items:center}
 
     /* Pin visible */
-    .pin-btn{
-      position:relative;
+    .pin-btn, .del-btn{
       width:42px;height:42px;
       display:grid;place-items:center;
       border-radius:12px;
@@ -189,46 +164,23 @@
       background:var(--surface);
       cursor:pointer;
       transition:transform .06s,box-shadow .2s, background .2s, border-color .2s;
+      -webkit-user-select:none;user-select:none;
     }
-    .pin-btn i{font-size:20px;color:var(--muted)}
+    .pin-btn i, .del-btn i{font-size:20px;color:var(--muted)}
+    .pin-btn:active,.del-btn:active{transform:scale(.98)}
+
     .pin-btn.pinned{
       border-color:color-mix(in oklab,var(--line-accent) 45%, var(--glass-border));
       background:color-mix(in oklab,var(--line-accent) 14%, var(--surface));
     }
     .pin-btn.pinned i{color:color-mix(in oklab,var(--line-accent) 80%, var(--text))}
-    .pin-btn:active{transform:scale(.98)}
 
-    /* Edit mode overlay actions */
-    .edit-actions{
-      display:none;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-      padding:12px;
-      border-radius:16px;
-      border:1px solid var(--glass-border);
-      background:color-mix(in oklab,var(--surface) 80%, transparent);
-      backdrop-filter:blur(10px) saturate(1.2);
+    .del-btn{
+      border-color:color-mix(in oklab,var(--danger) 35%, var(--glass-border));
+      background:color-mix(in oklab,var(--danger) 8%, var(--surface));
     }
-    body.edit-mode .edit-actions{display:grid}
-    .action-btn{
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      border-radius:14px;
-      min-height:44px;
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      cursor:pointer;
-      font-weight:950;
-    }
-    .action-btn i{font-size:20px}
-    .action-btn.pin{
-      border-color:color-mix(in oklab,var(--line-accent) 45%, var(--glass-border));
-      background:color-mix(in oklab,var(--line-accent) 12%, var(--surface));
-    }
-    .action-btn.danger{
-      border-color:color-mix(in oklab,var(--danger) 45%, var(--glass-border));
-      background:color-mix(in oklab,var(--danger) 12%, var(--surface));
-      color:color-mix(in oklab,var(--danger) 75%, var(--text));
-    }
+    .del-btn i{color:color-mix(in oklab,var(--danger) 70%, var(--muted))}
+    .del-btn:hover{border-color:color-mix(in oklab,var(--danger) 55%, var(--glass-border))}
 
     .stop-row{
       display:grid;
@@ -460,11 +412,6 @@
       </div>
 
       <div class="actions">
-        <div class="edit-pill" id="editToggle" role="button" tabindex="0" aria-pressed="false" title="Gestionar tarjetas">
-          <i class="material-icons" aria-hidden="true">edit</i>
-          <span id="editToggleLabel">Editar</span>
-        </div>
-
         <button class="btn" id="themeToggle" aria-label="Cambiar tema">
           <i id="themeIcon" class="material-icons">dark_mode</i><span>Tema</span>
         </button>
@@ -543,11 +490,9 @@
   let globalLastRefresh = 0;
   let globalTickTimer = null;
 
-  let isEditMode = false;
-
   // Undo delete
   let undoTimer = null;
-  let lastDeleted = null; // { line, panelState, pinnedBefore, domIndex }
+  let lastDeleted = null; // { line, panelState, pinnedBefore }
 
   // cache colores por línea (para Add list) y por panel
   const colorCache = loadJSON("line_colors", {});
@@ -647,7 +592,7 @@
     saveJSON(recKey(line), r);
   }
 
-  /* ========= UI utils ========= */
+  /* ========= UI ========= */
   const $ = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 
@@ -733,40 +678,7 @@
     t._timer = setTimeout(()=> hideToast(), duration);
   }
 
-  /* ========= Edit mode ========= */
-  function setEditMode(v){
-    isEditMode = v;
-    document.body.classList.toggle("edit-mode", v);
-    $("#editToggle").classList.toggle("active", v);
-    $("#editToggle").setAttribute("aria-pressed", String(v));
-    $("#editToggleLabel").textContent = v ? "Hecho" : "Editar";
-
-    // hint la primera vez
-    if (v && !loadJSON("seen_edit_hint", false)){
-      saveJSON("seen_edit_hint", true);
-      showToast({
-        title: "Modo editar",
-        detail: "Ahora puedes desfijar o eliminar tarjetas con botones grandes.",
-        duration: 4500
-      });
-    }
-  }
-
-  /* ========= Order: pinned first ========= */
-  function renderPanelsOrder(){
-    const container = $("#panels-container");
-    const allCodes = Object.keys(panels);
-    const pinned = getPinnedLines();
-    const ordered = [
-      ...pinned.filter(c => allCodes.includes(c)),
-      ...allCodes.filter(c => !pinned.includes(c)).sort((a,b)=>a.localeCompare(b))
-    ];
-    ordered.forEach(c=>{
-      const el = $("#panel-"+c);
-      if (el) container.appendChild(el);
-    });
-  }
-
+  /* ========= Pin order ========= */
   function isPinned(code){ return getPinnedLines().includes(code); }
 
   function setPinned(code, pinned){
@@ -779,9 +691,7 @@
     renderPanelsOrder();
   }
 
-  function togglePin(code){
-    setPinned(code, !isPinned(code));
-  }
+  function togglePin(code){ setPinned(code, !isPinned(code)); }
 
   function updatePinUI(code){
     const pinned = isPinned(code);
@@ -791,8 +701,20 @@
       btn.setAttribute("aria-pressed", String(pinned));
       btn.title = pinned ? "Desfijar" : "Fijar";
     }
-    const txt = $("#edit-pin-label-"+code);
-    if (txt) txt.textContent = pinned ? "Desfijar" : "Fijar";
+  }
+
+  function renderPanelsOrder(){
+    const container = $("#panels-container");
+    const allCodes = Object.keys(panels);
+    const pinned = getPinnedLines();
+    const ordered = [
+      ...pinned.filter(c => allCodes.includes(c)),
+      ...allCodes.filter(c => !pinned.includes(c)).sort((a,b)=>a.localeCompare(b))
+    ];
+    ordered.forEach(c=>{
+      const el = $("#panel-"+c);
+      if (el) container.appendChild(el);
+    });
   }
 
   /* ========= Favorites ========= */
@@ -812,7 +734,7 @@
     if (ic) ic.textContent = selected ? "★" : "☆";
   }
 
-  /* ========= Helpers viewport modales ========= */
+  /* ========= Modal helpers ========= */
   function lockBodyScroll(){ document.body.classList.add('modal-open'); }
   function unlockBodyScroll(){ document.body.classList.remove('modal-open'); }
 
@@ -830,36 +752,99 @@
   }
   function detachViewportShim(modal){ if(modal && modal._vvDetach){ modal._vvDetach(); modal._vvDetach=null; } }
 
-  /* ========= Color real por línea (bus) ========= */
+  /* ========= Colors ========= */
   async function ensureLineColor(line){
     if (line.type !== "bus") return;
     if (colorCache[line.code]) return;
     if (inflightColor.has(line.code)) return;
     inflightColor.add(line.code);
-
     try{
       const data = await getJSON(line.stopsUrl);
       const col = parseHexColor(data?.color);
       if (col){
         colorCache[line.code] = col;
         saveJSON("line_colors", colorCache);
-
-        // actualizar chips visibles en add list
         $$(".add-item").forEach(it=>{
           if (it.dataset.code === line.code){
             it.style.setProperty("--chip-accent", col);
           }
         });
-
-        // actualizar el panel si ya existe
         const panel = $("#panel-"+line.code);
         if (panel) panel.style.setProperty("--line-accent", col);
       }
-    }catch(_){
-      // si falla, no pasa nada: se queda con el color genérico
-    }finally{
-      inflightColor.delete(line.code);
-    }
+    }catch(_){} finally{ inflightColor.delete(line.code); }
+  }
+
+  /* ========= Delete with undo ========= */
+  function snapshotPanelState(code){
+    const p = panels[code];
+    if (!p) return null;
+    return {
+      currentStopId: p.currentStopId,
+      currentStopName: p.currentStopName,
+      lastUpdated: p.lastUpdated
+    };
+  }
+
+  function deletePanelWithUndo(code){
+    const p = panels[code];
+    if (!p) return;
+
+    const line = p.line;
+    const pinnedBefore = isPinned(code);
+    const panelState = snapshotPanelState(code);
+
+    deletePanel(code);
+
+    lastDeleted = { line, panelState, pinnedBefore };
+    clearTimeout(undoTimer);
+
+    showToast({
+      title: `${line.code} eliminada`,
+      detail: "Puedes deshacer durante unos segundos.",
+      actionText: "Deshacer",
+      onAction: undoDelete,
+      duration: 5200
+    });
+
+    undoTimer = setTimeout(()=> { lastDeleted=null; }, 5200);
+  }
+
+  function undoDelete(){
+    if (!lastDeleted) return;
+    const { line, panelState, pinnedBefore } = lastDeleted;
+    lastDeleted = null;
+
+    createPanel(line, {focus:true, pinOnAdd:pinnedBefore});
+
+    setTimeout(()=>{
+      const p = panels[line.code];
+      if (!p) return;
+      if (panelState?.currentStopId){
+        p.currentStopId = panelState.currentStopId;
+        p.currentStopName = panelState.currentStopName;
+        const sn = $("#stop-name-"+line.code);
+        if (sn) sn.textContent = panelState.currentStopName || "Parada";
+        updateFavIcon(line.code);
+        refreshPanel(line.code);
+      }
+    }, 250);
+
+    showToast({ title: "Restaurada", detail: `${line.code} vuelve a tu lista.`, duration: 2300 });
+  }
+
+  function deletePanel(code){
+    const p = panels[code];
+    if (p?.countdownInterval) clearInterval(p.countdownInterval);
+    Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
+    delete panels[code];
+    $("#panel-"+code)?.remove();
+
+    const pins = getPinnedLines();
+    if (pins.includes(code)) setPinnedLines(pins.filter(x=>x!==code));
+
+    renderPanelsOrder();
+    updateEmpty();
   }
 
   /* ========= Create panel ========= */
@@ -896,9 +881,12 @@
           </div>
         </div>
 
-        <div style="display:flex;gap:10px;align-items:center">
+        <div class="card-actions">
           <button class="pin-btn" id="pin-btn-${line.code}" type="button" aria-pressed="false" title="Fijar">
             <i class="material-icons">push_pin</i>
+          </button>
+          <button class="del-btn" id="del-btn-${line.code}" type="button" title="Eliminar">
+            <i class="material-icons">close</i>
           </button>
         </div>
       </div>
@@ -922,17 +910,6 @@
         </div>
         <div id="list-${line.code}" class="badges"></div>
       </div>
-
-      <div class="edit-actions" aria-label="Acciones de edición">
-        <button class="action-btn pin" type="button" id="edit-pin-${line.code}">
-          <i class="material-icons">push_pin</i>
-          <span id="edit-pin-label-${line.code}">Fijar</span>
-        </button>
-        <button class="action-btn danger" type="button" id="edit-del-${line.code}">
-          <i class="material-icons">delete</i>
-          <span>Eliminar</span>
-        </button>
-      </div>
     `;
 
     $("#panels-container").appendChild(card);
@@ -948,36 +925,25 @@
 
     $("#stop-picker-"+line.code).addEventListener('click', ()=> showStopsList(line.code));
     $("#fav-btn-"+line.code).addEventListener('click', ()=> toggleFavorite(line.code));
+
     $("#pin-btn-"+line.code).addEventListener('click', ()=> {
       togglePin(line.code);
       const pinned = isPinned(line.code);
       showToast({
         title: pinned ? `${line.code} fijada` : `${line.code} desfijada`,
         detail: pinned ? "Aparecerá arriba del todo." : "Seguirá en tu lista.",
-        duration: 2400
+        duration: 2200
       });
     });
 
-    $("#edit-pin-"+line.code).addEventListener('click', ()=> {
-      togglePin(line.code);
-      const pinned = isPinned(line.code);
-      showToast({
-        title: pinned ? `${line.code} fijada` : `${line.code} desfijada`,
-        detail: pinned ? "Aparecerá arriba del todo." : "Seguirá en tu lista.",
-        duration: 2400
-      });
-    });
-
-    $("#edit-del-"+line.code).addEventListener('click', ()=> {
+    $("#del-btn-"+line.code).addEventListener('click', ()=> {
       deletePanelWithUndo(line.code);
     });
 
     updateFavIcon(line.code);
 
-    // si bus, intentar conseguir color real (cache)
     ensureLineColor(line);
 
-    // pin al añadir (tu preferencia)
     if (pinOnAdd){
       setPinned(line.code, true);
     } else {
@@ -987,9 +953,7 @@
     loadStopsForPanel(line.code).then(()=>{
       renderPanelsOrder();
       updateEmpty();
-      if (focus){
-        focusPanel(line.code);
-      }
+      if (focus){ focusPanel(line.code); }
     });
 
     renderPanelsOrder();
@@ -1013,87 +977,6 @@
     if (el) el.textContent = "Actualizado: " + relTime(ts);
   }
 
-  /* ========= Delete with undo ========= */
-  function snapshotPanelState(code){
-    const p = panels[code];
-    if (!p) return null;
-    return {
-      currentStopId: p.currentStopId,
-      currentStopName: p.currentStopName,
-      lastUpdated: p.lastUpdated
-    };
-  }
-
-  function deletePanelWithUndo(code){
-    const p = panels[code];
-    if (!p) return;
-
-    // guarda undo
-    const line = p.line;
-    const pinnedBefore = isPinned(code);
-    const panelState = snapshotPanelState(code);
-
-    // posición DOM
-    const el = $("#panel-"+code);
-    const container = $("#panels-container");
-    const domIndex = Array.from(container.children).indexOf(el);
-
-    // borrar real
-    deletePanel(code);
-
-    lastDeleted = { line, panelState, pinnedBefore, domIndex };
-
-    // toast undo
-    clearTimeout(undoTimer);
-    showToast({
-      title: `${line.code} eliminada`,
-      detail: "Puedes deshacer durante unos segundos.",
-      actionText: "Deshacer",
-      onAction: undoDelete,
-      duration: 5200
-    });
-    undoTimer = setTimeout(()=> { lastDeleted=null; }, 5200);
-  }
-
-  function undoDelete(){
-    if (!lastDeleted) return;
-    const { line, panelState, pinnedBefore } = lastDeleted;
-    lastDeleted = null;
-
-    // recrear panel
-    createPanel(line, {focus:true, pinOnAdd: pinnedBefore});
-    // restaurar estado cuando exista
-    const tryRestore = ()=>{
-      const p = panels[line.code];
-      if (!p) return;
-      if (panelState?.currentStopId){
-        p.currentStopId = panelState.currentStopId;
-        p.currentStopName = panelState.currentStopName;
-        const sn = $("#stop-name-"+line.code);
-        if (sn) sn.textContent = panelState.currentStopName || "Parada";
-        updateFavIcon(line.code);
-        refreshPanel(line.code);
-      }
-    };
-    setTimeout(tryRestore, 250);
-    showToast({ title: "Restaurada", detail: `${line.code} vuelve a tu lista.`, duration: 2300 });
-  }
-
-  function deletePanel(code){
-    const p = panels[code];
-    if (p?.countdownInterval) clearInterval(p.countdownInterval);
-    Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
-    delete panels[code];
-    $("#panel-"+code)?.remove();
-
-    // quitar de pinned
-    const pins = getPinnedLines();
-    if (pins.includes(code)) setPinnedLines(pins.filter(x=>x!==code));
-
-    renderPanelsOrder();
-    updateEmpty();
-  }
-
   /* ========= Stops ========= */
   async function loadStopsForPanel(code){
     const panel = panels[code]; if(!panel) return;
@@ -1104,7 +987,6 @@
       const data = await getJSON(line.stopsUrl);
       if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
 
-      // color real bus (si viene)
       if (line.type==='bus' && data.color){
         const col = parseHexColor(data.color);
         if (col){
@@ -1134,7 +1016,7 @@
     }
   }
 
-  /* ========= Stops modal (no internal IDs) ========= */
+  /* ========= Stops modal (no IDs) ========= */
   async function showStopsList(code){
     currentStopsForLine = code;
     const panel = panels[code]; if(!panel) return;
@@ -1251,7 +1133,7 @@
     updateFavIcon(code);
   }
 
-  /* ========= Llegadas (smooth) ========= */
+  /* ========= Arrivals ========= */
   async function refreshPanel(code){
     const p = panels[code]; if(!p || !p.currentStopId) return;
     const { line } = p;
@@ -1396,7 +1278,6 @@
     renderAddList();
     setTimeout(()=>$("#addSearchInput")?.focus({preventScroll:true}), 50);
 
-    // tutorial suave: la primera vez que abren "añadir"
     if (!loadJSON("seen_add_pin_hint", false)){
       saveJSON("seen_add_pin_hint", true);
       showToast({
@@ -1470,7 +1351,7 @@
         closeAddModal();
         showToast({
           title: `${line.code} añadida y fijada`,
-          detail: "Puedes desfijarla con el icono del pin.",
+          detail: "Puedes desfijarla con el pin.",
           actionText: "Desfijar",
           onAction: ()=> setPinned(line.code, false),
           duration: 5200
@@ -1488,7 +1369,7 @@
           closeAddModal();
           showToast({
             title: `${line.code} añadida y fijada`,
-            detail: "Puedes desfijarla con el icono del pin.",
+            detail: "Puedes desfijarla con el pin.",
             actionText: "Desfijar",
             onAction: ()=> setPinned(line.code, false),
             duration: 5200
@@ -1540,7 +1421,6 @@
       if (line) createPanel(line, {pinOnAdd:false});
     });
 
-    // compatibilidad: lineas añadidas previamente
     const storedAll = loadJSON("all_lines", []);
     storedAll.forEach(code=>{
       if ($("#panel-"+code)) return;
@@ -1548,7 +1428,6 @@
       if (line) createPanel(line, {pinOnAdd:false});
     });
 
-    // actualizar UI de pins
     Object.keys(panels).forEach(c=> updatePinUI(c));
     renderPanelsOrder();
     updateEmpty();
@@ -1558,24 +1437,8 @@
     saveJSON("all_lines", Object.keys(panels));
   }
 
-  /* ========= Modals close ========= */
-  function closeStops(){
-    const modal = $("#stopsModal");
-    modal.classList.remove('open');
-    detachViewportShim(modal);
-    unlockBodyScroll();
-    const code = currentStopsForLine;
-    if (code) $("#stop-picker-"+code)?.setAttribute('aria-expanded','false');
-  }
-
   document.addEventListener('DOMContentLoaded', ()=>{
-    // Toast close
     $("#toastCloseBtn").addEventListener("click", hideToast);
-
-    // Edit toggle (click + keyboard)
-    const et = $("#editToggle");
-    et.addEventListener("click", ()=> setEditMode(!isEditMode));
-    et.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); setEditMode(!isEditMode); } });
 
     $("#navAdd").addEventListener("click", openAddModal);
     $("#navRefresh").addEventListener('click', ()=>{
@@ -1602,7 +1465,6 @@
         closeAddModal();
         closeStops();
         hideToast();
-        if (isEditMode) setEditMode(false);
       }
     });
 
