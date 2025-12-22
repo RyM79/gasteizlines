@@ -201,6 +201,7 @@
 
     /* ALERTAS */
     .alerts{
+      position:relative; /* para la X */
       display:none;
       border:1px solid color-mix(in oklab,#f59e0b 40%, var(--glass-border));
       background:color-mix(in oklab,#f59e0b 14%, var(--surface));
@@ -223,6 +224,24 @@
       background:color-mix(in oklab,#f59e0b 18%, var(--surface));
       border-color:color-mix(in oklab,#f59e0b 34%, var(--glass-border));
     }
+
+    /* Alertas: botón cerrar (ocultar temporalmente) */
+    .alerts-close{
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:34px;height:34px;
+      border-radius:12px;
+      border:1px solid color-mix(in oklab,#f59e0b 35%, var(--glass-border));
+      background:color-mix(in oklab,var(--surface) 88%, transparent);
+      color:var(--muted);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+    }
+    .alerts-close i{ font-size:18px; }
+    .alerts-close:active{ transform:scale(.98); }
+    .alerts-close:focus-visible{ outline:none; box-shadow: var(--ring); }
 
     .stack{display:grid;gap:10px;justify-items:center;text-align:center}
     .next-time{
@@ -643,7 +662,6 @@
   function updateEmpty(){
     $("#empty-message").style.display = Object.keys(panels).length ? "none" : "block";
   }
-  function bannerOffline(){ $("#offlineBanner").style.display = navigator.onLine ? 'none' : 'block'; }
 
   function parseHexColor(v){
     if(!v) return null;
@@ -896,11 +914,21 @@
     return `${dayLabel(dayS)} ${hhmm(s)}–${hhmm(e)}`;
   }
 
+  // ✅ Alertas sin alertEffect + botón X para ocultar temporalmente (session)
   function setAlerts(instanceId, alertsRaw){
     const box = $("#alerts-"+instanceId);
     if (!box) return;
 
     const panel = panels[instanceId];
+    const stopId = String(panel?.currentStopId || "");
+
+    const dismissKey = `alerts_dismiss_${instanceId}_${stopId}`;
+    if (sessionStorage.getItem(dismissKey) === "1") {
+      box.classList.remove("show");
+      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
+      return;
+    }
+
     const relevant = filterAlertsForPanel(panel, alertsRaw);
 
     if (!relevant.length){
@@ -909,7 +937,6 @@
       return;
     }
 
-    // ✅ Orden: parada específica primero, y luego por inicio más próximo
     relevant.sort((a,b)=>{
       const as = String(a.stopId) !== "*" ? 0 : 1;
       const bs = String(b.stopId) !== "*" ? 0 : 1;
@@ -923,27 +950,42 @@
     });
 
     const top = relevant.slice(0, 2);
+
     const items = top.map(a=>{
       const head = a.alertHeader || "Aviso";
       const desc = a.alertDescription || "";
       const win = fmtAlertWindow(a);
-      const meta = [
-        win ? `⏱ ${win}` : "",
-        a.alertEffect ? `• ${a.alertEffect}` : "",
-      ].filter(Boolean).join(" ");
-      return `<div style="margin-top:6px">
-        <strong>${escapeHtml(head)}</strong><br>
-        ${desc ? `<span>${escapeHtml(desc)}</span><br>` : ``}
-        ${meta ? `<div class="muted">${escapeHtml(meta)}</div>` : ``}
-      </div>`;
+      const meta = win ? `⏱ ${win}` : "";
+
+      return `
+        <div style="margin-top:8px">
+          <strong>${escapeHtml(head)}</strong><br>
+          ${desc ? `<span>${escapeHtml(desc)}</span><br>` : ``}
+          ${meta ? `<div class="muted">${escapeHtml(meta)}</div>` : ``}
+        </div>
+      `;
     }).join("");
 
-    box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>
+    box.innerHTML = `
+      <button class="alerts-close" type="button" title="Ocultar avisos" aria-label="Ocultar avisos">
+        <i class="material-icons" aria-hidden="true">close</i>
+      </button>
+
+      <i class="material-icons" aria-hidden="true">warning_amber</i>
       <div class="alert-text">
         <strong>Avisos</strong>
         ${items}
-      </div>`;
+      </div>
+    `;
     box.classList.add("show");
+
+    const btn = box.querySelector(".alerts-close");
+    btn?.addEventListener("click", (e)=>{
+      e.preventDefault();
+      sessionStorage.setItem(dismissKey, "1");
+      box.classList.remove("show");
+      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
+    }, { once:true });
   }
 
   function renderNextChipsHtml(items){
@@ -1170,7 +1212,7 @@
       const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
       const data = await getJSON(url);
 
-      // ✅ alertas siempre visibles, con ventana horaria
+      // ✅ alertas siempre visibles, con ventana horaria, y X para ocultar temporalmente
       setAlerts(instanceId, data?.alertas || []);
 
       let arr = (data.llegadas||[]);
