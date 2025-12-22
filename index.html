@@ -29,12 +29,6 @@
       --shadow:0 12px 40px rgba(16,24,40,.12);
       --ring:0 0 0 3px rgba(11,99,255,.25);
       color-scheme:light;
-
-      /* Toast (snackbar) – alto contraste */
-      --toast-bg:#0f172a;
-      --toast-fg:#ffffff;
-      --toast-muted:rgba(255,255,255,.78);
-      --toast-border:rgba(255,255,255,.10);
     }
     html[data-theme=dark]{
       --bg:#0b1220;
@@ -49,11 +43,6 @@
       --shadow:0 18px 52px rgba(0,0,0,.45);
       --ring:0 0 0 3px rgba(59,130,246,.25);
       color-scheme:dark;
-
-      --toast-bg:#0b1220;
-      --toast-fg:#ffffff;
-      --toast-muted:rgba(255,255,255,.78);
-      --toast-border:rgba(255,255,255,.12);
     }
 
     *{box-sizing:border-box}
@@ -213,10 +202,9 @@
     .stop-name{
       font-weight:950;
       letter-spacing:-.2px;
-      font-size:16.5px; /* ↑ un poco más grande */
+      font-size:16.5px;
     }
 
-    /* caret (chevron) más claro + rota al abrir */
     .caret{
       margin-left:auto;
       color:var(--muted);
@@ -226,8 +214,9 @@
     .stop-picker[aria-expanded="true"] .caret{ transform: rotate(180deg); }
 
     .fav{
-      background:none;border:none;cursor:pointer;font-size:20px;color:var(--primary);
+      background:none;border:none;cursor:pointer;color:var(--primary);
       min-width:44px;min-height:44px;display:grid;place-items:center;border-radius:12px;
+      font-size:26px; /* ⭐ más grande */
     }
     .fav.selected{color:#f59e0b}
     .fav:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -279,7 +268,7 @@
     }
     .arrival-row{
       display:grid;
-      grid-template-columns: 72px 1fr auto; /* sin > */
+      grid-template-columns: 72px 1fr auto;
       align-items:center;
       gap:10px;
       padding:10px 12px;
@@ -335,35 +324,56 @@
     .bottom-nav{
       position:fixed;left:0;right:0;bottom:0;z-index:55;
       display:grid;grid-template-columns:repeat(2,1fr);
-      gap:8px;align-items:center;
-      padding:10px max(12px,env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right));
+      gap:10px;align-items:center;
+      padding:12px max(12px,env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right));
       background:color-mix(in oklab,var(--surface) 72%,transparent);
       border-top:1px solid var(--glass-border);
       backdrop-filter:blur(16px) saturate(1.35)
     }
+
+    /* Botones más atractivos */
     .nav-btn{
       border:1px solid var(--glass-border);
       background:var(--surface);
-      border-radius:16px;
-      min-height:46px;
-      display:grid;gap:2px;place-items:center;
+      border-radius:18px;
+      min-height:52px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
       cursor:pointer;
-      box-shadow:0 1px 0 rgba(16,24,40,.03);
+      box-shadow:0 2px 0 rgba(16,24,40,.03);
       transition:transform .06s,box-shadow .2s;
-      font-size:12px;color:var(--muted)
+      font-size:13px;color:var(--muted);
+      font-weight:900;
+      letter-spacing:.1px;
     }
     .nav-btn i{font-size:22px}
+
     .nav-btn.primary{
-      background:color-mix(in oklab,var(--primary) 16%, var(--surface));
-      border-color:color-mix(in oklab,var(--primary) 40%, var(--glass-border));
-      color:var(--text);
-      font-weight:950;
+      background:linear-gradient(135deg,
+        color-mix(in oklab,var(--primary) 78%, #ffffff 0%) 0%,
+        color-mix(in oklab,var(--primary) 58%, #22c55e 0%) 120%);
+      border-color:color-mix(in oklab,var(--primary) 48%, var(--glass-border));
+      color:#fff;
+      text-shadow:0 1px 0 rgba(0,0,0,.18);
+      box-shadow:0 16px 34px color-mix(in oklab,var(--primary) 18%, transparent);
     }
+    html[data-theme=dark] .nav-btn.primary{
+      box-shadow:0 18px 42px rgba(0,0,0,.42);
+    }
+    .nav-btn.secondary{
+      background:color-mix(in oklab,var(--surface) 92%, transparent);
+      border-color:color-mix(in oklab,var(--glass-border) 80%, transparent);
+      color:var(--text);
+    }
+    .nav-btn:active{transform:scale(.985)}
     .spin{animation:spin 1.1s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
     .modal{position:fixed;inset:0;display:none;place-items:center;padding:16px;z-index:60;background:rgba(0,0,0,.35);overscroll-behavior:contain}
     .modal.open{display:grid}
+
     .sheet{
       width:min(760px,96vw);
       max-height:88vh;
@@ -374,11 +384,22 @@
       box-shadow:var(--shadow);
       padding:14px;
       backdrop-filter:blur(12px) saturate(1.25);
-      animation:pop .15s ease
+      animation:pop .15s ease;
     }
     @keyframes pop{from{transform:translateY(6px);opacity:0}}
-    #stopsModal .sheet, #addModal .sheet{display:flex;flex-direction:column}
-    #stopsListContainer, #addList{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;overflow-anchor:none}
+
+    /* Evita que el sheet "encoga" con pocas líneas */
+    #addModal .sheet{
+      min-height: min(78vh, 640px);
+      display:flex;
+      flex-direction:column;
+    }
+    #stopsModal .sheet{display:flex;flex-direction:column}
+
+    #stopsListContainer, #addList{
+      flex:1;min-height:0;overflow:auto;
+      -webkit-overflow-scrolling:touch;overscroll-behavior:contain;overflow-anchor:none
+    }
 
     .search{
       width:100%;
@@ -428,55 +449,6 @@
       display:flex;align-items:center;gap:8px;
     }
     .divider{height:1px;background:var(--glass-border);margin:10px 0}
-
-    /* ===== NUEVO TOAST: snackbar superior, compacto, sólido y con alto contraste ===== */
-    .toast{
-      position:fixed;
-      left:12px; right:12px;
-      top:calc(12px + env(safe-area-inset-top) + 62px);
-      z-index:80;
-      display:none;
-      background:var(--toast-bg);
-      color:var(--toast-fg);
-      border:1px solid var(--toast-border);
-      box-shadow:0 18px 55px rgba(0,0,0,.35);
-      border-radius:16px;
-      padding:10px 10px;
-      align-items:center;
-      gap:10px;
-      max-width:860px;
-      margin:0 auto;
-    }
-    .toast.show{display:flex;animation:toastIn .16s ease}
-    @keyframes toastIn{from{transform:translateY(-10px);opacity:0}}
-    .toast .msg{min-width:0;flex:1;font-weight:800;font-size:13px}
-    .toast .msg small{display:block;color:var(--toast-muted);font-weight:650;margin-top:2px}
-    .toast .tbtn{
-      border:1px solid var(--toast-border);
-      background:transparent;
-      color:var(--toast-fg);
-      padding:8px 10px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:900;
-      font-size:12px;
-      min-height:38px;
-      display:inline-flex;align-items:center;gap:8px;
-      white-space:nowrap;
-    }
-    .toast .tbtn.primary{
-      background:color-mix(in oklab,var(--primary) 24%, transparent);
-      border-color:color-mix(in oklab,var(--primary) 55%, var(--toast-border));
-    }
-    .toast .iconbtn{
-      width:38px;height:38px;border-radius:12px;
-      display:grid;place-items:center;
-      border:1px solid var(--toast-border);
-      background:transparent;
-      color:var(--toast-fg);
-      cursor:pointer;
-    }
-    .toast .iconbtn i{font-size:20px}
   </style>
 </head>
 
@@ -514,15 +486,8 @@
 
   <nav class="bottom-nav" aria-label="Acciones">
     <button class="nav-btn primary" id="navAdd"><i class="material-icons">add</i><span>Añadir</span></button>
-    <button class="nav-btn" id="navRefresh"><i class="material-icons">refresh</i><span>Actualizar</span></button>
+    <button class="nav-btn secondary" id="navRefresh"><i class="material-icons">refresh</i><span>Actualizar</span></button>
   </nav>
-
-  <!-- Toast -->
-  <div id="toast" class="toast" role="status" aria-live="polite">
-    <div class="msg" id="toastMsg">—</div>
-    <button class="tbtn primary" id="toastActionBtn" type="button" style="display:none">Acción</button>
-    <button class="iconbtn" id="toastCloseBtn" type="button" aria-label="Cerrar"><i class="material-icons">close</i></button>
-  </div>
 
   <!-- Modal añadir línea -->
   <div id="addModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
@@ -567,15 +532,12 @@
 
   <script>
   /* ========= State ========= */
-  let currentStopsForLine = null;
+  let currentStopsForInstance = null; // instanceId
   let addFilter = "all";
-  const panels = {};
+  const panels = {}; // instanceId -> panel
   let autoRefreshTimer = null;
   let globalLastRefresh = 0;
   let globalTickTimer = null;
-
-  let undoTimer = null;
-  let lastDeleted = null;
 
   const colorCache = loadJSON("line_colors", {});
   const inflightColor = new Set();
@@ -655,24 +617,45 @@
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  const getPinnedLines = () => loadJSON("pinned_lines", []);
-  const setPinnedLines = arr => saveJSON("pinned_lines", arr);
-
-  const setFavorite = (line, stop) => saveJSON("favorite_"+line, stop);
-  const getFavorite = (line) => loadJSON("favorite_"+line, null);
-  const removeFavorite = (line) => localStorage.removeItem("favorite_"+line);
-
-  const recKey = (line) => "recent_" + line;
-  function getRecents(line){ return loadJSON(recKey(line), []); }
-  function pushRecent(line, stop){
-    if (!stop?.id || !stop?.name) return;
-    let r = getRecents(line).filter(x => x.id !== stop.id);
-    r.unshift(stop);
-    r = r.slice(0, 6);
-    saveJSON(recKey(line), r);
+  function uid(){
+    // id corto y suficientemente único
+    return (crypto?.randomUUID ? crypto.randomUUID() : ("id-"+Date.now()+"-"+Math.random().toString(16).slice(2))).slice(0,18);
   }
 
-  /* ========= UI helpers ========= */
+  // pinned por instancia
+  const getPinned = () => loadJSON("pinned_instances", []);
+  const setPinned = (arr) => saveJSON("pinned_instances", arr);
+  const isPinned = (instanceId) => getPinned().includes(instanceId);
+
+  function setPinnedInstance(instanceId, pinned){
+    let p = getPinned();
+    const has = p.includes(instanceId);
+    if (pinned && !has) p = [...p, instanceId];
+    if (!pinned && has) p = p.filter(x=>x!==instanceId);
+    setPinned(p);
+    updatePinUI(instanceId);
+    renderPanelsOrder();
+  }
+  function togglePin(instanceId){ setPinnedInstance(instanceId, !isPinned(instanceId)); }
+
+  // favorite por instancia
+  const favKey = (instanceId)=>"favorite_"+instanceId;
+  const setFavorite = (instanceId, stop) => saveJSON(favKey(instanceId), stop);
+  const getFavorite = (instanceId) => loadJSON(favKey(instanceId), null);
+  const removeFavorite = (instanceId) => localStorage.removeItem(favKey(instanceId));
+
+  // recents por linea (compartidos)
+  const recKey = (lineCode) => "recent_" + lineCode;
+  function getRecents(lineCode){ return loadJSON(recKey(lineCode), []); }
+  function pushRecent(lineCode, stop){
+    if (!stop?.id || !stop?.name) return;
+    let r = getRecents(lineCode).filter(x => x.id !== stop.id);
+    r.unshift(stop);
+    r = r.slice(0, 6);
+    saveJSON(recKey(lineCode), r);
+  }
+
+  /* ========= UI ========= */
   const $ = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 
@@ -701,6 +684,13 @@
     if (seconds < 60) return `${seconds} s`;
     return `${Math.ceil(seconds / 60)} min`;
   }
+  function fmtEtaOrClock(seconds, status, hourText){
+    // si es > 60 min, en el número grande ponemos HH:MM (más útil visualmente)
+    if (typeof seconds === "number" && seconds >= 60*60 && hourText && hourText !== '—'){
+      return hourText; // "14:23"
+    }
+    return fmtETA(seconds, status);
+  }
   function delayInfo(item) {
     const rt = item?.realtimeArrival;
     const sch = item?.scheduledArrival;
@@ -726,88 +716,6 @@
   }
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  /* ========= Toast (snackbar) ========= */
-  function hideToast(){
-    const t = $("#toast");
-    t.classList.remove("show");
-    $("#toastActionBtn").style.display = "none";
-    $("#toastActionBtn").onclick = null;
-    $("#toastMsg").innerHTML = "—";
-  }
-
-  function showToast({title, detail="", actionText=null, onAction=null, duration=3600}){
-    const t = $("#toast");
-    $("#toastMsg").innerHTML = `${escapeHtml(title)}${detail ? `<small>${escapeHtml(detail)}</small>` : ""}`;
-
-    const ab = $("#toastActionBtn");
-    if (actionText && typeof onAction === "function"){
-      ab.style.display = "inline-flex";
-      ab.textContent = actionText;
-      ab.onclick = ()=>{ onAction(); hideToast(); };
-    } else {
-      ab.style.display = "none";
-      ab.onclick = null;
-    }
-
-    t.classList.add("show");
-    clearTimeout(t._timer);
-    t._timer = setTimeout(()=> hideToast(), duration);
-  }
-
-  /* ========= Pin order ========= */
-  function isPinned(code){ return getPinnedLines().includes(code); }
-  function setPinned(code, pinned){
-    let p = getPinnedLines();
-    const has = p.includes(code);
-    if (pinned && !has) p = [...p, code];
-    if (!pinned && has) p = p.filter(x=>x!==code);
-    setPinnedLines(p);
-    updatePinUI(code);
-    renderPanelsOrder();
-  }
-  function togglePin(code){ setPinned(code, !isPinned(code)); }
-
-  function updatePinUI(code){
-    const pinned = isPinned(code);
-    const btn = $("#pin-btn-"+code);
-    if (btn){
-      btn.classList.toggle("pinned", pinned);
-      btn.setAttribute("aria-pressed", String(pinned));
-      btn.title = pinned ? "Desfijar" : "Fijar";
-    }
-  }
-
-  function renderPanelsOrder(){
-    const container = $("#panels-container");
-    const allCodes = Object.keys(panels);
-    const pinned = getPinnedLines();
-    const ordered = [
-      ...pinned.filter(c => allCodes.includes(c)),
-      ...allCodes.filter(c => !pinned.includes(c)).sort((a,b)=>a.localeCompare(b))
-    ];
-    ordered.forEach(c=>{
-      const el = $("#panel-"+c);
-      if (el) container.appendChild(el);
-    });
-  }
-
-  /* ========= Favorites ========= */
-  function toggleFavorite(code){
-    const p = panels[code]; if(!p) return;
-    const fav = getFavorite(code);
-    if (fav && fav.id===p.currentStopId) removeFavorite(code);
-    else setFavorite(code, {id:p.currentStopId, name:p.currentStopName});
-    updateFavIcon(code);
-  }
-  function updateFavIcon(code){
-    const p = panels[code]; if(!p) return;
-    const fav = getFavorite(code);
-    const selected = fav && fav.id === p.currentStopId;
-    $("#fav-btn-"+code)?.classList.toggle('selected', selected);
-    const ic = $("#fav-icon-"+code);
-    if (ic) ic.textContent = selected ? "★" : "☆";
   }
 
   /* ========= Modal helpers ========= */
@@ -840,93 +748,97 @@
       if (col){
         colorCache[line.code] = col;
         saveJSON("line_colors", colorCache);
+        // refrescar chips ya pintados
         $$(".add-item").forEach(it=>{
           if (it.dataset.code === line.code){
             it.style.setProperty("--chip-accent", col);
           }
         });
-        const panel = $("#panel-"+line.code);
-        if (panel) panel.style.setProperty("--line-accent", col);
+        // refrescar tarjetas existentes de esa línea
+        Object.keys(panels).forEach(id=>{
+          const p = panels[id];
+          if (p?.line?.code === line.code){
+            $("#panel-"+id)?.style.setProperty("--line-accent", col);
+          }
+        });
       }
     }catch(_){} finally{ inflightColor.delete(line.code); }
   }
 
-  /* ========= Delete with undo ========= */
-  function snapshotPanelState(code){
-    const p = panels[code];
-    if (!p) return null;
-    return { currentStopId: p.currentStopId, currentStopName: p.currentStopName, lastUpdated: p.lastUpdated };
-  }
+  /* ========= Order ========= */
+  function renderPanelsOrder(){
+    const container = $("#panels-container");
+    const allIds = Object.keys(panels);
+    const pinned = getPinned();
 
-  function deletePanelWithUndo(code){
-    const p = panels[code];
-    if (!p) return;
+    const ordered = [
+      ...pinned.filter(id => allIds.includes(id)),
+      ...allIds.filter(id => !pinned.includes(id)).sort((a,b)=>{
+        const la = panels[a]?.line?.code || a;
+        const lb = panels[b]?.line?.code || b;
+        return la.localeCompare(lb);
+      })
+    ];
 
-    const line = p.line;
-    const pinnedBefore = isPinned(code);
-    const panelState = snapshotPanelState(code);
-
-    deletePanel(code);
-
-    lastDeleted = { line, panelState, pinnedBefore };
-    clearTimeout(undoTimer);
-
-    showToast({
-      title: `${line.code} eliminada`,
-      detail: "Pulsa deshacer si fue un error.",
-      actionText: "Deshacer",
-      onAction: undoDelete,
-      duration: 4200
+    ordered.forEach(id=>{
+      const el = $("#panel-"+id);
+      if (el) container.appendChild(el);
     });
-
-    undoTimer = setTimeout(()=> { lastDeleted=null; }, 4200);
   }
 
-  function undoDelete(){
-    if (!lastDeleted) return;
-    const { line, panelState, pinnedBefore } = lastDeleted;
-    lastDeleted = null;
-
-    createPanel(line, {focus:true, pinOnAdd:pinnedBefore});
-
-    setTimeout(()=>{
-      const p = panels[line.code];
-      if (!p) return;
-      if (panelState?.currentStopId){
-        p.currentStopId = panelState.currentStopId;
-        p.currentStopName = panelState.currentStopName;
-        const sn = document.getElementById("stop-name-"+line.code);
-        if (sn) sn.textContent = panelState.currentStopName || "Parada";
-        updateFavIcon(line.code);
-        refreshPanel(line.code);
-      }
-    }, 250);
-
-    showToast({ title: "Restaurada", detail: `${line.code} vuelve a tu lista.`, duration: 2400 });
+  /* ========= Favorites ========= */
+  function toggleFavorite(instanceId){
+    const p = panels[instanceId]; if(!p) return;
+    const fav = getFavorite(instanceId);
+    if (fav && fav.id===p.currentStopId) removeFavorite(instanceId);
+    else setFavorite(instanceId, {id:p.currentStopId, name:p.currentStopName});
+    updateFavIcon(instanceId);
+  }
+  function updateFavIcon(instanceId){
+    const p = panels[instanceId]; if(!p) return;
+    const fav = getFavorite(instanceId);
+    const selected = fav && fav.id === p.currentStopId;
+    $("#fav-btn-"+instanceId)?.classList.toggle('selected', selected);
+    const ic = $("#fav-icon-"+instanceId);
+    if (ic) ic.textContent = selected ? "★" : "☆";
   }
 
-  function deletePanel(code){
-    const p = panels[code];
+  /* ========= Delete ========= */
+  function deletePanel(instanceId){
+    const p = panels[instanceId];
     if (p?.countdownInterval) clearInterval(p.countdownInterval);
     Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
-    delete panels[code];
-    document.getElementById("panel-"+code)?.remove();
+    delete panels[instanceId];
+    $("#panel-"+instanceId)?.remove();
 
-    const pins = getPinnedLines();
-    if (pins.includes(code)) setPinnedLines(pins.filter(x=>x!==code));
+    // quitar de pinned si estaba
+    const pins = getPinned();
+    if (pins.includes(instanceId)) setPinned(pins.filter(x=>x!==instanceId));
 
     renderPanelsOrder();
     updateEmpty();
+    persistAllPanels();
   }
 
   /* ========= Create panel ========= */
+  function updatePinUI(instanceId){
+    const pinned = isPinned(instanceId);
+    const btn = $("#pin-btn-"+instanceId);
+    if (btn){
+      btn.classList.toggle("pinned", pinned);
+      btn.setAttribute("aria-pressed", String(pinned));
+      btn.title = pinned ? "Desfijar" : "Fijar";
+    }
+  }
+
   function createPanel(line, {focus=false, pinOnAdd=false} = {}){
-    if (document.getElementById("panel-"+line.code)) return;
+    const instanceId = uid();
 
     const card = document.createElement('section');
     card.className='card';
-    card.id='panel-'+line.code;
-    card.dataset.code = line.code;
+    card.id='panel-'+instanceId;
+    card.dataset.instanceId = instanceId;
+    card.dataset.lineCode = line.code;
 
     const initialAccent =
       line.type==="tram"
@@ -947,50 +859,51 @@
             <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
           </div>
           <div class="meta-small">
-            <span id="updated-${line.code}">Actualizado: —</span>
+            <span id="updated-${instanceId}">Actualizado: —</span>
             <span class="dot"></span>
-            <span id="status-${line.code}">Estado: —</span>
+            <span id="status-${instanceId}">Estado: —</span>
           </div>
         </div>
 
         <div class="card-actions">
-          <button class="pin-btn" id="pin-btn-${line.code}" type="button" aria-pressed="false" title="Fijar">
+          <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
             <i class="material-icons">push_pin</i>
           </button>
-          <button class="del-btn" id="del-btn-${line.code}" type="button" title="Eliminar">
+          <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
             <i class="material-icons">close</i>
           </button>
         </div>
       </div>
 
       <div class="stop-row">
-        <button class="stop-picker" id="stop-picker-${line.code}" type="button"
+        <button class="stop-picker" id="stop-picker-${instanceId}" type="button"
                 aria-haspopup="dialog" aria-controls="stopsModal" aria-expanded="false" title="Cambiar parada">
           <i class="material-icons" aria-hidden="true">place</i>
-          <span class="stop-name" id="stop-name-${line.code}">Cargando paradas…</span>
+          <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
           <i class="material-icons caret" aria-hidden="true">expand_more</i>
         </button>
-        <button class="fav" id="fav-btn-${line.code}" type="button" title="Favorita">
-          <span id="fav-icon-${line.code}">☆</span>
+        <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
+          <span id="fav-icon-${instanceId}">☆</span>
         </button>
       </div>
 
       <div class="stack">
-        <div id="info-${line.code}">
+        <div id="info-${instanceId}">
           <div class="next-time">—</div>
           <div class="hint">Cargando…</div>
         </div>
 
-        <div class="arrivals" id="arrivals-${line.code}" style="display:none">
+        <div class="arrivals" id="arrivals-${instanceId}" style="display:none">
           <div class="arrivals-title">Próximas</div>
-          <div class="arrivals-list" id="list-${line.code}"></div>
+          <div class="arrivals-list" id="list-${instanceId}"></div>
         </div>
       </div>
     `;
 
-    document.getElementById("panels-container").appendChild(card);
+    $("#panels-container").appendChild(card);
 
-    panels[line.code] = {
+    panels[instanceId] = {
+      id: instanceId,
       line,
       currentStopId:null,
       currentStopName:null,
@@ -999,111 +912,116 @@
       lastUpdated: 0
     };
 
-    document.getElementById("stop-picker-"+line.code).addEventListener('click', ()=> showStopsList(line.code));
-    document.getElementById("fav-btn-"+line.code).addEventListener('click', ()=> toggleFavorite(line.code));
-    document.getElementById("pin-btn-"+line.code).addEventListener('click', ()=> {
-      togglePin(line.code);
-      const pinned = isPinned(line.code);
-      showToast({ title: pinned ? `${line.code} fijada` : `${line.code} desfijada`, detail: pinned ? "Aparecerá arriba del todo." : "Seguirá en tu lista.", duration: 2200 });
-    });
-    document.getElementById("del-btn-"+line.code).addEventListener('click', ()=> deletePanelWithUndo(line.code));
+    $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
+    $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
+    $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
+    $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
 
-    updateFavIcon(line.code);
+    updateFavIcon(instanceId);
     ensureLineColor(line);
 
-    if (pinOnAdd) setPinned(line.code, true);
-    else updatePinUI(line.code);
+    if (pinOnAdd) setPinnedInstance(instanceId, true);
+    else updatePinUI(instanceId);
 
-    loadStopsForPanel(line.code).then(()=>{
+    loadStopsForPanel(instanceId).then(()=>{
       renderPanelsOrder();
       updateEmpty();
-      if (focus) focusPanel(line.code);
+      persistAllPanels();
+      if (focus) focusPanel(instanceId);
     });
 
     renderPanelsOrder();
     updateEmpty();
+    persistAllPanels();
+
+    return instanceId;
   }
 
-  function focusPanel(code){
-    const el = document.getElementById("panel-"+code);
+  function focusPanel(instanceId){
+    const el = $("#panel-"+instanceId);
     if (!el) return;
     el.classList.add("flash");
     el.scrollIntoView({behavior:"smooth", block:"start"});
     setTimeout(()=>el.classList.remove("flash"), 1400);
   }
 
-  function setStatus(code, text){
-    const el = document.getElementById("status-"+code);
+  function setStatus(instanceId, text){
+    const el = $("#status-"+instanceId);
     if (el) el.textContent = "Estado: " + text;
   }
-  function setUpdated(code, ts){
-    const el = document.getElementById("updated-"+code);
+  function setUpdated(instanceId, ts){
+    const el = $("#updated-"+instanceId);
     if (el) el.textContent = "Actualizado: " + relTime(ts);
   }
 
   /* ========= Stops ========= */
-  async function loadStopsForPanel(code){
-    const panel = panels[code]; if(!panel) return;
+  async function loadStopsForPanel(instanceId){
+    const panel = panels[instanceId]; if(!panel) return;
     const line = panel.line;
 
     try{
-      setStatus(code, "Cargando paradas…");
+      setStatus(instanceId, "Cargando paradas…");
       const data = await getJSON(line.stopsUrl);
       if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
 
       if (line.type==='bus' && data.color){
         const col = parseHexColor(data.color);
         if (col){
-          document.getElementById("panel-"+code).style.setProperty('--line-accent', col);
+          $("#panel-"+instanceId).style.setProperty('--line-accent', col);
           if (!colorCache[line.code]){
             colorCache[line.code] = col;
             saveJSON("line_colors", colorCache);
           }
-          updatePinUI(code);
+          updatePinUI(instanceId);
         }
       }
 
-      const fav = getFavorite(line.code);
-      if (fav){ panel.currentStopId=fav.id; panel.currentStopName=fav.name; }
-      else { const s=data.recorrido[0]; panel.currentStopId=s.idParada; panel.currentStopName=s.nombre; }
+      const fav = getFavorite(instanceId);
+      if (fav){
+        panel.currentStopId=fav.id; panel.currentStopName=fav.name;
+      } else {
+        const s=data.recorrido[0];
+        panel.currentStopId=s.idParada;
+        panel.currentStopName=s.nombre;
+      }
 
-      document.getElementById("stop-name-"+code).textContent = panel.currentStopName || "Parada no disponible";
-      updateFavIcon(code);
+      $("#stop-name-"+instanceId).textContent = panel.currentStopName || "Parada no disponible";
+      updateFavIcon(instanceId);
 
-      await refreshPanel(code);
+      await refreshPanel(instanceId);
     }catch(err){
-      document.getElementById("stop-name-"+code).textContent = "Error al cargar paradas";
-      document.getElementById("info-"+code).innerHTML = `<div class="danger-text">⚠️ No se pudieron cargar las paradas.</div>`;
-      document.getElementById("list-"+code).innerHTML = "";
-      document.getElementById("arrivals-"+code).style.display = "none";
-      setStatus(code, "Error");
+      $("#stop-name-"+instanceId).textContent = "Error al cargar paradas";
+      $("#info-"+instanceId).innerHTML = `<div class="danger-text">⚠️ No se pudieron cargar las paradas.</div>`;
+      $("#list-"+instanceId).innerHTML = "";
+      $("#arrivals-"+instanceId).style.display = "none";
+      setStatus(instanceId, "Error");
       console.warn('Paradas -', line.code, err);
     }
   }
 
-  /* ========= Stops modal (no IDs) ========= */
-  async function showStopsList(code){
-    currentStopsForLine = code;
-    const panel = panels[code]; if(!panel) return;
+  /* ========= Stops modal ========= */
+  async function showStopsList(instanceId){
+    currentStopsForInstance = instanceId;
+    const panel = panels[instanceId]; if(!panel) return;
 
-    document.getElementById("stop-picker-"+code)?.setAttribute('aria-expanded','true');
+    $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','true');
 
-    document.getElementById("stopsModalTitle").textContent = `Paradas • ${panel.line.code} — ${panel.line.name}`;
-    document.getElementById("stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
-    document.getElementById("stopSearchInput").value = "";
-    document.getElementById("stopsModal").classList.add('open');
+    $("#stopsModalTitle").textContent = `Paradas • ${panel.line.code} — ${panel.line.name}`;
+    $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
+    $("#stopSearchInput").value = "";
+    $("#stopsModal").classList.add('open');
     lockBodyScroll();
-    attachViewportShim(document.getElementById("stopsModal"));
-    setTimeout(()=>{ document.getElementById("stopSearchInput")?.focus({preventScroll:true}); }, 50);
+    attachViewportShim($("#stopsModal"));
+    setTimeout(()=>{ $("#stopSearchInput")?.focus({preventScroll:true}); }, 50);
 
     try{
       const data = await getJSON(panel.line.stopsUrl);
       if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
 
-      const fav = getFavorite(panel.line.code);
+      const fav = getFavorite(instanceId);
       const recents = getRecents(panel.line.code);
 
-      const cont = document.getElementById("stopsListContainer");
+      const cont = $("#stopsListContainer");
       cont.innerHTML = "";
 
       if (fav && fav.id) {
@@ -1139,7 +1057,7 @@
         selectStop(it.dataset.id, it.dataset.name);
       };
     }catch(err){
-      document.getElementById("stopsListContainer").innerHTML = `<div class="danger-text" style="padding:12px">⚠️ No se pudieron cargar las paradas.</div>`;
+      $("#stopsListContainer").innerHTML = `<div class="danger-text" style="padding:12px">⚠️ No se pudieron cargar las paradas.</div>`;
       console.warn('Stops modal error', err);
     }
   }
@@ -1167,30 +1085,31 @@
   }
 
   function closeStops(){
-    const modal = document.getElementById("stopsModal");
+    const modal = $("#stopsModal");
     modal.classList.remove('open');
     detachViewportShim(modal);
     unlockBodyScroll();
-    const code = currentStopsForLine;
-    if (code) document.getElementById("stop-picker-"+code)?.setAttribute('aria-expanded','false');
+    const instanceId = currentStopsForInstance;
+    if (instanceId) $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','false');
   }
 
   function selectStop(stopId, name){
-    const code = currentStopsForLine; if(!code || !panels[code]) return;
-    const p = panels[code];
+    const instanceId = currentStopsForInstance; if(!instanceId || !panels[instanceId]) return;
+    const p = panels[instanceId];
 
     p.currentStopId = stopId;
     p.currentStopName = name;
 
-    document.getElementById("stop-name-"+code).textContent = name;
+    $("#stop-name-"+instanceId).textContent = name;
 
     pushRecent(p.line.code, {id: stopId, name});
     closeStops();
-    refreshPanel(code);
-    updateFavIcon(code);
+    refreshPanel(instanceId);
+    updateFavIcon(instanceId);
+    persistAllPanels();
   }
 
-  /* ========= Próximas llegadas renderer ========= */
+  /* ========= Próximas ========= */
   function renderNextRowsHtml(items){
     return items.map(it=>{
       return `
@@ -1206,15 +1125,15 @@
   }
 
   /* ========= Arrivals ========= */
-  async function refreshPanel(code){
-    const p = panels[code]; if(!p || !p.currentStopId) return;
+  async function refreshPanel(instanceId){
+    const p = panels[instanceId]; if(!p || !p.currentStopId) return;
     const { line } = p;
 
     if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
     Object.values(p.countdownIntervals||{}).forEach(id=>clearInterval(id));
     p.countdownIntervals = {};
 
-    setStatus(code, "Actualizando…");
+    setStatus(instanceId, "Actualizando…");
     const started = Date.now();
 
     try{
@@ -1224,11 +1143,11 @@
 
         const arr = (data.llegadas||[]).filter(x=>x.line===line.code);
         if (!arr.length){
-          document.getElementById("info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚊 No hay más llegadas hoy.</div>`;
-          document.getElementById("list-"+code).innerHTML = "";
-          document.getElementById("arrivals-"+code).style.display = "none";
-          setStatus(code, "Sin llegadas");
-          p.lastUpdated = started; setUpdated(code, started);
+          $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">🚊 No hay más llegadas hoy.</div>`;
+          $("#list-"+instanceId).innerHTML = "";
+          $("#arrivals-"+instanceId).style.display = "none";
+          setStatus(instanceId, "Sin llegadas");
+          p.lastUpdated = started; setUpdated(instanceId, started);
           return;
         }
 
@@ -1239,26 +1158,33 @@
         const bestDest = dests.sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds)[0];
         const nx = groups[bestDest][0];
 
-        const etaText = fmtETA(nx.seconds, nx.status);
-        const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
         const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
                     : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
+
+        const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
+        const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
         const dly = delayInfo(nx);
 
-        document.getElementById("info-"+code).innerHTML = `
+        // siempre mostramos "en X min" abajo para contexto cuando el grande es HH:MM
+        const etaSmall = (typeof nx.seconds === 'number')
+          ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
+          : '';
+
+        $("#info-"+instanceId).innerHTML = `
           <div style="color:var(--primary);font-weight:950;margin-bottom:2px">Destino: ${escapeHtml(bestDest)}</div>
-          <div class="next-time ${urgentClass}" id="count-${code}">${etaText}</div>
+          <div class="next-time ${urgentClass}" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
           <div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+            ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
             ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
           </div>
         `;
 
-        const cdEl = document.getElementById("count-"+code);
+        const cdEl = $("#count-"+instanceId);
         if (nx.seconds < 60){
-          cdEl.innerHTML = `<span id="sec-${code}">${nx.seconds}</span> s`;
+          cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
           p.countdownInterval = setInterval(()=>{
-            const el = document.getElementById("sec-"+code); if(!el) return;
+            const el = $("#sec-"+instanceId); if(!el) return;
             let n = parseInt(el.textContent,10);
             if(Number.isFinite(n)&&n>0){ el.textContent = n-1; }
             else { el.textContent="0"; clearInterval(p.countdownInterval); p.countdownInterval=null; }
@@ -1275,16 +1201,16 @@
         });
 
         if (rows.length){
-          document.getElementById("arrivals-"+code).style.display = "";
-          document.getElementById("list-"+code).innerHTML = renderNextRowsHtml(rows);
+          $("#arrivals-"+instanceId).style.display = "";
+          $("#list-"+instanceId).innerHTML = renderNextRowsHtml(rows);
         } else {
-          document.getElementById("arrivals-"+code).style.display = "none";
-          document.getElementById("list-"+code).innerHTML = "";
+          $("#arrivals-"+instanceId).style.display = "none";
+          $("#list-"+instanceId).innerHTML = "";
         }
 
-        animateTick(document.querySelector("#panel-"+code+" .next-time"));
-        setStatus(code, "OK");
-        p.lastUpdated = started; setUpdated(code, started);
+        animateTick($("#panel-"+instanceId+" .next-time"));
+        setStatus(instanceId, "OK");
+        p.lastUpdated = started; setUpdated(instanceId, started);
 
       } else {
         const expected = (line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code;
@@ -1293,34 +1219,39 @@
 
         const arr = (data.llegadas||[]).filter(x=>x.line===expected);
         if (!arr.length){
-          document.getElementById("info-"+code).innerHTML = `<div class="next-time">—</div><div class="hint">🚍 No hay más llegadas hoy.</div>`;
-          document.getElementById("list-"+code).innerHTML = "";
-          document.getElementById("arrivals-"+code).style.display = "none";
-          setStatus(code, "Sin llegadas");
-          p.lastUpdated = started; setUpdated(code, started);
+          $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">🚍 No hay más llegadas hoy.</div>`;
+          $("#list-"+instanceId).innerHTML = "";
+          $("#arrivals-"+instanceId).style.display = "none";
+          setStatus(instanceId, "Sin llegadas");
+          p.lastUpdated = started; setUpdated(instanceId, started);
           return;
         }
 
         const nx = arr[0];
-        const etaText = fmtETA(nx.seconds, nx.status);
-        const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
         const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
                     : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
-        const dly = delayInfo(nx);
 
-        document.getElementById("info-"+code).innerHTML = `
-          <div class="next-time ${urgentClass}" id="count-${code}">${etaText}</div>
+        const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
+        const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
+        const dly = delayInfo(nx);
+        const etaSmall = (typeof nx.seconds === 'number')
+          ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
+          : '';
+
+        $("#info-"+instanceId).innerHTML = `
+          <div class="next-time ${urgentClass}" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
           <div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+            ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
             ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
           </div>
         `;
 
-        const cdEl = document.getElementById("count-"+code);
+        const cdEl = $("#count-"+instanceId);
         if (nx.seconds < 60){
-          cdEl.innerHTML = `<span id="sec-${code}">${nx.seconds}</span> s`;
+          cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
           p.countdownInterval = setInterval(()=>{
-            const el = document.getElementById("sec-"+code); if(!el) return;
+            const el = $("#sec-"+instanceId); if(!el) return;
             let n = parseInt(el.textContent,10);
             if(Number.isFinite(n)&&n>0){ el.textContent = n-1; }
             else { el.textContent="0"; clearInterval(p.countdownInterval); p.countdownInterval=null; }
@@ -1337,59 +1268,52 @@
         });
 
         if (rows.length){
-          document.getElementById("arrivals-"+code).style.display = "";
-          document.getElementById("list-"+code).innerHTML = renderNextRowsHtml(rows);
+          $("#arrivals-"+instanceId).style.display = "";
+          $("#list-"+instanceId).innerHTML = renderNextRowsHtml(rows);
         } else {
-          document.getElementById("arrivals-"+code).style.display = "none";
-          document.getElementById("list-"+code).innerHTML = "";
+          $("#arrivals-"+instanceId).style.display = "none";
+          $("#list-"+instanceId).innerHTML = "";
         }
 
-        animateTick(document.querySelector("#panel-"+code+" .next-time"));
-        setStatus(code, "OK");
-        p.lastUpdated = started; setUpdated(code, started);
+        animateTick($("#panel-"+instanceId+" .next-time"));
+        setStatus(instanceId, "OK");
+        p.lastUpdated = started; setUpdated(instanceId, started);
       }
     }catch(e){
-      document.getElementById("info-"+code).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa “Actualizar” o revisa conexión.</div>`;
-      document.getElementById("list-"+code).innerHTML = "";
-      document.getElementById("arrivals-"+code).style.display = "none";
-      setStatus(code, "Error");
+      $("#info-"+instanceId).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa “Actualizar” o revisa conexión.</div>`;
+      $("#list-"+instanceId).innerHTML = "";
+      $("#arrivals-"+instanceId).style.display = "none";
+      setStatus(instanceId, "Error");
       console.warn('Arrivals error', e);
     }
   }
 
   /* ========= Add modal ========= */
   function openAddModal(){
-    document.getElementById("addModal").classList.add("open");
+    $("#addModal").classList.add("open");
     lockBodyScroll();
-    attachViewportShim(document.getElementById("addModal"));
-    document.getElementById("addSearchInput").value = "";
+    attachViewportShim($("#addModal"));
+    $("#addSearchInput").value = "";
     renderAddList();
-    setTimeout(()=>document.getElementById("addSearchInput")?.focus({preventScroll:true}), 50);
-
-    if (!loadJSON("seen_add_pin_hint", false)){
-      saveJSON("seen_add_pin_hint", true);
-      showToast({ title: "Tip", detail: "Al añadir una línea queda fijada automáticamente. Puedes desfijarla con el pin.", duration: 3800 });
-    }
+    setTimeout(()=>$("#addSearchInput")?.focus({preventScroll:true}), 50);
   }
   function closeAddModal(){
-    document.getElementById("addModal").classList.remove("open");
-    detachViewportShim(document.getElementById("addModal"));
+    $("#addModal").classList.remove("open");
+    detachViewportShim($("#addModal"));
     unlockBodyScroll();
   }
   function setAddFilter(type){
     addFilter = type;
-    document.getElementById("chipAll").classList.toggle("active", type==="all");
-    document.getElementById("chipBus").classList.toggle("active", type==="bus");
-    document.getElementById("chipTram").classList.toggle("active", type==="tram");
+    $("#chipAll").classList.toggle("active", type==="all");
+    $("#chipBus").classList.toggle("active", type==="bus");
+    $("#chipTram").classList.toggle("active", type==="tram");
     renderAddList();
   }
 
   function renderAddList(){
-    const q = (document.getElementById("addSearchInput").value || "").trim().toLowerCase();
-    const existing = new Set(Object.keys(panels));
+    const q = ($("#addSearchInput").value || "").trim().toLowerCase();
 
     const filtered = lines
-      .filter(l => !existing.has(l.code))
       .filter(l => addFilter==="all" ? true : l.type===addFilter)
       .filter(l => !q || l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q))
       .sort((a,b)=>{
@@ -1397,7 +1321,7 @@
         return a.code.localeCompare(b.code);
       });
 
-    const host = document.getElementById("addList");
+    const host = $("#addList");
     if (!filtered.length){
       host.innerHTML = `<div style="padding:12px;color:var(--muted)">No hay resultados.</div>`;
       return;
@@ -1416,7 +1340,7 @@
           </span>
           <div class="row-main">
             <div class="row-title">${escapeHtml(l.name)}</div>
-            <div class="row-sub">${l.type==="bus" ? "Autobús" : "Tranvía"} · Se fijará al añadir</div>
+            <div class="row-sub">${l.type==="bus" ? "Autobús" : "Tranvía"}</div>
           </div>
           <div class="row-right">Añadir</div>
         </div>
@@ -1431,15 +1355,8 @@
       const code = it.dataset.code;
       const line = lines.find(x=>x.code===code);
       if (line){
-        createPanel(line, {focus:true, pinOnAdd:true});
+        const id = createPanel(line, {focus:true, pinOnAdd:true});
         closeAddModal();
-        showToast({
-          title: `${line.code} añadida y fijada`,
-          detail: "Puedes desfijarla con el pin.",
-          actionText: "Desfijar",
-          onAction: ()=> setPinned(line.code, false),
-          duration: 4200
-        });
       }
     };
     host.onkeydown = (e)=>{
@@ -1451,13 +1368,6 @@
         if (line){
           createPanel(line, {focus:true, pinOnAdd:true});
           closeAddModal();
-          showToast({
-            title: `${line.code} añadida y fijada`,
-            detail: "Puedes desfijarla con el pin.",
-            actionText: "Desfijar",
-            onAction: ()=> setPinned(line.code, false),
-            duration: 4200
-          });
         }
       }
     };
@@ -1470,10 +1380,10 @@
     document.documentElement.classList.add('theme-switching');
     const t=p==='auto'?(sysDark()?'dark':'light'):p;
     document.documentElement.setAttribute('data-theme',t);
-    document.getElementById("themeIcon").textContent=t==='dark'?'light_mode':'dark_mode';
+    $("#themeIcon").textContent=t==='dark'?'light_mode':'dark_mode';
     const c=t==='dark'?'#0b1220':'#f6f8fc';
-    document.getElementById('metaThemeLight').setAttribute('content',c);
-    document.getElementById('metaThemeDark').setAttribute('content',c);
+    $("#metaThemeLight").setAttribute('content',c);
+    $("#metaThemeDark").setAttribute('content',c);
     setTimeout(()=>document.documentElement.classList.remove('theme-switching'),250);
   }
   function cycleTheme(){
@@ -1493,64 +1403,180 @@
   function refreshAll(){
     globalLastRefresh = Date.now();
     updateGlobalUpdated();
-    Object.keys(panels).forEach(c => refreshPanel(c));
+    Object.keys(panels).forEach(id => refreshPanel(id));
+  }
+
+  /* ========= Persist: panel instances ========= */
+  function persistAllPanels(){
+    const ids = Object.keys(panels);
+    const snapshot = ids.map(id=>{
+      const p = panels[id];
+      return {
+        id,
+        lineCode: p.line.code,
+        pinned: isPinned(id),
+        stop: p.currentStopId ? { id: p.currentStopId, name: p.currentStopName } : null,
+        favorite: getFavorite(id)
+      };
+    });
+    saveJSON("panel_instances", snapshot);
   }
 
   function loadInitialPanels(){
-    const pinned = getPinnedLines();
-    pinned.forEach(code=>{
-      const line = lines.find(l=>l.code===code);
-      if (line) createPanel(line, {pinOnAdd:false});
-    });
+    const snapshot = loadJSON("panel_instances", []);
+    if (snapshot.length){
+      snapshot.forEach(item=>{
+        const line = lines.find(l=>l.code===item.lineCode);
+        if (!line) return;
+        // recrear instancia con el id guardado (mantener referencias)
+        const instanceId = item.id || uid();
 
-    const storedAll = loadJSON("all_lines", []);
-    storedAll.forEach(code=>{
-      if (document.getElementById("panel-"+code)) return;
-      const line = lines.find(l=>l.code===code);
-      if (line) createPanel(line, {pinOnAdd:false});
-    });
+        const card = document.createElement('section');
+        card.className='card';
+        card.id='panel-'+instanceId;
+        card.dataset.instanceId = instanceId;
+        card.dataset.lineCode = line.code;
 
-    Object.keys(panels).forEach(c=> updatePinUI(c));
-    renderPanelsOrder();
+        const initialAccent =
+          line.type==="tram"
+            ? "var(--accent-tram)"
+            : (colorCache[line.code] ? colorCache[line.code] : "var(--accent-bus)");
+
+        card.style.setProperty('--line-accent', initialAccent);
+        const ico = line.type==='bus'?'directions_bus':'tram';
+
+        card.innerHTML = `
+          <div class="card-top">
+            <div>
+              <div class="line-row">
+                <span class="line-pill">
+                  <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}
+                </span>
+                <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
+              </div>
+              <div class="meta-small">
+                <span id="updated-${instanceId}">Actualizado: —</span>
+                <span class="dot"></span>
+                <span id="status-${instanceId}">Estado: —</span>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
+                <i class="material-icons">push_pin</i>
+              </button>
+              <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
+                <i class="material-icons">close</i>
+              </button>
+            </div>
+          </div>
+
+          <div class="stop-row">
+            <button class="stop-picker" id="stop-picker-${instanceId}" type="button"
+                    aria-haspopup="dialog" aria-controls="stopsModal" aria-expanded="false" title="Cambiar parada">
+              <i class="material-icons" aria-hidden="true">place</i>
+              <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
+              <i class="material-icons caret" aria-hidden="true">expand_more</i>
+            </button>
+            <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
+              <span id="fav-icon-${instanceId}">☆</span>
+            </button>
+          </div>
+
+          <div class="stack">
+            <div id="info-${instanceId}">
+              <div class="next-time">—</div>
+              <div class="hint">Cargando…</div>
+            </div>
+
+            <div class="arrivals" id="arrivals-${instanceId}" style="display:none">
+              <div class="arrivals-title">Próximas</div>
+              <div class="arrivals-list" id="list-${instanceId}"></div>
+            </div>
+          </div>
+        `;
+
+        $("#panels-container").appendChild(card);
+
+        panels[instanceId] = {
+          id: instanceId,
+          line,
+          currentStopId: item.stop?.id ?? null,
+          currentStopName: item.stop?.name ?? null,
+          countdownInterval:null,
+          countdownIntervals:{},
+          lastUpdated: 0
+        };
+
+        // restaurar favorita si existe
+        if (item.favorite && item.favorite.id){
+          setFavorite(instanceId, item.favorite);
+        }
+
+        // pin
+        if (item.pinned) setPinnedInstance(instanceId, true);
+        else updatePinUI(instanceId);
+
+        $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
+        $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
+        $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
+        $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
+
+        // si ya conocemos parada, pintarla
+        if (panels[instanceId].currentStopName){
+          $("#stop-name-"+instanceId).textContent = panels[instanceId].currentStopName;
+        }
+
+        updateFavIcon(instanceId);
+        ensureLineColor(line);
+
+        // si no hay parada guardada, cargar paradas y elegir la primera
+        if (!panels[instanceId].currentStopId){
+          loadStopsForPanel(instanceId);
+        } else {
+          refreshPanel(instanceId);
+        }
+      });
+
+      renderPanelsOrder();
+      updateEmpty();
+      return;
+    }
+
+    // si no hay snapshot, arranca vacío
     updateEmpty();
   }
 
-  function persistAllLines(){
-    saveJSON("all_lines", Object.keys(panels));
-  }
-
+  /* ========= Init ========= */
   document.addEventListener('DOMContentLoaded', ()=>{
-    document.getElementById("toastCloseBtn").addEventListener("click", hideToast);
-
-    document.getElementById("navAdd").addEventListener("click", openAddModal);
-    document.getElementById("navRefresh").addEventListener('click', ()=>{
-      const ic=document.querySelector("#navRefresh i");
+    $("#navAdd").addEventListener("click", openAddModal);
+    $("#navRefresh").addEventListener('click', ()=>{
+      const ic=$("#navRefresh i");
       ic.classList.add('spin');
       refreshAll();
       setTimeout(()=>ic.classList.remove('spin'), 900);
     });
 
-    document.getElementById("themeToggle").addEventListener('click', cycleTheme);
+    $("#themeToggle").addEventListener('click', cycleTheme);
 
-    document.getElementById("closeAdd").addEventListener("click", closeAddModal);
-    document.getElementById("addModal").addEventListener("click", (e)=>{ if (e.target===e.currentTarget) closeAddModal(); });
-    document.getElementById("addSearchInput").addEventListener("input", renderAddList);
-    document.getElementById("chipAll").addEventListener("click", ()=> setAddFilter("all"));
-    document.getElementById("chipBus").addEventListener("click", ()=> setAddFilter("bus"));
-    document.getElementById("chipTram").addEventListener("click", ()=> setAddFilter("tram"));
+    $("#closeAdd").addEventListener("click", closeAddModal);
+    $("#addModal").addEventListener("click", (e)=>{ if (e.target===e.currentTarget) closeAddModal(); });
+    $("#addSearchInput").addEventListener("input", renderAddList);
+    $("#chipAll").addEventListener("click", ()=> setAddFilter("all"));
+    $("#chipBus").addEventListener("click", ()=> setAddFilter("bus"));
+    $("#chipTram").addEventListener("click", ()=> setAddFilter("tram"));
 
-    document.getElementById("closeStops").addEventListener('click', closeStops);
-    document.getElementById("stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
+    $("#closeStops").addEventListener('click', closeStops);
+    $("#stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
 
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){
         closeAddModal();
         closeStops();
-        hideToast();
       }
     });
 
-    document.getElementById("stopSearchInput").addEventListener('input', function(){
+    $("#stopSearchInput").addEventListener('input', function(){
       const q=this.value.toLowerCase();
       $$("#stopsListContainer .stop-item").forEach(it=>{
         const name = (it.dataset.name || it.textContent || "").toLowerCase();
@@ -1558,7 +1584,7 @@
       });
     });
 
-    document.getElementById("nearbyStopsBtn").addEventListener('click', ()=>{
+    $("#nearbyStopsBtn").addEventListener('click', ()=>{
       if (!navigator.geolocation) return alert("La geolocalización no está disponible.");
       navigator.geolocation.getCurrentPosition(pos=>{
         const {latitude,longitude}=pos.coords;
@@ -1569,7 +1595,7 @@
           return {el,d};
         }).sort((a,b)=>a.d-b.d);
 
-        const cont=document.getElementById("stopsListContainer");
+        const cont=$("#stopsListContainer");
         const fixed = Array.from(cont.children).filter(ch=>!ch.classList.contains("stop-item"));
         cont.innerHTML = "";
         fixed.forEach(x=>cont.appendChild(x));
@@ -1594,15 +1620,13 @@
     if (globalTickTimer) clearInterval(globalTickTimer);
     globalTickTimer = setInterval(()=>{
       updateGlobalUpdated();
-      Object.keys(panels).forEach(c=> setUpdated(c, panels[c].lastUpdated));
+      Object.keys(panels).forEach(id=> setUpdated(id, panels[id].lastUpdated));
     }, 1000);
 
     loadInitialPanels();
 
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
     autoRefreshTimer = setInterval(()=> refreshAll(), 30000);
-
-    setInterval(persistAllLines, 5000);
   });
   </script>
 </body>
