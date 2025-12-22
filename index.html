@@ -128,11 +128,6 @@
       user-select:none;
     }
     .card::after{content:"";position:absolute;inset:-1px -1px auto -1px;height:6px;border-radius:18px 18px 0 0;background:var(--line-accent,var(--primary));opacity:.92;pointer-events:none}
-    .card.flash{
-      box-shadow:0 0 0 3px color-mix(in oklab, var(--line-accent) 35%, transparent), var(--shadow);
-      animation:flash 1.2s ease-out;
-    }
-    @keyframes flash{0%{transform:translateY(0)}20%{transform:translateY(-2px)}100%{transform:translateY(0)}}
 
     .card-top{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
     .line-row{display:flex;align-items:center;gap:10px;min-width:0}
@@ -177,7 +172,6 @@
       background:color-mix(in oklab,var(--danger) 8%, var(--surface));
     }
     .del-btn i{color:color-mix(in oklab,var(--danger) 70%, var(--muted))}
-    .del-btn:hover{border-color:color-mix(in oklab,var(--danger) 55%, var(--glass-border))}
 
     .stop-row{
       display:grid;
@@ -204,7 +198,6 @@
       letter-spacing:-.2px;
       font-size:16.5px;
     }
-
     .caret{
       margin-left:auto;
       color:var(--muted);
@@ -216,7 +209,7 @@
     .fav{
       background:none;border:none;cursor:pointer;color:var(--primary);
       min-width:44px;min-height:44px;display:grid;place-items:center;border-radius:12px;
-      font-size:26px; /* ⭐ más grande */
+      font-size:26px;
     }
     .fav.selected{color:#f59e0b}
     .fav:focus-visible{outline:none;box-shadow:var(--ring)}
@@ -231,7 +224,6 @@
       transition:transform .2s,opacity .2s;
       will-change:transform;
     }
-    .next-time.tick{transform:translateY(-2px) scale(1.02);opacity:.95}
     .hint{
       color:var(--muted);
       font-size:12px;
@@ -290,30 +282,7 @@
       font-size:14px;
     }
     .arrival-row .right{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      justify-content:flex-end;
-    }
-    @media (max-width:420px){
-      .arrival-row{ grid-template-columns: 66px 1fr auto; }
-      .arrival-row .eta{ font-size:13px; }
-    }
-
-    .is-urgent{animation:pulse 1.2s ease-in-out infinite}
-    @keyframes pulse{
-      0%{transform:scale(1);text-shadow:none}
-      50%{transform:scale(1.045);text-shadow:0 0 .35rem color-mix(in oklab,var(--primary) 35%, transparent)}
-      100%{transform:scale(1);text-shadow:none}
-    }
-    @media (prefers-reduced-motion: reduce){.is-urgent{animation:none}}
-
-    .notice{
-      display:none;text-align:center;color:var(--muted);
-      border:1px dashed var(--glass-border);
-      background:var(--surface);
-      padding:18px;border-radius:var(--radius);
-      backdrop-filter:blur(10px) saturate(1.2)
+      display:flex;align-items:center;gap:8px;justify-content:flex-end;
     }
 
     .delay{padding:2px 8px;border-radius:999px;border:1px solid var(--glass-border);font-size:12px}
@@ -330,8 +299,6 @@
       border-top:1px solid var(--glass-border);
       backdrop-filter:blur(16px) saturate(1.35)
     }
-
-    /* Botones más atractivos */
     .nav-btn{
       border:1px solid var(--glass-border);
       background:var(--surface);
@@ -349,7 +316,6 @@
       letter-spacing:.1px;
     }
     .nav-btn i{font-size:22px}
-
     .nav-btn.primary{
       background:linear-gradient(135deg,
         color-mix(in oklab,var(--primary) 78%, #ffffff 0%) 0%,
@@ -359,9 +325,7 @@
       text-shadow:0 1px 0 rgba(0,0,0,.18);
       box-shadow:0 16px 34px color-mix(in oklab,var(--primary) 18%, transparent);
     }
-    html[data-theme=dark] .nav-btn.primary{
-      box-shadow:0 18px 42px rgba(0,0,0,.42);
-    }
+    html[data-theme=dark] .nav-btn.primary{ box-shadow:0 18px 42px rgba(0,0,0,.42); }
     .nav-btn.secondary{
       background:color-mix(in oklab,var(--surface) 92%, transparent);
       border-color:color-mix(in oklab,var(--glass-border) 80%, transparent);
@@ -373,7 +337,6 @@
 
     .modal{position:fixed;inset:0;display:none;place-items:center;padding:16px;z-index:60;background:rgba(0,0,0,.35);overscroll-behavior:contain}
     .modal.open{display:grid}
-
     .sheet{
       width:min(760px,96vw);
       max-height:88vh;
@@ -388,17 +351,30 @@
     }
     @keyframes pop{from{transform:translateY(6px);opacity:0}}
 
-    /* Evita que el sheet "encoga" con pocas líneas */
+    /* ✅ FIX DEFINITIVO: altura estable para el modal de Añadir */
     #addModal .sheet{
-      min-height: min(78vh, 640px);
+      height: min(78vh, 640px);
+      max-height: 88vh;
       display:flex;
       flex-direction:column;
     }
     #stopsModal .sheet{display:flex;flex-direction:column}
 
     #stopsListContainer, #addList{
-      flex:1;min-height:0;overflow:auto;
-      -webkit-overflow-scrolling:touch;overscroll-behavior:contain;overflow-anchor:none
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+      overflow-anchor:none;
+    }
+
+    /* ✅ Panel interior del listado (así NO “encoge visualmente”) */
+    #addList{
+      border:1px solid var(--glass-border);
+      background:var(--surface-2);
+      border-radius:16px;
+      padding:6px 0;
     }
 
     .search{
@@ -414,7 +390,7 @@
       .search{ font-size:17px; line-height:1.25; }
     }
 
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 8px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px}
     .chip{
       border:1px solid var(--glass-border);
       background:var(--surface-2);
@@ -449,6 +425,14 @@
       display:flex;align-items:center;gap:8px;
     }
     .divider{height:1px;background:var(--glass-border);margin:10px 0}
+
+    .notice{
+      display:none;text-align:center;color:var(--muted);
+      border:1px dashed var(--glass-border);
+      background:var(--surface);
+      padding:18px;border-radius:var(--radius);
+      backdrop-filter:blur(10px) saturate(1.2)
+    }
   </style>
 </head>
 
@@ -618,11 +602,9 @@
   }
 
   function uid(){
-    // id corto y suficientemente único
     return (crypto?.randomUUID ? crypto.randomUUID() : ("id-"+Date.now()+"-"+Math.random().toString(16).slice(2))).slice(0,18);
   }
 
-  // pinned por instancia
   const getPinned = () => loadJSON("pinned_instances", []);
   const setPinned = (arr) => saveJSON("pinned_instances", arr);
   const isPinned = (instanceId) => getPinned().includes(instanceId);
@@ -638,13 +620,11 @@
   }
   function togglePin(instanceId){ setPinnedInstance(instanceId, !isPinned(instanceId)); }
 
-  // favorite por instancia
   const favKey = (instanceId)=>"favorite_"+instanceId;
   const setFavorite = (instanceId, stop) => saveJSON(favKey(instanceId), stop);
   const getFavorite = (instanceId) => loadJSON(favKey(instanceId), null);
   const removeFavorite = (instanceId) => localStorage.removeItem(favKey(instanceId));
 
-  // recents por linea (compartidos)
   const recKey = (lineCode) => "recent_" + lineCode;
   function getRecents(lineCode){ return loadJSON(recKey(lineCode), []); }
   function pushRecent(lineCode, stop){
@@ -663,7 +643,13 @@
     $("#empty-message").style.display = Object.keys(panels).length ? "none" : "block";
   }
   function bannerOffline(){ $("#offlineBanner").style.display = navigator.onLine ? 'none' : 'block'; }
-  function animateTick(el){ if(!el) return; el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); }
+
+  function animateTick(el){
+    if(!el) return;
+    el.classList.remove('tick');
+    void el.offsetWidth;
+    el.classList.add('tick');
+  }
 
   function parseHexColor(v){
     if(!v) return null;
@@ -679,18 +665,20 @@
     const m = Math.floor((secondsFromMidnight % 3600) / 60);
     return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
   }
+
   function fmtETA(seconds, status) {
     if (status === 'STOPPED_AT' || seconds <= 0) return 'En la parada';
     if (seconds < 60) return `${seconds} s`;
     return `${Math.ceil(seconds / 60)} min`;
   }
+
   function fmtEtaOrClock(seconds, status, hourText){
-    // si es > 60 min, en el número grande ponemos HH:MM (más útil visualmente)
     if (typeof seconds === "number" && seconds >= 60*60 && hourText && hourText !== '—'){
-      return hourText; // "14:23"
+      return hourText;
     }
     return fmtETA(seconds, status);
   }
+
   function delayInfo(item) {
     const rt = item?.realtimeArrival;
     const sch = item?.scheduledArrival;
@@ -701,6 +689,7 @@
     const mins = Math.round(abs / 60);
     return diff > 60 ? { label: `+${mins}m`, cls: 'delay-late' } : { label: `–${mins}m`, cls: 'delay-early' };
   }
+
   function relTime(ts){
     if (!ts) return "—";
     const s = Math.max(0, Math.floor((Date.now() - ts)/1000));
@@ -711,9 +700,11 @@
     const h = Math.floor(m/60);
     return `hace ${h}h`;
   }
+
   function updateGlobalUpdated(){
     $("#globalUpdated").textContent = `Actualizado: ${relTime(globalLastRefresh)}`;
   }
+
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
@@ -748,13 +739,11 @@
       if (col){
         colorCache[line.code] = col;
         saveJSON("line_colors", colorCache);
-        // refrescar chips ya pintados
         $$(".add-item").forEach(it=>{
           if (it.dataset.code === line.code){
             it.style.setProperty("--chip-accent", col);
           }
         });
-        // refrescar tarjetas existentes de esa línea
         Object.keys(panels).forEach(id=>{
           const p = panels[id];
           if (p?.line?.code === line.code){
@@ -793,6 +782,7 @@
     if (fav && fav.id===p.currentStopId) removeFavorite(instanceId);
     else setFavorite(instanceId, {id:p.currentStopId, name:p.currentStopName});
     updateFavIcon(instanceId);
+    persistAllPanels();
   }
   function updateFavIcon(instanceId){
     const p = panels[instanceId]; if(!p) return;
@@ -811,7 +801,6 @@
     delete panels[instanceId];
     $("#panel-"+instanceId)?.remove();
 
-    // quitar de pinned si estaba
     const pins = getPinned();
     if (pins.includes(instanceId)) setPinned(pins.filter(x=>x!==instanceId));
 
@@ -829,6 +818,26 @@
       btn.setAttribute("aria-pressed", String(pinned));
       btn.title = pinned ? "Desfijar" : "Fijar";
     }
+  }
+
+  function setStatus(instanceId, text){
+    const el = $("#status-"+instanceId);
+    if (el) el.textContent = "Estado: " + text;
+  }
+  function setUpdated(instanceId, ts){
+    const el = $("#updated-"+instanceId);
+    if (el) el.textContent = "Actualizado: " + relTime(ts);
+  }
+
+  function renderStoppedText(instanceId){
+    const p = panels[instanceId];
+    const icon = p?.line?.type === "tram" ? "tram" : "directions_bus";
+    const el = $("#count-"+instanceId);
+    if (!el) return;
+    el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:10px">
+      <i class="material-icons" aria-hidden="true" style="font-size:.85em;opacity:.9">${icon}</i>
+      <span>En la parada</span>
+    </span>`;
   }
 
   function createPanel(line, {focus=false, pinOnAdd=false} = {}){
@@ -933,25 +942,13 @@
     renderPanelsOrder();
     updateEmpty();
     persistAllPanels();
-
     return instanceId;
   }
 
   function focusPanel(instanceId){
     const el = $("#panel-"+instanceId);
     if (!el) return;
-    el.classList.add("flash");
     el.scrollIntoView({behavior:"smooth", block:"start"});
-    setTimeout(()=>el.classList.remove("flash"), 1400);
-  }
-
-  function setStatus(instanceId, text){
-    const el = $("#status-"+instanceId);
-    if (el) el.textContent = "Estado: " + text;
-  }
-  function setUpdated(instanceId, ts){
-    const el = $("#updated-"+instanceId);
-    if (el) el.textContent = "Actualizado: " + relTime(ts);
   }
 
   /* ========= Stops ========= */
@@ -1130,155 +1127,107 @@
     const { line } = p;
 
     if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
-    Object.values(p.countdownIntervals||{}).forEach(id=>clearInterval(id));
+    Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
     p.countdownIntervals = {};
 
     setStatus(instanceId, "Actualizando…");
     const started = Date.now();
 
     try{
-      if (line.type === "tram"){
-        const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", line.code);
-        const data = await getJSON(url);
+      const isTram = line.type === "tram";
+      const routeCode = isTram
+        ? line.code
+        : ((line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code);
 
-        const arr = (data.llegadas||[]).filter(x=>x.line===line.code);
-        if (!arr.length){
-          $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">🚊 No hay más llegadas hoy.</div>`;
-          $("#list-"+instanceId).innerHTML = "";
-          $("#arrivals-"+instanceId).style.display = "none";
-          setStatus(instanceId, "Sin llegadas");
-          p.lastUpdated = started; setUpdated(instanceId, started);
-          return;
-        }
+      const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
+      const data = await getJSON(url);
 
+      let arr = (data.llegadas||[]);
+      if (isTram) arr = arr.filter(x=>x.line===line.code);
+      else arr = arr.filter(x=>x.line===routeCode);
+
+      if (!arr.length){
+        $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">${isTram ? "🚊" : "🚍"} No hay más llegadas hoy.</div>`;
+        $("#list-"+instanceId).innerHTML = "";
+        $("#arrivals-"+instanceId).style.display = "none";
+        setStatus(instanceId, "Sin llegadas");
+        p.lastUpdated = started; setUpdated(instanceId, started);
+        return;
+      }
+
+      // para tranvía puede haber destinos: elegimos el destino con la llegada más cercana
+      let nx = arr[0];
+      let bestDest = null;
+      if (isTram){
         const groups = {};
         arr.forEach(a=>{ (groups[a.destination||"Destino"] ??= []).push(a); });
         Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
         const dests = Object.keys(groups);
-        const bestDest = dests.sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds)[0];
-        const nx = groups[bestDest][0];
-
-        const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
-                    : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
-
-        const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
-        const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
-        const dly = delayInfo(nx);
-
-        // siempre mostramos "en X min" abajo para contexto cuando el grande es HH:MM
-        const etaSmall = (typeof nx.seconds === 'number')
-          ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
-          : '';
-
-        $("#info-"+instanceId).innerHTML = `
-          <div style="color:var(--primary);font-weight:950;margin-bottom:2px">Destino: ${escapeHtml(bestDest)}</div>
-          <div class="next-time ${urgentClass}" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
-          <div class="hint">
-            <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
-            ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
-            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
-          </div>
-        `;
-
-        const cdEl = $("#count-"+instanceId);
-        if (nx.seconds < 60){
-          cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
-          p.countdownInterval = setInterval(()=>{
-            const el = $("#sec-"+instanceId); if(!el) return;
-            let n = parseInt(el.textContent,10);
-            if(Number.isFinite(n)&&n>0){ el.textContent = n-1; }
-            else { el.textContent="0"; clearInterval(p.countdownInterval); p.countdownInterval=null; }
-          }, 1000);
-        }
-
-        const rest = groups[bestDest].slice(1,5);
-        const rows = rest.map(a=>{
-          const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
-                  : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-          const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
-          const dl = delayInfo(a);
-          return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
-        });
-
-        if (rows.length){
-          $("#arrivals-"+instanceId).style.display = "";
-          $("#list-"+instanceId).innerHTML = renderNextRowsHtml(rows);
-        } else {
-          $("#arrivals-"+instanceId).style.display = "none";
-          $("#list-"+instanceId).innerHTML = "";
-        }
-
-        animateTick($("#panel-"+instanceId+" .next-time"));
-        setStatus(instanceId, "OK");
-        p.lastUpdated = started; setUpdated(instanceId, started);
-
-      } else {
-        const expected = (line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code;
-        const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", expected);
-        const data = await getJSON(url);
-
-        const arr = (data.llegadas||[]).filter(x=>x.line===expected);
-        if (!arr.length){
-          $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">🚍 No hay más llegadas hoy.</div>`;
-          $("#list-"+instanceId).innerHTML = "";
-          $("#arrivals-"+instanceId).style.display = "none";
-          setStatus(instanceId, "Sin llegadas");
-          p.lastUpdated = started; setUpdated(instanceId, started);
-          return;
-        }
-
-        const nx = arr[0];
-        const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
-                    : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
-
-        const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
-        const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
-        const dly = delayInfo(nx);
-        const etaSmall = (typeof nx.seconds === 'number')
-          ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
-          : '';
-
-        $("#info-"+instanceId).innerHTML = `
-          <div class="next-time ${urgentClass}" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
-          <div class="hint">
-            <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
-            ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
-            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
-          </div>
-        `;
-
-        const cdEl = $("#count-"+instanceId);
-        if (nx.seconds < 60){
-          cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
-          p.countdownInterval = setInterval(()=>{
-            const el = $("#sec-"+instanceId); if(!el) return;
-            let n = parseInt(el.textContent,10);
-            if(Number.isFinite(n)&&n>0){ el.textContent = n-1; }
-            else { el.textContent="0"; clearInterval(p.countdownInterval); p.countdownInterval=null; }
-          }, 1000);
-        }
-
-        const rest = arr.slice(1,5);
-        const rows = rest.map(a=>{
-          const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
-                  : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-          const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
-          const dl = delayInfo(a);
-          return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
-        });
-
-        if (rows.length){
-          $("#arrivals-"+instanceId).style.display = "";
-          $("#list-"+instanceId).innerHTML = renderNextRowsHtml(rows);
-        } else {
-          $("#arrivals-"+instanceId).style.display = "none";
-          $("#list-"+instanceId).innerHTML = "";
-        }
-
-        animateTick($("#panel-"+instanceId+" .next-time"));
-        setStatus(instanceId, "OK");
-        p.lastUpdated = started; setUpdated(instanceId, started);
+        bestDest = dests.sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds)[0];
+        nx = groups[bestDest][0];
+        arr = groups[bestDest];
       }
+
+      const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
+                  : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
+
+      const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
+      const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
+      const dly = delayInfo(nx);
+      const etaSmall = (typeof nx.seconds === 'number')
+        ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
+        : '';
+
+      $("#info-"+instanceId).innerHTML = `
+        ${isTram && bestDest ? `<div style="color:var(--primary);font-weight:950;margin-bottom:2px">Destino: ${escapeHtml(bestDest)}</div>` : ``}
+        <div class="next-time ${urgentClass}" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
+        <div class="hint">
+          <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+          ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
+          ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
+        </div>
+      `;
+
+      // ✅ countdown: si llega a 0 -> "En la parada" + icono
+      const cdEl = $("#count-"+instanceId);
+      if (typeof nx.seconds === "number" && nx.seconds < 60){
+        cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
+        p.countdownInterval = setInterval(()=>{
+          const el = $("#sec-"+instanceId);
+          if(!el){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+          let n = parseInt(el.textContent,10);
+          if(!Number.isFinite(n)){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+          if (n <= 1){
+            clearInterval(p.countdownInterval); p.countdownInterval=null;
+            renderStoppedText(instanceId);
+            return;
+          }
+          el.textContent = String(n-1);
+        }, 1000);
+      } else if (nx.status === 'STOPPED_AT' || nx.seconds <= 0){
+        renderStoppedText(instanceId);
+      }
+
+      const rest = arr.slice(1,5);
+      const rows = rest.map(a=>{
+        const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
+                : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
+        const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
+        const dl = delayInfo(a);
+        return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+      });
+
+      if (rows.length){
+        $("#arrivals-"+instanceId).style.display = "";
+        $("#list-"+instanceId).innerHTML = renderNextRowsHtml(rows);
+      } else {
+        $("#arrivals-"+instanceId).style.display = "none";
+        $("#list-"+instanceId).innerHTML = "";
+      }
+
+      animateTick($("#panel-"+instanceId+" .next-time"));
+      setStatus(instanceId, "OK");
+      p.lastUpdated = started; setUpdated(instanceId, started);
     }catch(e){
       $("#info-"+instanceId).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa “Actualizar” o revisa conexión.</div>`;
       $("#list-"+instanceId).innerHTML = "";
@@ -1355,7 +1304,7 @@
       const code = it.dataset.code;
       const line = lines.find(x=>x.code===code);
       if (line){
-        const id = createPanel(line, {focus:true, pinOnAdd:true});
+        createPanel(line, {focus:true, pinOnAdd:true});
         closeAddModal();
       }
     };
@@ -1371,6 +1320,138 @@
         }
       }
     };
+  }
+
+  /* ========= Persist ========= */
+  function persistAllPanels(){
+    const ids = Object.keys(panels);
+    const snapshot = ids.map(id=>{
+      const p = panels[id];
+      return {
+        id,
+        lineCode: p.line.code,
+        pinned: isPinned(id),
+        stop: p.currentStopId ? { id: p.currentStopId, name: p.currentStopName } : null,
+        favorite: getFavorite(id)
+      };
+    });
+    saveJSON("panel_instances", snapshot);
+  }
+
+  function loadInitialPanels(){
+    const snapshot = loadJSON("panel_instances", []);
+    if (!snapshot.length){
+      updateEmpty();
+      return;
+    }
+
+    snapshot.forEach(item=>{
+      const line = lines.find(l=>l.code===item.lineCode);
+      if (!line) return;
+
+      const instanceId = item.id || uid();
+
+      const card = document.createElement('section');
+      card.className='card';
+      card.id='panel-'+instanceId;
+      card.dataset.instanceId = instanceId;
+      card.dataset.lineCode = line.code;
+
+      const initialAccent =
+        line.type==="tram"
+          ? "var(--accent-tram)"
+          : (colorCache[line.code] ? colorCache[line.code] : "var(--accent-bus)");
+
+      card.style.setProperty('--line-accent', initialAccent);
+
+      const ico = line.type==='bus'?'directions_bus':'tram';
+
+      card.innerHTML = `
+        <div class="card-top">
+          <div>
+            <div class="line-row">
+              <span class="line-pill">
+                <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}
+              </span>
+              <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
+            </div>
+            <div class="meta-small">
+              <span id="updated-${instanceId}">Actualizado: —</span>
+              <span class="dot"></span>
+              <span id="status-${instanceId}">Estado: —</span>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
+              <i class="material-icons">push_pin</i>
+            </button>
+            <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
+              <i class="material-icons">close</i>
+            </button>
+          </div>
+        </div>
+
+        <div class="stop-row">
+          <button class="stop-picker" id="stop-picker-${instanceId}" type="button"
+                  aria-haspopup="dialog" aria-controls="stopsModal" aria-expanded="false" title="Cambiar parada">
+            <i class="material-icons" aria-hidden="true">place</i>
+            <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
+            <i class="material-icons caret" aria-hidden="true">expand_more</i>
+          </button>
+          <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
+            <span id="fav-icon-${instanceId}">☆</span>
+          </button>
+        </div>
+
+        <div class="stack">
+          <div id="info-${instanceId}">
+            <div class="next-time">—</div>
+            <div class="hint">Cargando…</div>
+          </div>
+
+          <div class="arrivals" id="arrivals-${instanceId}" style="display:none">
+            <div class="arrivals-title">Próximas</div>
+            <div class="arrivals-list" id="list-${instanceId}"></div>
+          </div>
+        </div>
+      `;
+
+      $("#panels-container").appendChild(card);
+
+      panels[instanceId] = {
+        id: instanceId,
+        line,
+        currentStopId: item.stop?.id ?? null,
+        currentStopName: item.stop?.name ?? null,
+        countdownInterval:null,
+        countdownIntervals:{},
+        lastUpdated: 0
+      };
+
+      if (item.favorite && item.favorite.id) setFavorite(instanceId, item.favorite);
+
+      if (item.pinned) setPinnedInstance(instanceId, true);
+      else updatePinUI(instanceId);
+
+      $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
+      $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
+      $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
+      $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
+
+      if (panels[instanceId].currentStopName){
+        $("#stop-name-"+instanceId).textContent = panels[instanceId].currentStopName;
+      }
+
+      updateFavIcon(instanceId);
+      ensureLineColor(line);
+
+      if (!panels[instanceId].currentStopId) loadStopsForPanel(instanceId);
+      else refreshPanel(instanceId);
+    });
+
+    renderPanelsOrder();
+    updateEmpty();
   }
 
   /* ========= Theme ========= */
@@ -1404,147 +1485,6 @@
     globalLastRefresh = Date.now();
     updateGlobalUpdated();
     Object.keys(panels).forEach(id => refreshPanel(id));
-  }
-
-  /* ========= Persist: panel instances ========= */
-  function persistAllPanels(){
-    const ids = Object.keys(panels);
-    const snapshot = ids.map(id=>{
-      const p = panels[id];
-      return {
-        id,
-        lineCode: p.line.code,
-        pinned: isPinned(id),
-        stop: p.currentStopId ? { id: p.currentStopId, name: p.currentStopName } : null,
-        favorite: getFavorite(id)
-      };
-    });
-    saveJSON("panel_instances", snapshot);
-  }
-
-  function loadInitialPanels(){
-    const snapshot = loadJSON("panel_instances", []);
-    if (snapshot.length){
-      snapshot.forEach(item=>{
-        const line = lines.find(l=>l.code===item.lineCode);
-        if (!line) return;
-        // recrear instancia con el id guardado (mantener referencias)
-        const instanceId = item.id || uid();
-
-        const card = document.createElement('section');
-        card.className='card';
-        card.id='panel-'+instanceId;
-        card.dataset.instanceId = instanceId;
-        card.dataset.lineCode = line.code;
-
-        const initialAccent =
-          line.type==="tram"
-            ? "var(--accent-tram)"
-            : (colorCache[line.code] ? colorCache[line.code] : "var(--accent-bus)");
-
-        card.style.setProperty('--line-accent', initialAccent);
-        const ico = line.type==='bus'?'directions_bus':'tram';
-
-        card.innerHTML = `
-          <div class="card-top">
-            <div>
-              <div class="line-row">
-                <span class="line-pill">
-                  <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}
-                </span>
-                <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
-              </div>
-              <div class="meta-small">
-                <span id="updated-${instanceId}">Actualizado: —</span>
-                <span class="dot"></span>
-                <span id="status-${instanceId}">Estado: —</span>
-              </div>
-            </div>
-
-            <div class="card-actions">
-              <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
-                <i class="material-icons">push_pin</i>
-              </button>
-              <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
-                <i class="material-icons">close</i>
-              </button>
-            </div>
-          </div>
-
-          <div class="stop-row">
-            <button class="stop-picker" id="stop-picker-${instanceId}" type="button"
-                    aria-haspopup="dialog" aria-controls="stopsModal" aria-expanded="false" title="Cambiar parada">
-              <i class="material-icons" aria-hidden="true">place</i>
-              <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
-              <i class="material-icons caret" aria-hidden="true">expand_more</i>
-            </button>
-            <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
-              <span id="fav-icon-${instanceId}">☆</span>
-            </button>
-          </div>
-
-          <div class="stack">
-            <div id="info-${instanceId}">
-              <div class="next-time">—</div>
-              <div class="hint">Cargando…</div>
-            </div>
-
-            <div class="arrivals" id="arrivals-${instanceId}" style="display:none">
-              <div class="arrivals-title">Próximas</div>
-              <div class="arrivals-list" id="list-${instanceId}"></div>
-            </div>
-          </div>
-        `;
-
-        $("#panels-container").appendChild(card);
-
-        panels[instanceId] = {
-          id: instanceId,
-          line,
-          currentStopId: item.stop?.id ?? null,
-          currentStopName: item.stop?.name ?? null,
-          countdownInterval:null,
-          countdownIntervals:{},
-          lastUpdated: 0
-        };
-
-        // restaurar favorita si existe
-        if (item.favorite && item.favorite.id){
-          setFavorite(instanceId, item.favorite);
-        }
-
-        // pin
-        if (item.pinned) setPinnedInstance(instanceId, true);
-        else updatePinUI(instanceId);
-
-        $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
-        $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
-        $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
-        $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
-
-        // si ya conocemos parada, pintarla
-        if (panels[instanceId].currentStopName){
-          $("#stop-name-"+instanceId).textContent = panels[instanceId].currentStopName;
-        }
-
-        updateFavIcon(instanceId);
-        ensureLineColor(line);
-
-        // si no hay parada guardada, cargar paradas y elegir la primera
-        if (!panels[instanceId].currentStopId){
-          loadStopsForPanel(instanceId);
-        } else {
-          refreshPanel(instanceId);
-        }
-      });
-
-      renderPanelsOrder();
-      updateEmpty();
-      return;
-    }
-
-    // si no hay snapshot, arranca vacío
-    updateEmpty();
   }
 
   /* ========= Init ========= */
@@ -1603,9 +1543,9 @@
       }, _=>alert("No se pudo obtener tu ubicación."));
     });
 
-    window.addEventListener('online', bannerOffline);
-    window.addEventListener('offline', bannerOffline);
-    bannerOffline();
+    window.addEventListener('online', ()=> $("#offlineBanner").style.display = 'none');
+    window.addEventListener('offline', ()=> $("#offlineBanner").style.display = 'block');
+    $("#offlineBanner").style.display = navigator.onLine ? 'none' : 'block';
 
     applyTheme(pref());
     if (window.matchMedia){
@@ -1618,10 +1558,7 @@
     updateGlobalUpdated();
 
     if (globalTickTimer) clearInterval(globalTickTimer);
-    globalTickTimer = setInterval(()=>{
-      updateGlobalUpdated();
-      Object.keys(panels).forEach(id=> setUpdated(id, panels[id].lastUpdated));
-    }, 1000);
+    globalTickTimer = setInterval(()=> updateGlobalUpdated(), 1000);
 
     loadInitialPanels();
 
