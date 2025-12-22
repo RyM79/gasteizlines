@@ -834,53 +834,66 @@
   }
 
   function tramAlertLineNumber(code){
-    // alertas de tranvía usan "line": "1" / "2"
     if (code === "TG1") return "1";
     if (code === "TG2") return "2";
     return code.replace(/\D+/g,'') || code;
   }
 
-  function isAlertActive(a, nowSec){
-    const start = Number(a?.alertPeriodStart);
-    const end = Number(a?.alertPeriodEnd);
-    if (!Number.isFinite(start) || !Number.isFinite(end)) return true;
-    return nowSec >= start && nowSec <= end;
+  // ✅ Ya NO filtramos por ventana temporal
+  function isAlertActive(_a, _nowSec){
+    return true;
   }
 
+  // ✅ Filtramos solo por parada / línea / tipo (no por tiempo)
   function filterAlertsForPanel(panel, alerts){
     const arr = Array.isArray(alerts) ? alerts : [];
     if (!arr.length) return [];
-    const nowSec = Math.floor(Date.now()/1000);
 
     const stopId = String(panel.currentStopId || "");
     const isTram = panel.line.type === "tram";
-    const lineMatch = isTram ? tramAlertLineNumber(panel.line.code) : panel.line.code; // bus normalmente coincide
-    const lineType = isTram ? "3" : null; // en tu JSON: 3 => tranvía (según ejemplo)
+    const lineMatch = isTram ? tramAlertLineNumber(panel.line.code) : panel.line.code;
+    const lineType = isTram ? "3" : null;
 
     return arr.filter(a=>{
-      if (!isAlertActive(a, nowSec)) return false;
-
       const aStop = String(a.stopId ?? "*");
       if (!(aStop === "*" || aStop === stopId)) return false;
 
       const aLine = String(a.line ?? "*");
       if (!(aLine === "*" || aLine === lineMatch)) return false;
 
-      // si viene lineType, filtramos por ello (tu ejemplo: 3)
       if (lineType && a.lineType != null && String(a.lineType) !== String(lineType)) return false;
 
       return true;
     });
   }
 
+  // ✅ Ventana visible: Hoy/Mañana o dd/mm, y rango hh:mm
   function fmtAlertWindow(a){
     const start = Number(a?.alertPeriodStart);
     const end = Number(a?.alertPeriodEnd);
     if (!Number.isFinite(start) || !Number.isFinite(end)) return "";
-    const s = new Date(start*1000);
-    const e = new Date(end*1000);
+
+    const s = new Date(start * 1000);
+    const e = new Date(end * 1000);
+
     const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    return `${hhmm(s)}–${hhmm(e)}`;
+
+    const today = new Date();
+    const day0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const dayS = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+    const dayE = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+
+    const dayLabel = (d)=>{
+      const diffDays = Math.round((d - day0) / (24*3600*1000));
+      if (diffDays === 0) return "Hoy";
+      if (diffDays === 1) return "Mañana";
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    };
+
+    if (dayS.getTime() !== dayE.getTime()){
+      return `${dayLabel(dayS)} ${hhmm(s)} → ${dayLabel(dayE)} ${hhmm(e)}`;
+    }
+    return `${dayLabel(dayS)} ${hhmm(s)}–${hhmm(e)}`;
   }
 
   function setAlerts(instanceId, alertsRaw){
@@ -892,20 +905,24 @@
 
     if (!relevant.length){
       box.classList.remove("show");
-      // dejamos el icono (primer hijo) pero vacío el contenido
       box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
       return;
     }
 
-    // orden: primero las que afectan a la parada específica (stopId!=*) y luego las globales
+    // ✅ Orden: parada específica primero, y luego por inicio más próximo
     relevant.sort((a,b)=>{
       const as = String(a.stopId) !== "*" ? 0 : 1;
       const bs = String(b.stopId) !== "*" ? 0 : 1;
       if (as !== bs) return as - bs;
+
+      const sa = Number(a.alertPeriodStart);
+      const sb = Number(b.alertPeriodStart);
+      if (Number.isFinite(sa) && Number.isFinite(sb)) return sa - sb;
+
       return (Number(b.realtime) - Number(a.realtime));
     });
 
-    const top = relevant.slice(0, 2); // no saturar
+    const top = relevant.slice(0, 2);
     const items = top.map(a=>{
       const head = a.alertHeader || "Aviso";
       const desc = a.alertDescription || "";
@@ -953,8 +970,6 @@
       ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
       : '';
 
-    const bigId = `count-${instanceId}-${btoa(destName).replace(/=+$/,'')}`;
-
     const chips = restArr.slice(0,2).map(a=>{
       const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
               : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
@@ -972,7 +987,7 @@
         </div>
 
         <div>
-          <div class="next-time" id="${bigId}">${escapeHtml(etaBig)}</div>
+          <div class="next-time">${escapeHtml(etaBig)}</div>
           <div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
             ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
@@ -1155,7 +1170,7 @@
       const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
       const data = await getJSON(url);
 
-      // ALERTAS (con estructura real)
+      // ✅ alertas siempre visibles, con ventana horaria
       setAlerts(instanceId, data?.alertas || []);
 
       let arr = (data.llegadas||[]);
@@ -1172,7 +1187,6 @@
       }
 
       if (isTram){
-        // ✅ Mostrar ambos destinos: agrupamos por destination y pintamos 1 bloque por destino
         const groups = {};
         arr.forEach(a=>{
           const k = (a.destination || "Destino").toString();
@@ -1180,11 +1194,9 @@
         });
         Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
 
-        // ordenamos destinos por próxima llegada
         const dests = Object.keys(groups).sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds);
         const firstTwo = dests.slice(0,2);
 
-        // Montamos HTML (2 bloques máximo)
         const blocksHtml = firstTwo.map(dest=>{
           const g = groups[dest];
           const nx = g[0];
@@ -1192,46 +1204,15 @@
           return renderDestinationBlock(instanceId, dest, nx, rest);
         }).join("");
 
-        // Reutilizamos #info como contenedor para los destinos (compacto)
         $("#info-"+instanceId).innerHTML = blocksHtml;
-
-        // ocultamos el contenedor normal
         $("#next-"+instanceId).classList.remove("show");
         $("#next-"+instanceId).innerHTML = "";
-
-        // Si algún destino tiene countdown <60s, lo aplicamos solo a su propio elemento
-        // (no hacemos countdown para ambos a la vez por simplicidad UX)
-        const topDest = firstTwo[0];
-        const nx = groups[topDest][0];
-        if (typeof nx.seconds === "number" && nx.seconds < 60){
-          // buscamos el primer .next-time dentro del primer bloque
-          const firstCountEl = $("#info-"+instanceId).querySelector(".dest-block .next-time");
-          if (firstCountEl){
-            firstCountEl.innerHTML = `<span>${nx.seconds}</span> s`;
-            p.countdownInterval = setInterval(()=>{
-              const span = firstCountEl.querySelector("span");
-              if(!span){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
-              let n = parseInt(span.textContent,10);
-              if(!Number.isFinite(n)){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
-              if (n <= 1){
-                clearInterval(p.countdownInterval); p.countdownInterval=null;
-                renderStoppedText(instanceId, firstCountEl);
-                return;
-              }
-              span.textContent = String(n-1);
-            }, 1000);
-          }
-        } else if (nx.status === 'STOPPED_AT' || nx.seconds <= 0){
-          const firstCountEl = $("#info-"+instanceId).querySelector(".dest-block .next-time");
-          if (firstCountEl) renderStoppedText(instanceId, firstCountEl);
-        }
 
         setStatus(instanceId, "OK");
         p.lastUpdated = started; setUpdated(instanceId, started);
         return;
       }
 
-      // BUS (y también tranvía si algún día no trae destination): vista normal + chips 2
       const nx = arr[0];
       const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
                   : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
@@ -1251,7 +1232,6 @@
         </div>
       `;
 
-      // Countdown: 0 => En la parada
       const cdEl = $("#count-"+instanceId);
       if (typeof nx.seconds === "number" && nx.seconds < 60){
         cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
@@ -1301,7 +1281,7 @@
     }
   }
 
-  /* ========= Stops modal (sin cambios funcionales) ========= */
+  /* ========= Stops modal ========= */
   function renderStopItem({id, nombre, selected, latitud, longitud, isFav, isRecent}){
     const div = document.createElement("div");
     div.className = "stop-item" + (selected ? " selected" : "");
