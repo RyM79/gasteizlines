@@ -102,9 +102,6 @@
     @media (hover:hover) and (pointer:fine){
       .btn:hover,.pin-btn:hover,.del-btn:hover,.nav-btn:hover,.chip:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
     }
-    @media (hover:none) and (pointer:coarse){
-      .btn:hover,.pin-btn:hover,.del-btn:hover,.nav-btn:hover,.chip:hover{transform:none;box-shadow:0 1px 0 rgba(16,24,40,.03)}
-    }
 
     .offline-banner{
       position:sticky;top:0;z-index:49;margin:0 -16px;padding:10px 16px;
@@ -156,17 +153,14 @@
       background:var(--surface);
       cursor:pointer;
       transition:transform .06s,box-shadow .2s, background .2s, border-color .2s;
-      -webkit-user-select:none;user-select:none;
     }
     .pin-btn i, .del-btn i{font-size:20px;color:var(--muted)}
     .pin-btn:active,.del-btn:active{transform:scale(.98)}
-
     .pin-btn.pinned{
       border-color:color-mix(in oklab,var(--line-accent) 45%, var(--glass-border));
       background:color-mix(in oklab,var(--line-accent) 14%, var(--surface));
     }
     .pin-btn.pinned i{color:color-mix(in oklab,var(--line-accent) 80%, var(--text))}
-
     .del-btn{
       border-color:color-mix(in oklab,var(--danger) 35%, var(--glass-border));
       background:color-mix(in oklab,var(--danger) 8%, var(--surface));
@@ -191,18 +185,9 @@
       border-radius:12px;
     }
     .stop-picker i{font-size:18px;color:var(--primary)}
-    .stop-picker:active{transform:translateY(1px)}
     .stop-picker:focus-visible{outline:none;box-shadow:var(--ring)}
-    .stop-name{
-      font-weight:950;
-      letter-spacing:-.2px;
-      font-size:16.5px;
-    }
-    .caret{
-      margin-left:auto;
-      color:var(--muted);
-      transition: transform 0.2s ease, color 0.2s ease;
-    }
+    .stop-name{font-weight:950;letter-spacing:-.2px;font-size:16.5px;}
+    .caret{margin-left:auto;color:var(--muted);transition: transform .2s ease, color .2s ease;}
     .stop-picker:hover .caret{ color: var(--primary); }
     .stop-picker[aria-expanded="true"] .caret{ transform: rotate(180deg); }
 
@@ -214,6 +199,29 @@
     .fav.selected{color:#f59e0b}
     .fav:focus-visible{outline:none;box-shadow:var(--ring)}
 
+    /* ALERTAS */
+    .alerts{
+      display:none;
+      border:1px solid color-mix(in oklab,#f59e0b 40%, var(--glass-border));
+      background:color-mix(in oklab,#f59e0b 14%, var(--surface));
+      border-radius:14px;
+      padding:10px 12px;
+      gap:8px;
+      align-items:flex-start;
+    }
+    .alerts.show{display:flex}
+    .alerts i{font-size:18px;color:color-mix(in oklab,#f59e0b 75%, var(--text));margin-top:1px}
+    .alerts .alert-text{
+      font-size:13px;
+      color:color-mix(in oklab,var(--text) 92%, #0000);
+      line-height:1.25;
+    }
+    .alerts .alert-text strong{font-weight:950}
+    html[data-theme=dark] .alerts{
+      background:color-mix(in oklab,#f59e0b 18%, var(--surface));
+      border-color:color-mix(in oklab,#f59e0b 34%, var(--glass-border));
+    }
+
     .stack{display:grid;gap:10px;justify-items:center;text-align:center}
     .next-time{
       font-size:clamp(44px,9vw,72px);
@@ -221,8 +229,6 @@
       letter-spacing:-1px;
       line-height:.95;
       font-variant-numeric:tabular-nums;
-      transition:transform .2s,opacity .2s;
-      will-change:transform;
     }
     .hint{
       color:var(--muted);
@@ -231,64 +237,43 @@
       justify-content:center;align-items:center;
     }
 
-    .arrivals{
+    /* Próximas compactas (máximo 2) */
+    .next-compact{
       width:100%;
       max-width:520px;
-      display:grid;
-      gap:10px;
-    }
-    .arrivals-title{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:950;
-      letter-spacing:.2px;
-      text-align:left;
-      width:100%;
-      max-width:520px;
-      padding:0 2px;
-    }
-    .arrivals-list{
-      width:100%;
-      max-width:520px;
-      display:grid;
+      display:none;
       gap:8px;
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-      border-radius:16px;
-      padding:10px;
-      backdrop-filter:blur(10px) saturate(1.2);
+      flex-wrap:wrap;
+      justify-content:center;
     }
-    .arrival-row{
-      display:grid;
-      grid-template-columns: 72px 1fr auto;
+    .next-compact.show{display:flex}
+    .next-chip{
+      display:inline-flex;
       align-items:center;
       gap:10px;
       padding:10px 12px;
-      border-radius:14px;
-      border:1px solid color-mix(in oklab, var(--glass-border) 85%, transparent);
-      background:color-mix(in oklab, var(--surface) 72%, transparent);
-    }
-    .arrival-row .t{
-      font-weight:950;
+      border-radius:999px;
+      border:1px solid var(--glass-border);
+      background:var(--surface-2);
       font-variant-numeric:tabular-nums;
-      text-align:left;
-      font-size:18px;
-    }
-    .arrival-row .eta{
-      color:var(--muted);
-      font-weight:800;
-      text-align:left;
       white-space:nowrap;
-      font-size:14px;
     }
-    .arrival-row .right{
-      display:flex;align-items:center;gap:8px;justify-content:flex-end;
-    }
+    .next-chip .t{font-weight:950;font-size:15px}
+    .next-chip .eta{color:var(--muted);font-weight:800;font-size:13px}
+    .next-chip .delay{margin-left:2px}
 
     .delay{padding:2px 8px;border-radius:999px;border:1px solid var(--glass-border);font-size:12px}
     .delay-late{background:color-mix(in oklab,#ef4444 16%, var(--surface-2));border-color:color-mix(in oklab,#ef4444 45%, var(--glass-border))}
     .delay-early{background:color-mix(in oklab,#22c55e 16%, var(--surface-2));border-color:color-mix(in oklab,#22c55e 45%, var(--glass-border))}
     .delay-neutral{background:var(--surface-2)}
+
+    .notice{
+      display:none;text-align:center;color:var(--muted);
+      border:1px dashed var(--glass-border);
+      background:var(--surface);
+      padding:18px;border-radius:var(--radius);
+      backdrop-filter:blur(10px) saturate(1.2)
+    }
 
     .bottom-nav{
       position:fixed;left:0;right:0;bottom:0;z-index:55;
@@ -325,7 +310,6 @@
       text-shadow:0 1px 0 rgba(0,0,0,.18);
       box-shadow:0 16px 34px color-mix(in oklab,var(--primary) 18%, transparent);
     }
-    html[data-theme=dark] .nav-btn.primary{ box-shadow:0 18px 42px rgba(0,0,0,.42); }
     .nav-btn.secondary{
       background:color-mix(in oklab,var(--surface) 92%, transparent);
       border-color:color-mix(in oklab,var(--glass-border) 80%, transparent);
@@ -351,7 +335,7 @@
     }
     @keyframes pop{from{transform:translateY(6px);opacity:0}}
 
-    /* ✅ FIX DEFINITIVO: altura estable para el modal de Añadir */
+    /* Modal Añadir: altura estable (no encoge al filtrar tranvía) */
     #addModal .sheet{
       height: min(78vh, 640px);
       max-height: 88vh;
@@ -369,7 +353,6 @@
       overflow-anchor:none;
     }
 
-    /* ✅ Panel interior del listado (así NO “encoge visualmente”) */
     #addList{
       border:1px solid var(--glass-border);
       background:var(--surface-2);
@@ -425,14 +408,6 @@
       display:flex;align-items:center;gap:8px;
     }
     .divider{height:1px;background:var(--glass-border);margin:10px 0}
-
-    .notice{
-      display:none;text-align:center;color:var(--muted);
-      border:1px dashed var(--glass-border);
-      background:var(--surface);
-      padding:18px;border-radius:var(--radius);
-      backdrop-filter:blur(10px) saturate(1.2)
-    }
   </style>
 </head>
 
@@ -516,9 +491,9 @@
 
   <script>
   /* ========= State ========= */
-  let currentStopsForInstance = null; // instanceId
+  let currentStopsForInstance = null;
   let addFilter = "all";
-  const panels = {}; // instanceId -> panel
+  const panels = {};
   let autoRefreshTimer = null;
   let globalLastRefresh = 0;
   let globalTickTimer = null;
@@ -578,7 +553,7 @@
 
   function tryParseJSON(text){
     try{ return JSON.parse(text); }catch(_){}
-    const m = text.match(/\{[\s\S]*"(recorrido|llegadas|posiciones|color)"[\s\S]*\}/);
+    const m = text.match(/\{[\s\S]*"(recorrido|llegadas|posiciones|color|alertas)"[\s\S]*\}/);
     if (m){ try{ return JSON.parse(m[0]); }catch(_){ } }
     const stripped = text.replace(/<[^>]*>/g,'').trim();
     try{ return JSON.parse(stripped); }catch(_){}
@@ -593,9 +568,12 @@
   /* ========= Storage ========= */
   function loadJSON(key, fallback){
     try{
-      const v = localStorage.getItem(key);
-      return v ? JSON.parse(v) : fallback;
-    }catch{ return fallback; }
+      const v = localStorage.get/entities? JSON.parse(localStorage.getItem(key)) : null;
+      // fallback por compatibilidad (por si el navegador no tiene localStorage? muy raro)
+      return v ?? fallback;
+    }catch{ 
+      try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }catch{ return fallback; }
+    }
   }
   function saveJSON(key, value){
     localStorage.setItem(key, JSON.stringify(value));
@@ -617,6 +595,7 @@
     setPinned(p);
     updatePinUI(instanceId);
     renderPanelsOrder();
+    persistAllPanels();
   }
   function togglePin(instanceId){ setPinnedInstance(instanceId, !isPinned(instanceId)); }
 
@@ -643,13 +622,6 @@
     $("#empty-message").style.display = Object.keys(panels).length ? "none" : "block";
   }
   function bannerOffline(){ $("#offlineBanner").style.display = navigator.onLine ? 'none' : 'block'; }
-
-  function animateTick(el){
-    if(!el) return;
-    el.classList.remove('tick');
-    void el.offsetWidth;
-    el.classList.add('tick');
-  }
 
   function parseHexColor(v){
     if(!v) return null;
@@ -797,7 +769,6 @@
   function deletePanel(instanceId){
     const p = panels[instanceId];
     if (p?.countdownInterval) clearInterval(p.countdownInterval);
-    Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
     delete panels[instanceId];
     $("#panel-"+instanceId)?.remove();
 
@@ -838,6 +809,42 @@
       <i class="material-icons" aria-hidden="true" style="font-size:.85em;opacity:.9">${icon}</i>
       <span>En la parada</span>
     </span>`;
+  }
+
+  function normalizeAlerts(raw){
+    if (!raw) return [];
+    if (typeof raw === "string") {
+      const s = raw.trim();
+      return s ? [s] : [];
+    }
+    if (Array.isArray(raw)) {
+      return raw.map(a=>{
+        if (typeof a === "string") return a.trim();
+        if (a && typeof a === "object") {
+          return (a.text || a.texto || a.mensaje || a.message || a.descripcion || a.description || "").toString().trim();
+        }
+        return "";
+      }).filter(Boolean);
+    }
+    if (typeof raw === "object") {
+      const s = (raw.text || raw.texto || raw.mensaje || raw.message || raw.descripcion || raw.description || "").toString().trim();
+      return s ? [s] : [];
+    }
+    return [];
+  }
+
+  function setAlerts(instanceId, alerts){
+    const box = $("#alerts-"+instanceId);
+    if (!box) return;
+    const list = normalizeAlerts(alerts);
+    if (!list.length){
+      box.classList.remove("show");
+      box.innerHTML = "";
+      return;
+    }
+    const text = list.slice(0,2).map(x=>escapeHtml(x)).join("<br>");
+    box.innerHTML = `<div class="alert-text"><strong>Avisos</strong><br>${text}</div>`;
+    box.classList.add("show");
   }
 
   function createPanel(line, {focus=false, pinOnAdd=false} = {}){
@@ -896,16 +903,17 @@
         </button>
       </div>
 
+      <div class="alerts" id="alerts-${instanceId}">
+        <i class="material-icons" aria-hidden="true">warning_amber</i>
+      </div>
+
       <div class="stack">
         <div id="info-${instanceId}">
           <div class="next-time">—</div>
           <div class="hint">Cargando…</div>
         </div>
 
-        <div class="arrivals" id="arrivals-${instanceId}" style="display:none">
-          <div class="arrivals-title">Próximas</div>
-          <div class="arrivals-list" id="list-${instanceId}"></div>
-        </div>
+        <div class="next-compact" id="next-${instanceId}"></div>
       </div>
     `;
 
@@ -917,7 +925,6 @@
       currentStopId:null,
       currentStopName:null,
       countdownInterval:null,
-      countdownIntervals:{},
       lastUpdated: 0
     };
 
@@ -936,19 +943,13 @@
       renderPanelsOrder();
       updateEmpty();
       persistAllPanels();
-      if (focus) focusPanel(instanceId);
+      if (focus) $("#panel-"+instanceId)?.scrollIntoView({behavior:"smooth", block:"start"});
     });
 
     renderPanelsOrder();
     updateEmpty();
     persistAllPanels();
     return instanceId;
-  }
-
-  function focusPanel(instanceId){
-    const el = $("#panel-"+instanceId);
-    if (!el) return;
-    el.scrollIntoView({behavior:"smooth", block:"start"});
   }
 
   /* ========= Stops ========= */
@@ -988,9 +989,9 @@
       await refreshPanel(instanceId);
     }catch(err){
       $("#stop-name-"+instanceId).textContent = "Error al cargar paradas";
-      $("#info-"+instanceId).innerHTML = `<div class="danger-text">⚠️ No se pudieron cargar las paradas.</div>`;
-      $("#list-"+instanceId).innerHTML = "";
-      $("#arrivals-"+instanceId).style.display = "none";
+      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ No se pudieron cargar las paradas.</div>`;
+      $("#next-"+instanceId).classList.remove("show");
+      setAlerts(instanceId, null);
       setStatus(instanceId, "Error");
       console.warn('Paradas -', line.code, err);
     }
@@ -1054,7 +1055,7 @@
         selectStop(it.dataset.id, it.dataset.name);
       };
     }catch(err){
-      $("#stopsListContainer").innerHTML = `<div class="danger-text" style="padding:12px">⚠️ No se pudieron cargar las paradas.</div>`;
+      $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">⚠️ No se pudieron cargar las paradas.</div>`;
       console.warn('Stops modal error', err);
     }
   }
@@ -1106,16 +1107,14 @@
     persistAllPanels();
   }
 
-  /* ========= Próximas ========= */
-  function renderNextRowsHtml(items){
+  /* ========= Próximas compactas ========= */
+  function renderNextChipsHtml(items){
     return items.map(it=>{
       return `
-        <div class="arrival-row">
-          <div class="t">${escapeHtml(it.hourText)}</div>
-          <div class="eta">${escapeHtml(it.etaText)}</div>
-          <div class="right">
-            ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
-          </div>
+        <div class="next-chip">
+          <span class="t">${escapeHtml(it.hourText)}</span>
+          <span class="eta">${escapeHtml(it.etaText)}</span>
+          ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
         </div>
       `;
     }).join("");
@@ -1127,8 +1126,6 @@
     const { line } = p;
 
     if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
-    Object.values(p?.countdownIntervals||{}).forEach(id=>clearInterval(id));
-    p.countdownIntervals = {};
 
     setStatus(instanceId, "Actualizando…");
     const started = Date.now();
@@ -1142,20 +1139,23 @@
       const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
       const data = await getJSON(url);
 
+      // ✅ ALERTAS: del JSON de llegadas
+      setAlerts(instanceId, data?.alertas ?? data?.alerta ?? data?.avisos ?? data?.incidencias);
+
       let arr = (data.llegadas||[]);
       if (isTram) arr = arr.filter(x=>x.line===line.code);
       else arr = arr.filter(x=>x.line===routeCode);
 
       if (!arr.length){
         $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">${isTram ? "🚊" : "🚍"} No hay más llegadas hoy.</div>`;
-        $("#list-"+instanceId).innerHTML = "";
-        $("#arrivals-"+instanceId).style.display = "none";
+        $("#next-"+instanceId).classList.remove("show");
+        $("#next-"+instanceId).innerHTML = "";
         setStatus(instanceId, "Sin llegadas");
         p.lastUpdated = started; setUpdated(instanceId, started);
         return;
       }
 
-      // para tranvía puede haber destinos: elegimos el destino con la llegada más cercana
+      // Para tranvía, si hay destinos, elegimos el destino con la llegada más cercana
       let nx = arr[0];
       let bestDest = null;
       if (isTram){
@@ -1172,7 +1172,6 @@
                   : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
 
       const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
-      const urgentClass = (nx.seconds < 60 || nx.status === 'INCOMING_AT') ? ' is-urgent' : '';
       const dly = delayInfo(nx);
       const etaSmall = (typeof nx.seconds === 'number')
         ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
@@ -1180,7 +1179,7 @@
 
       $("#info-"+instanceId).innerHTML = `
         ${isTram && bestDest ? `<div style="color:var(--primary);font-weight:950;margin-bottom:2px">Destino: ${escapeHtml(bestDest)}</div>` : ``}
-        <div class="next-time ${urgentClass}" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
+        <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
         <div class="hint">
           <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
           ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
@@ -1188,7 +1187,7 @@
         </div>
       `;
 
-      // ✅ countdown: si llega a 0 -> "En la parada" + icono
+      // Countdown: si llega a 0 -> “En la parada” + icono
       const cdEl = $("#count-"+instanceId);
       if (typeof nx.seconds === "number" && nx.seconds < 60){
         cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
@@ -1208,8 +1207,9 @@
         renderStoppedText(instanceId);
       }
 
-      const rest = arr.slice(1,5);
-      const rows = rest.map(a=>{
+      // ✅ Próximas: SOLO 2 más, en chips compactos
+      const rest = arr.slice(1,3);
+      const chips = rest.map(a=>{
         const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
                 : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
         const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
@@ -1217,21 +1217,22 @@
         return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
       });
 
-      if (rows.length){
-        $("#arrivals-"+instanceId).style.display = "";
-        $("#list-"+instanceId).innerHTML = renderNextRowsHtml(rows);
+      const nextBox = $("#next-"+instanceId);
+      if (chips.length){
+        nextBox.classList.add("show");
+        nextBox.innerHTML = renderNextChipsHtml(chips);
       } else {
-        $("#arrivals-"+instanceId).style.display = "none";
-        $("#list-"+instanceId).innerHTML = "";
+        nextBox.classList.remove("show");
+        nextBox.innerHTML = "";
       }
 
-      animateTick($("#panel-"+instanceId+" .next-time"));
       setStatus(instanceId, "OK");
       p.lastUpdated = started; setUpdated(instanceId, started);
     }catch(e){
-      $("#info-"+instanceId).innerHTML = `<div class="danger-text">⚠️ Error al actualizar</div><div class="hint">Pulsa “Actualizar” o revisa conexión.</div>`;
-      $("#list-"+instanceId).innerHTML = "";
-      $("#arrivals-"+instanceId).style.display = "none";
+      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ Error al actualizar</div>`;
+      $("#next-"+instanceId).classList.remove("show");
+      $("#next-"+instanceId).innerHTML = "";
+      setAlerts(instanceId, null);
       setStatus(instanceId, "Error");
       console.warn('Arrivals error', e);
     }
@@ -1344,112 +1345,28 @@
       updateEmpty();
       return;
     }
-
     snapshot.forEach(item=>{
       const line = lines.find(l=>l.code===item.lineCode);
       if (!line) return;
-
-      const instanceId = item.id || uid();
-
-      const card = document.createElement('section');
-      card.className='card';
-      card.id='panel-'+instanceId;
-      card.dataset.instanceId = instanceId;
-      card.dataset.lineCode = line.code;
-
-      const initialAccent =
-        line.type==="tram"
-          ? "var(--accent-tram)"
-          : (colorCache[line.code] ? colorCache[line.code] : "var(--accent-bus)");
-
-      card.style.setProperty('--line-accent', initialAccent);
-
-      const ico = line.type==='bus'?'directions_bus':'tram';
-
-      card.innerHTML = `
-        <div class="card-top">
-          <div>
-            <div class="line-row">
-              <span class="line-pill">
-                <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}
-              </span>
-              <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
-            </div>
-            <div class="meta-small">
-              <span id="updated-${instanceId}">Actualizado: —</span>
-              <span class="dot"></span>
-              <span id="status-${instanceId}">Estado: —</span>
-            </div>
-          </div>
-
-          <div class="card-actions">
-            <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
-              <i class="material-icons">push_pin</i>
-            </button>
-            <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
-              <i class="material-icons">close</i>
-            </button>
-          </div>
-        </div>
-
-        <div class="stop-row">
-          <button class="stop-picker" id="stop-picker-${instanceId}" type="button"
-                  aria-haspopup="dialog" aria-controls="stopsModal" aria-expanded="false" title="Cambiar parada">
-            <i class="material-icons" aria-hidden="true">place</i>
-            <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
-            <i class="material-icons caret" aria-hidden="true">expand_more</i>
-          </button>
-          <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
-            <span id="fav-icon-${instanceId}">☆</span>
-          </button>
-        </div>
-
-        <div class="stack">
-          <div id="info-${instanceId}">
-            <div class="next-time">—</div>
-            <div class="hint">Cargando…</div>
-          </div>
-
-          <div class="arrivals" id="arrivals-${instanceId}" style="display:none">
-            <div class="arrivals-title">Próximas</div>
-            <div class="arrivals-list" id="list-${instanceId}"></div>
-          </div>
-        </div>
-      `;
-
-      $("#panels-container").appendChild(card);
-
-      panels[instanceId] = {
-        id: instanceId,
-        line,
-        currentStopId: item.stop?.id ?? null,
-        currentStopName: item.stop?.name ?? null,
-        countdownInterval:null,
-        countdownIntervals:{},
-        lastUpdated: 0
-      };
-
-      if (item.favorite && item.favorite.id) setFavorite(instanceId, item.favorite);
-
-      if (item.pinned) setPinnedInstance(instanceId, true);
-      else updatePinUI(instanceId);
-
-      $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
-      $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
-      $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
-      $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
-
-      if (panels[instanceId].currentStopName){
-        $("#stop-name-"+instanceId).textContent = panels[instanceId].currentStopName;
+      const id = item.id || uid();
+      // recreamos usando createPanel para evitar duplicar lógica:
+      // pero necesitamos respetar ID persistido => lo hacemos manualmente rápido
+      // (para mantener el código simple, cargamos limpio y guardamos de nuevo)
+      const newId = createPanel(line, {focus:false, pinOnAdd:item.pinned});
+      // aplicar parada y favorita por instancia
+      if (item.stop?.id){
+        panels[newId].currentStopId = item.stop.id;
+        panels[newId].currentStopName = item.stop.name || null;
+        $("#stop-name-"+newId).textContent = panels[newId].currentStopName || "Parada";
       }
-
-      updateFavIcon(instanceId);
-      ensureLineColor(line);
-
-      if (!panels[instanceId].currentStopId) loadStopsForPanel(instanceId);
-      else refreshPanel(instanceId);
+      if (item.favorite?.id){
+        setFavorite(newId, item.favorite);
+        updateFavIcon(newId);
+      }
+      refreshPanel(newId);
     });
 
+    persistAllPanels(); // normaliza ids si han cambiado
     renderPanelsOrder();
     updateEmpty();
   }
@@ -1543,9 +1460,9 @@
       }, _=>alert("No se pudo obtener tu ubicación."));
     });
 
-    window.addEventListener('online', ()=> $("#offlineBanner").style.display = 'none');
-    window.addEventListener('offline', ()=> $("#offlineBanner").style.display = 'block');
-    $("#offlineBanner").style.display = navigator.onLine ? 'none' : 'block';
+    window.addEventListener('online', bannerOffline);
+    window.addEventListener('offline', bannerOffline);
+    bannerOffline();
 
     applyTheme(pref());
     if (window.matchMedia){
@@ -1556,7 +1473,6 @@
 
     globalLastRefresh = Date.now();
     updateGlobalUpdated();
-
     if (globalTickTimer) clearInterval(globalTickTimer);
     globalTickTimer = setInterval(()=> updateGlobalUpdated(), 1000);
 
