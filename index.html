@@ -206,7 +206,7 @@
       background:color-mix(in oklab,#f59e0b 14%, var(--surface));
       border-radius:14px;
       padding:10px 12px;
-      gap:8px;
+      gap:10px;
       align-items:flex-start;
     }
     .alerts.show{display:flex}
@@ -215,8 +215,10 @@
       font-size:13px;
       color:color-mix(in oklab,var(--text) 92%, #0000);
       line-height:1.25;
+      min-width:0;
     }
     .alerts .alert-text strong{font-weight:950}
+    .alerts .alert-text .muted{color:var(--muted);font-weight:700;font-size:12px;margin-top:4px}
     html[data-theme=dark] .alerts{
       background:color-mix(in oklab,#f59e0b 18%, var(--surface));
       border-color:color-mix(in oklab,#f59e0b 34%, var(--glass-border));
@@ -260,7 +262,31 @@
     }
     .next-chip .t{font-weight:950;font-size:15px}
     .next-chip .eta{color:var(--muted);font-weight:800;font-size:13px}
-    .next-chip .delay{margin-left:2px}
+
+    /* bloque compacto por destino (tranvía) */
+    .dest-block{
+      width:100%;
+      max-width:540px;
+      border:1px solid var(--glass-border);
+      background:color-mix(in oklab,var(--surface-2) 85%, transparent);
+      border-radius:16px;
+      padding:12px;
+      display:grid;
+      gap:10px;
+      text-align:center;
+    }
+    .dest-head{
+      display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;
+      color:var(--muted);font-weight:900;font-size:12px;
+    }
+    .dest-pill{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:3px 10px;border-radius:999px;
+      border:1px solid var(--glass-border);
+      background:var(--surface);
+      color:var(--text);
+      font-weight:950;
+    }
 
     .delay{padding:2px 8px;border-radius:999px;border:1px solid var(--glass-border);font-size:12px}
     .delay-late{background:color-mix(in oklab,#ef4444 16%, var(--surface-2));border-color:color-mix(in oklab,#ef4444 45%, var(--glass-border))}
@@ -335,7 +361,6 @@
     }
     @keyframes pop{from{transform:translateY(6px);opacity:0}}
 
-    /* Modal Añadir: altura estable (no encoge al filtrar tranvía) */
     #addModal .sheet{
       height: min(78vh, 640px);
       max-height: 88vh;
@@ -568,12 +593,9 @@
   /* ========= Storage ========= */
   function loadJSON(key, fallback){
     try{
-      const v = localStorage.get/entities? JSON.parse(localStorage.getItem(key)) : null;
-      // fallback por compatibilidad (por si el navegador no tiene localStorage? muy raro)
-      return v ?? fallback;
-    }catch{ 
-      try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }catch{ return fallback; }
-    }
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    }catch{ return fallback; }
   }
   function saveJSON(key, value){
     localStorage.setItem(key, JSON.stringify(value));
@@ -800,10 +822,10 @@
     if (el) el.textContent = "Actualizado: " + relTime(ts);
   }
 
-  function renderStoppedText(instanceId){
+  function renderStoppedText(instanceId, targetEl){
     const p = panels[instanceId];
     const icon = p?.line?.type === "tram" ? "tram" : "directions_bus";
-    const el = $("#count-"+instanceId);
+    const el = targetEl || $("#count-"+instanceId);
     if (!el) return;
     el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:10px">
       <i class="material-icons" aria-hidden="true" style="font-size:.85em;opacity:.9">${icon}</i>
@@ -811,40 +833,158 @@
     </span>`;
   }
 
-  function normalizeAlerts(raw){
-    if (!raw) return [];
-    if (typeof raw === "string") {
-      const s = raw.trim();
-      return s ? [s] : [];
-    }
-    if (Array.isArray(raw)) {
-      return raw.map(a=>{
-        if (typeof a === "string") return a.trim();
-        if (a && typeof a === "object") {
-          return (a.text || a.texto || a.mensaje || a.message || a.descripcion || a.description || "").toString().trim();
-        }
-        return "";
-      }).filter(Boolean);
-    }
-    if (typeof raw === "object") {
-      const s = (raw.text || raw.texto || raw.mensaje || raw.message || raw.descripcion || raw.description || "").toString().trim();
-      return s ? [s] : [];
-    }
-    return [];
+  function tramAlertLineNumber(code){
+    // alertas de tranvía usan "line": "1" / "2"
+    if (code === "TG1") return "1";
+    if (code === "TG2") return "2";
+    return code.replace(/\D+/g,'') || code;
   }
 
-  function setAlerts(instanceId, alerts){
+  function isAlertActive(a, nowSec){
+    const start = Number(a?.alertPeriodStart);
+    const end = Number(a?.alertPeriodEnd);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return true;
+    return nowSec >= start && nowSec <= end;
+  }
+
+  function filterAlertsForPanel(panel, alerts){
+    const arr = Array.isArray(alerts) ? alerts : [];
+    if (!arr.length) return [];
+    const nowSec = Math.floor(Date.now()/1000);
+
+    const stopId = String(panel.currentStopId || "");
+    const isTram = panel.line.type === "tram";
+    const lineMatch = isTram ? tramAlertLineNumber(panel.line.code) : panel.line.code; // bus normalmente coincide
+    const lineType = isTram ? "3" : null; // en tu JSON: 3 => tranvía (según ejemplo)
+
+    return arr.filter(a=>{
+      if (!isAlertActive(a, nowSec)) return false;
+
+      const aStop = String(a.stopId ?? "*");
+      if (!(aStop === "*" || aStop === stopId)) return false;
+
+      const aLine = String(a.line ?? "*");
+      if (!(aLine === "*" || aLine === lineMatch)) return false;
+
+      // si viene lineType, filtramos por ello (tu ejemplo: 3)
+      if (lineType && a.lineType != null && String(a.lineType) !== String(lineType)) return false;
+
+      return true;
+    });
+  }
+
+  function fmtAlertWindow(a){
+    const start = Number(a?.alertPeriodStart);
+    const end = Number(a?.alertPeriodEnd);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return "";
+    const s = new Date(start*1000);
+    const e = new Date(end*1000);
+    const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return `${hhmm(s)}–${hhmm(e)}`;
+  }
+
+  function setAlerts(instanceId, alertsRaw){
     const box = $("#alerts-"+instanceId);
     if (!box) return;
-    const list = normalizeAlerts(alerts);
-    if (!list.length){
+
+    const panel = panels[instanceId];
+    const relevant = filterAlertsForPanel(panel, alertsRaw);
+
+    if (!relevant.length){
       box.classList.remove("show");
-      box.innerHTML = "";
+      // dejamos el icono (primer hijo) pero vacío el contenido
+      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
       return;
     }
-    const text = list.slice(0,2).map(x=>escapeHtml(x)).join("<br>");
-    box.innerHTML = `<div class="alert-text"><strong>Avisos</strong><br>${text}</div>`;
+
+    // orden: primero las que afectan a la parada específica (stopId!=*) y luego las globales
+    relevant.sort((a,b)=>{
+      const as = String(a.stopId) !== "*" ? 0 : 1;
+      const bs = String(b.stopId) !== "*" ? 0 : 1;
+      if (as !== bs) return as - bs;
+      return (Number(b.realtime) - Number(a.realtime));
+    });
+
+    const top = relevant.slice(0, 2); // no saturar
+    const items = top.map(a=>{
+      const head = a.alertHeader || "Aviso";
+      const desc = a.alertDescription || "";
+      const win = fmtAlertWindow(a);
+      const meta = [
+        win ? `⏱ ${win}` : "",
+        a.alertEffect ? `• ${a.alertEffect}` : "",
+      ].filter(Boolean).join(" ");
+      return `<div style="margin-top:6px">
+        <strong>${escapeHtml(head)}</strong><br>
+        ${desc ? `<span>${escapeHtml(desc)}</span><br>` : ``}
+        ${meta ? `<div class="muted">${escapeHtml(meta)}</div>` : ``}
+      </div>`;
+    }).join("");
+
+    box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>
+      <div class="alert-text">
+        <strong>Avisos</strong>
+        ${items}
+      </div>`;
     box.classList.add("show");
+  }
+
+  function renderNextChipsHtml(items){
+    return items.map(it=>{
+      return `
+        <div class="next-chip">
+          <span class="t">${escapeHtml(it.hourText)}</span>
+          <span class="eta">${escapeHtml(it.etaText)}</span>
+          ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderDestinationBlock(instanceId, destName, nx, restArr){
+    const isTram = panels[instanceId].line.type === "tram";
+
+    const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
+                : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
+
+    const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
+    const dly = delayInfo(nx);
+    const etaSmall = (typeof nx.seconds === 'number')
+      ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
+      : '';
+
+    const bigId = `count-${instanceId}-${btoa(destName).replace(/=+$/,'')}`;
+
+    const chips = restArr.slice(0,2).map(a=>{
+      const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
+              : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
+      const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
+      const dl = delayInfo(a);
+      return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+    });
+
+    return `
+      <div class="dest-block">
+        <div class="dest-head">
+          <span class="dest-pill"><i class="material-icons" style="font-size:16px">${isTram?'tram':'directions_bus'}</i>
+            Destino: ${escapeHtml(destName)}
+          </span>
+        </div>
+
+        <div>
+          <div class="next-time" id="${bigId}">${escapeHtml(etaBig)}</div>
+          <div class="hint">
+            <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+            ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
+            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
+          </div>
+        </div>
+
+        <div class="next-compact ${chips.length?'show':''}" style="max-width:520px;margin:0 auto;justify-content:center">
+          ${chips.length ? renderNextChipsHtml(chips) : ``}
+        </div>
+      </div>
+    `;
   }
 
   function createPanel(line, {focus=false, pinOnAdd=false} = {}){
@@ -909,7 +1049,7 @@
 
       <div class="stack">
         <div id="info-${instanceId}">
-          <div class="next-time">—</div>
+          <div class="next-time" id="count-${instanceId}">—</div>
           <div class="hint">Cargando…</div>
         </div>
 
@@ -952,7 +1092,6 @@
     return instanceId;
   }
 
-  /* ========= Stops ========= */
   async function loadStopsForPanel(instanceId){
     const panel = panels[instanceId]; if(!panel) return;
     const line = panel.line;
@@ -991,13 +1130,225 @@
       $("#stop-name-"+instanceId).textContent = "Error al cargar paradas";
       $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ No se pudieron cargar las paradas.</div>`;
       $("#next-"+instanceId).classList.remove("show");
-      setAlerts(instanceId, null);
+      $("#next-"+instanceId).innerHTML = "";
+      setAlerts(instanceId, []);
       setStatus(instanceId, "Error");
       console.warn('Paradas -', line.code, err);
     }
   }
 
-  /* ========= Stops modal ========= */
+  async function refreshPanel(instanceId){
+    const p = panels[instanceId]; if(!p || !p.currentStopId) return;
+    const { line } = p;
+
+    if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
+
+    setStatus(instanceId, "Actualizando…");
+    const started = Date.now();
+
+    try{
+      const isTram = line.type === "tram";
+      const routeCode = isTram
+        ? line.code
+        : ((line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code);
+
+      const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
+      const data = await getJSON(url);
+
+      // ALERTAS (con estructura real)
+      setAlerts(instanceId, data?.alertas || []);
+
+      let arr = (data.llegadas||[]);
+      if (isTram) arr = arr.filter(x=>x.line===line.code);
+      else arr = arr.filter(x=>x.line===routeCode);
+
+      if (!arr.length){
+        $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">${isTram ? "🚊" : "🚍"} No hay más llegadas hoy.</div>`;
+        $("#next-"+instanceId).classList.remove("show");
+        $("#next-"+instanceId).innerHTML = "";
+        setStatus(instanceId, "Sin llegadas");
+        p.lastUpdated = started; setUpdated(instanceId, started);
+        return;
+      }
+
+      if (isTram){
+        // ✅ Mostrar ambos destinos: agrupamos por destination y pintamos 1 bloque por destino
+        const groups = {};
+        arr.forEach(a=>{
+          const k = (a.destination || "Destino").toString();
+          (groups[k] ??= []).push(a);
+        });
+        Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
+
+        // ordenamos destinos por próxima llegada
+        const dests = Object.keys(groups).sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds);
+        const firstTwo = dests.slice(0,2);
+
+        // Montamos HTML (2 bloques máximo)
+        const blocksHtml = firstTwo.map(dest=>{
+          const g = groups[dest];
+          const nx = g[0];
+          const rest = g.slice(1);
+          return renderDestinationBlock(instanceId, dest, nx, rest);
+        }).join("");
+
+        // Reutilizamos #info como contenedor para los destinos (compacto)
+        $("#info-"+instanceId).innerHTML = blocksHtml;
+
+        // ocultamos el contenedor normal
+        $("#next-"+instanceId).classList.remove("show");
+        $("#next-"+instanceId).innerHTML = "";
+
+        // Si algún destino tiene countdown <60s, lo aplicamos solo a su propio elemento
+        // (no hacemos countdown para ambos a la vez por simplicidad UX)
+        const topDest = firstTwo[0];
+        const nx = groups[topDest][0];
+        if (typeof nx.seconds === "number" && nx.seconds < 60){
+          // buscamos el primer .next-time dentro del primer bloque
+          const firstCountEl = $("#info-"+instanceId).querySelector(".dest-block .next-time");
+          if (firstCountEl){
+            firstCountEl.innerHTML = `<span>${nx.seconds}</span> s`;
+            p.countdownInterval = setInterval(()=>{
+              const span = firstCountEl.querySelector("span");
+              if(!span){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+              let n = parseInt(span.textContent,10);
+              if(!Number.isFinite(n)){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+              if (n <= 1){
+                clearInterval(p.countdownInterval); p.countdownInterval=null;
+                renderStoppedText(instanceId, firstCountEl);
+                return;
+              }
+              span.textContent = String(n-1);
+            }, 1000);
+          }
+        } else if (nx.status === 'STOPPED_AT' || nx.seconds <= 0){
+          const firstCountEl = $("#info-"+instanceId).querySelector(".dest-block .next-time");
+          if (firstCountEl) renderStoppedText(instanceId, firstCountEl);
+        }
+
+        setStatus(instanceId, "OK");
+        p.lastUpdated = started; setUpdated(instanceId, started);
+        return;
+      }
+
+      // BUS (y también tranvía si algún día no trae destination): vista normal + chips 2
+      const nx = arr[0];
+      const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
+                  : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
+
+      const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
+      const dly = delayInfo(nx);
+      const etaSmall = (typeof nx.seconds === 'number')
+        ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
+        : '';
+
+      $("#info-"+instanceId).innerHTML = `
+        <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
+        <div class="hint">
+          <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+          ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
+          ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
+        </div>
+      `;
+
+      // Countdown: 0 => En la parada
+      const cdEl = $("#count-"+instanceId);
+      if (typeof nx.seconds === "number" && nx.seconds < 60){
+        cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
+        p.countdownInterval = setInterval(()=>{
+          const el = $("#sec-"+instanceId);
+          if(!el){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+          let n = parseInt(el.textContent,10);
+          if(!Number.isFinite(n)){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+          if (n <= 1){
+            clearInterval(p.countdownInterval); p.countdownInterval=null;
+            renderStoppedText(instanceId);
+            return;
+          }
+          el.textContent = String(n-1);
+        }, 1000);
+      } else if (nx.status === 'STOPPED_AT' || nx.seconds <= 0){
+        renderStoppedText(instanceId);
+      }
+
+      const rest = arr.slice(1,3);
+      const chips = rest.map(a=>{
+        const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
+                : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
+        const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
+        const dl = delayInfo(a);
+        return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+      });
+
+      const nextBox = $("#next-"+instanceId);
+      if (chips.length){
+        nextBox.classList.add("show");
+        nextBox.innerHTML = renderNextChipsHtml(chips);
+      } else {
+        nextBox.classList.remove("show");
+        nextBox.innerHTML = "";
+      }
+
+      setStatus(instanceId, "OK");
+      p.lastUpdated = started; setUpdated(instanceId, started);
+    }catch(e){
+      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ Error al actualizar</div>`;
+      $("#next-"+instanceId).classList.remove("show");
+      $("#next-"+instanceId).innerHTML = "";
+      setAlerts(instanceId, []);
+      setStatus(instanceId, "Error");
+      console.warn('Arrivals error', e);
+    }
+  }
+
+  /* ========= Stops modal (sin cambios funcionales) ========= */
+  function renderStopItem({id, nombre, selected, latitud, longitud, isFav, isRecent}){
+    const div = document.createElement("div");
+    div.className = "stop-item" + (selected ? " selected" : "");
+    div.dataset.id = id;
+    div.dataset.name = nombre;
+    if (latitud) div.dataset.lat = latitud;
+    if (longitud) div.dataset.lng = longitud;
+
+    const tags = [];
+    if (isFav) tags.push("★ favorita");
+    if (isRecent) tags.push("reciente");
+
+    div.innerHTML = `
+      <div class="row-main">
+        <div class="row-title">${escapeHtml(nombre)}</div>
+        <div class="row-sub">${tags.length ? escapeHtml(tags.join(" · ")) : ""}</div>
+      </div>
+      <div class="row-right"><i class="material-icons" style="font-size:18px;color:var(--muted)">chevron_right</i></div>
+    `;
+    return div;
+  }
+
+  function closeStops(){
+    const modal = $("#stopsModal");
+    modal.classList.remove('open');
+    detachViewportShim(modal);
+    unlockBodyScroll();
+    const instanceId = currentStopsForInstance;
+    if (instanceId) $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','false');
+  }
+
+  function selectStop(stopId, name){
+    const instanceId = currentStopsForInstance; if(!instanceId || !panels[instanceId]) return;
+    const p = panels[instanceId];
+
+    p.currentStopId = stopId;
+    p.currentStopName = name;
+
+    $("#stop-name-"+instanceId).textContent = name;
+
+    pushRecent(p.line.code, {id: stopId, name});
+    closeStops();
+    refreshPanel(instanceId);
+    updateFavIcon(instanceId);
+    persistAllPanels();
+  }
+
   async function showStopsList(instanceId){
     currentStopsForInstance = instanceId;
     const panel = panels[instanceId]; if(!panel) return;
@@ -1057,184 +1408,6 @@
     }catch(err){
       $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">⚠️ No se pudieron cargar las paradas.</div>`;
       console.warn('Stops modal error', err);
-    }
-  }
-
-  function renderStopItem({id, nombre, selected, latitud, longitud, isFav, isRecent}){
-    const div = document.createElement("div");
-    div.className = "stop-item" + (selected ? " selected" : "");
-    div.dataset.id = id;
-    div.dataset.name = nombre;
-    if (latitud) div.dataset.lat = latitud;
-    if (longitud) div.dataset.lng = longitud;
-
-    const tags = [];
-    if (isFav) tags.push("★ favorita");
-    if (isRecent) tags.push("reciente");
-
-    div.innerHTML = `
-      <div class="row-main">
-        <div class="row-title">${escapeHtml(nombre)}</div>
-        <div class="row-sub">${tags.length ? escapeHtml(tags.join(" · ")) : ""}</div>
-      </div>
-      <div class="row-right"><i class="material-icons" style="font-size:18px;color:var(--muted)">chevron_right</i></div>
-    `;
-    return div;
-  }
-
-  function closeStops(){
-    const modal = $("#stopsModal");
-    modal.classList.remove('open');
-    detachViewportShim(modal);
-    unlockBodyScroll();
-    const instanceId = currentStopsForInstance;
-    if (instanceId) $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','false');
-  }
-
-  function selectStop(stopId, name){
-    const instanceId = currentStopsForInstance; if(!instanceId || !panels[instanceId]) return;
-    const p = panels[instanceId];
-
-    p.currentStopId = stopId;
-    p.currentStopName = name;
-
-    $("#stop-name-"+instanceId).textContent = name;
-
-    pushRecent(p.line.code, {id: stopId, name});
-    closeStops();
-    refreshPanel(instanceId);
-    updateFavIcon(instanceId);
-    persistAllPanels();
-  }
-
-  /* ========= Próximas compactas ========= */
-  function renderNextChipsHtml(items){
-    return items.map(it=>{
-      return `
-        <div class="next-chip">
-          <span class="t">${escapeHtml(it.hourText)}</span>
-          <span class="eta">${escapeHtml(it.etaText)}</span>
-          ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
-        </div>
-      `;
-    }).join("");
-  }
-
-  /* ========= Arrivals ========= */
-  async function refreshPanel(instanceId){
-    const p = panels[instanceId]; if(!p || !p.currentStopId) return;
-    const { line } = p;
-
-    if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
-
-    setStatus(instanceId, "Actualizando…");
-    const started = Date.now();
-
-    try{
-      const isTram = line.type === "tram";
-      const routeCode = isTram
-        ? line.code
-        : ((line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code);
-
-      const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
-      const data = await getJSON(url);
-
-      // ✅ ALERTAS: del JSON de llegadas
-      setAlerts(instanceId, data?.alertas ?? data?.alerta ?? data?.avisos ?? data?.incidencias);
-
-      let arr = (data.llegadas||[]);
-      if (isTram) arr = arr.filter(x=>x.line===line.code);
-      else arr = arr.filter(x=>x.line===routeCode);
-
-      if (!arr.length){
-        $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">${isTram ? "🚊" : "🚍"} No hay más llegadas hoy.</div>`;
-        $("#next-"+instanceId).classList.remove("show");
-        $("#next-"+instanceId).innerHTML = "";
-        setStatus(instanceId, "Sin llegadas");
-        p.lastUpdated = started; setUpdated(instanceId, started);
-        return;
-      }
-
-      // Para tranvía, si hay destinos, elegimos el destino con la llegada más cercana
-      let nx = arr[0];
-      let bestDest = null;
-      if (isTram){
-        const groups = {};
-        arr.forEach(a=>{ (groups[a.destination||"Destino"] ??= []).push(a); });
-        Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
-        const dests = Object.keys(groups);
-        bestDest = dests.sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds)[0];
-        nx = groups[bestDest][0];
-        arr = groups[bestDest];
-      }
-
-      const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
-                  : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
-
-      const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
-      const dly = delayInfo(nx);
-      const etaSmall = (typeof nx.seconds === 'number')
-        ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
-        : '';
-
-      $("#info-"+instanceId).innerHTML = `
-        ${isTram && bestDest ? `<div style="color:var(--primary);font-weight:950;margin-bottom:2px">Destino: ${escapeHtml(bestDest)}</div>` : ``}
-        <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
-        <div class="hint">
-          <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
-          ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
-          ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
-        </div>
-      `;
-
-      // Countdown: si llega a 0 -> “En la parada” + icono
-      const cdEl = $("#count-"+instanceId);
-      if (typeof nx.seconds === "number" && nx.seconds < 60){
-        cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
-        p.countdownInterval = setInterval(()=>{
-          const el = $("#sec-"+instanceId);
-          if(!el){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
-          let n = parseInt(el.textContent,10);
-          if(!Number.isFinite(n)){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
-          if (n <= 1){
-            clearInterval(p.countdownInterval); p.countdownInterval=null;
-            renderStoppedText(instanceId);
-            return;
-          }
-          el.textContent = String(n-1);
-        }, 1000);
-      } else if (nx.status === 'STOPPED_AT' || nx.seconds <= 0){
-        renderStoppedText(instanceId);
-      }
-
-      // ✅ Próximas: SOLO 2 más, en chips compactos
-      const rest = arr.slice(1,3);
-      const chips = rest.map(a=>{
-        const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
-                : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-        const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
-        const dl = delayInfo(a);
-        return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
-      });
-
-      const nextBox = $("#next-"+instanceId);
-      if (chips.length){
-        nextBox.classList.add("show");
-        nextBox.innerHTML = renderNextChipsHtml(chips);
-      } else {
-        nextBox.classList.remove("show");
-        nextBox.innerHTML = "";
-      }
-
-      setStatus(instanceId, "OK");
-      p.lastUpdated = started; setUpdated(instanceId, started);
-    }catch(e){
-      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ Error al actualizar</div>`;
-      $("#next-"+instanceId).classList.remove("show");
-      $("#next-"+instanceId).innerHTML = "";
-      setAlerts(instanceId, null);
-      setStatus(instanceId, "Error");
-      console.warn('Arrivals error', e);
     }
   }
 
@@ -1348,25 +1521,19 @@
     snapshot.forEach(item=>{
       const line = lines.find(l=>l.code===item.lineCode);
       if (!line) return;
-      const id = item.id || uid();
-      // recreamos usando createPanel para evitar duplicar lógica:
-      // pero necesitamos respetar ID persistido => lo hacemos manualmente rápido
-      // (para mantener el código simple, cargamos limpio y guardamos de nuevo)
-      const newId = createPanel(line, {focus:false, pinOnAdd:item.pinned});
-      // aplicar parada y favorita por instancia
+      const id = createPanel(line, {focus:false, pinOnAdd:item.pinned});
       if (item.stop?.id){
-        panels[newId].currentStopId = item.stop.id;
-        panels[newId].currentStopName = item.stop.name || null;
-        $("#stop-name-"+newId).textContent = panels[newId].currentStopName || "Parada";
+        panels[id].currentStopId = item.stop.id;
+        panels[id].currentStopName = item.stop.name || null;
+        $("#stop-name-"+id).textContent = panels[id].currentStopName || "Parada";
       }
       if (item.favorite?.id){
-        setFavorite(newId, item.favorite);
-        updateFavIcon(newId);
+        setFavorite(id, item.favorite);
+        updateFavIcon(id);
       }
-      refreshPanel(newId);
+      refreshPanel(id);
     });
-
-    persistAllPanels(); // normaliza ids si han cambiado
+    persistAllPanels();
     renderPanelsOrder();
     updateEmpty();
   }
@@ -1389,13 +1556,6 @@
     const n=c==='auto'?'light':c==='light'?'dark':'auto';
     localStorage.setItem('theme_pref',n);
     applyTheme(n);
-  }
-
-  function haversine(lat1, lon1, lat2, lon2){
-    const R=6371000, toRad=d=>d*Math.PI/180;
-    const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
-    const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-    return 2*R*Math.asin(Math.sqrt(a));
   }
 
   function refreshAll(){
@@ -1446,9 +1606,15 @@
       navigator.geolocation.getCurrentPosition(pos=>{
         const {latitude,longitude}=pos.coords;
         const items=$$("#stopsListContainer .stop-item");
+        const hav=(lat1,lon1,lat2,lon2)=>{
+          const R=6371000, toRad=d=>d*Math.PI/180;
+          const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+          const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+          return 2*R*Math.asin(Math.sqrt(a));
+        };
         const arr=items.map(el=>{
           const lat=parseFloat(el.dataset.lat), lng=parseFloat(el.dataset.lng);
-          const d=(Number.isFinite(lat)&&Number.isFinite(lng))?haversine(latitude,longitude,lat,lng):Number.POSITIVE_INFINITY;
+          const d=(Number.isFinite(lat)&&Number.isFinite(lng))?hav(latitude,longitude,lat,lng):Number.POSITIVE_INFINITY;
           return {el,d};
         }).sort((a,b)=>a.d-b.d);
 
@@ -1460,9 +1626,9 @@
       }, _=>alert("No se pudo obtener tu ubicación."));
     });
 
-    window.addEventListener('online', bannerOffline);
-    window.addEventListener('offline', bannerOffline);
-    bannerOffline();
+    window.addEventListener('online', ()=> $("#offlineBanner").style.display = 'none');
+    window.addEventListener('offline', ()=> $("#offlineBanner").style.display = 'block');
+    $("#offlineBanner").style.display = navigator.onLine ? 'none' : 'block';
 
     applyTheme(pref());
     if (window.matchMedia){
