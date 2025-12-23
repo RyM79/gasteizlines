@@ -1041,16 +1041,19 @@
     const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
                 : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
 
-    const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
+    const secVal = (nx && nx.seconds != null) ? Number(nx.seconds) : NaN;
+
+    const etaBig = fmtEtaOrClock(Number.isFinite(secVal) ? secVal : nx.seconds, nx.status, hour);
     const dly = delayInfo(nx);
-    const etaSmall = (typeof nx.seconds === 'number')
-      ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
+    const etaSmall = Number.isFinite(secVal)
+      ? (secVal < 60 ? `en ${secVal}s` : `en ${Math.ceil(secVal/60)} min`)
       : '';
 
     const chips = restArr.slice(0,2).map(a=>{
       const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
               : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-      const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
+      const aSec = (a && a.seconds != null) ? Number(a.seconds) : NaN;
+      const eta = Number.isFinite(aSec) ? (aSec < 60 ? `en ${aSec} s` : `en ${Math.ceil(aSec/60)} min`) : '';
       const dl = delayInfo(a);
       return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
     });
@@ -1067,8 +1070,8 @@
 
         <div>
           <div class="next-time">${
-            (typeof nx.seconds === 'number' && nx.seconds < 60)
-              ? `<span class="tram-sec" data-seconds="${nx.seconds}">${nx.seconds}</span> s`
+            (Number.isFinite(secVal) && secVal < 60)
+              ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
               : `${escapeHtml(etaBig)}`
           }</div>
           <div class="hint">
