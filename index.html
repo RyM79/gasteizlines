@@ -1066,7 +1066,11 @@
         </div>
 
         <div>
-          <div class="next-time">${escapeHtml(etaBig)}</div>
+          <div class="next-time">${
+            (typeof nx.seconds === 'number' && nx.seconds < 60)
+              ? `<span class="tram-sec" data-seconds="${nx.seconds}">${nx.seconds}</span> s`
+              : `${escapeHtml(etaBig)}`
+          }</div>
           <div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
             ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
@@ -1237,6 +1241,11 @@
 
     if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
 
+    if (p.tramCountdownIntervals && p.tramCountdownIntervals.length){
+      p.tramCountdownIntervals.forEach(id=>clearInterval(id));
+      p.tramCountdownIntervals = [];
+    }
+
     setStatus(instanceId, "Actualizando…");
     const started = Date.now();
 
@@ -1285,6 +1294,39 @@
         $("#info-"+instanceId).innerHTML = blocksHtml;
         $("#next-"+instanceId).classList.remove("show");
         $("#next-"+instanceId).innerHTML = "";
+
+        // Countdown por bloque (tranvía): puede haber dos destinos en la misma parada
+        p.tramCountdownIntervals = [];
+        const panelEl = $("#panel-"+instanceId);
+        const spans = panelEl ? panelEl.querySelectorAll(".tram-sec[data-seconds]") : [];
+        spans.forEach(span=>{
+          const intervalId = setInterval(()=>{
+            // Si el panel se ha eliminado o se ha vuelto a renderizar, paramos
+            if (!document.body.contains(span)){
+              clearInterval(intervalId);
+              return;
+            }
+
+            let n = parseInt(span.dataset.seconds, 10);
+            if (!Number.isFinite(n)){
+              clearInterval(intervalId);
+              return;
+            }
+
+            n = n - 1;
+            if (n <= 0){
+              clearInterval(intervalId);
+              const nextTimeEl = span.closest(".next-time");
+              if (nextTimeEl) renderStoppedText(instanceId, nextTimeEl);
+              return;
+            }
+
+            span.dataset.seconds = String(n);
+            span.textContent = String(n);
+          }, 1000);
+
+          p.tramCountdownIntervals.push(intervalId);
+        });
 
         setStatus(instanceId, "OK");
         p.lastUpdated = started; setUpdated(instanceId, started);
