@@ -288,17 +288,18 @@
     .next-compact.show{display:flex}
     .next-chip{
       display:inline-flex;
+      flex-direction:column;
       align-items:center;
-      gap:10px;
-      padding:10px 12px;
+      gap:4px;
+      padding:10px 14px;
       border-radius:999px;
       border:1px solid var(--glass-border);
       background:var(--surface-2);
       font-variant-numeric:tabular-nums;
       white-space:nowrap;
     }
-    .next-chip .t{font-weight:950;font-size:15px}
-    .next-chip .eta{color:var(--muted);font-weight:800;font-size:13px}
+    .next-chip .big{font-weight:950;font-size:15px;line-height:1}
+    .next-chip .sub{color:var(--muted);font-weight:850;font-size:12px;line-height:1.15}
 
     /* bloque compacto por destino (tranvía) */
     .dest-block{
@@ -331,7 +332,17 @@
       font-size:18px;
       color: color-mix(in oklab, var(--line-accent) 85%, var(--text));
     }
-    .dest-label{
+    
+    /* ✅ DIRECCIÓN (tranvía): estilo neutro para no parecer aviso */
+    .dest-pill.dir-pill{
+      border-color: color-mix(in oklab, var(--primary) 40%, var(--glass-border));
+      background: color-mix(in oklab, var(--primary) 10%, var(--surface));
+      box-shadow:0 8px 18px rgba(16,24,40,.08);
+    }
+    .dest-pill.dir-pill i{
+      color: color-mix(in oklab, var(--primary) 80%, var(--text));
+    }
+.dest-label{
       font-size:11px;
       letter-spacing:.14em;
       text-transform:uppercase;
@@ -1027,8 +1038,8 @@
     return items.map(it=>{
       return `
         <div class="next-chip">
-          <span class="t">${escapeHtml(it.hourText)}</span>
-          <span class="eta">${escapeHtml(it.etaText)}</span>
+          <span class="big">${escapeHtml(it.bigText)}</span>
+          <span class="sub">Hora: ${escapeHtml(it.hourText)}</span>
           ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
         </div>
       `;
@@ -1055,15 +1066,15 @@
       const aSec = (a && a.seconds != null) ? Number(a.seconds) : NaN;
       const eta = Number.isFinite(aSec) ? (aSec < 60 ? `en ${aSec} s` : `en ${Math.ceil(aSec/60)} min`) : '';
       const dl = delayInfo(a);
-      return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+      return { hourText: h, bigText: eta || "—", delayLabel: dl.label, delayCls: dl.cls };
     });
 
     return `
       <div class="dest-block">
         <div class="dest-head">
-          <span class="dest-pill">
+          <span class="dest-pill ${isTram ? 'dir-pill' : ''}">
             <i class="material-icons" aria-hidden="true">${isTram?'tram':'directions_bus'}</i>
-            <span class="dest-label">Destino</span>
+            <span class="dest-label">${isTram ? 'Dirección' : 'Destino'}</span>
             <span class="dest-value">${escapeHtml(destName)}</span>
           </span>
         </div>
@@ -1142,13 +1153,7 @@
         <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
           <span id="fav-icon-${instanceId}">☆</span>
         </button>
-      </div>
-
-      <div class="alerts" id="alerts-${instanceId}">
-        <i class="material-icons" aria-hidden="true">warning_amber</i>
-      </div>
-
-      <div class="stack">
+      </div><div class="stack">
         <div id="info-${instanceId}">
           <div class="next-time" id="count-${instanceId}">—</div>
           <div class="hint">Cargando…</div>
@@ -1156,6 +1161,11 @@
 
         <div class="next-compact" id="next-${instanceId}"></div>
       </div>
+
+      <div class="alerts" id="alerts-${instanceId}">
+        <i class="material-icons" aria-hidden="true">warning_amber</i>
+      </div>
+
     `;
 
     $("#panels-container").appendChild(card);
@@ -1380,7 +1390,7 @@
                 : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
         const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
         const dl = delayInfo(a);
-        return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+        return { hourText: h, bigText: eta || "—", delayLabel: dl.label, delayCls: dl.cls };
       });
 
       const nextBox = $("#next-"+instanceId);
