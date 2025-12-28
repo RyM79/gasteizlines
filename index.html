@@ -100,7 +100,7 @@
     .btn span{font-size:12px;color:var(--muted)}
     .btn:active{transform:scale(.98)}
     @media (hover:hover) and (pointer:fine){
-      .btn:hover,.del-btn:hover,.nav-btn:hover,.chip:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+      .btn:hover,.pin-btn:hover,.del-btn:hover,.nav-btn:hover,.chip:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
     }
 
     .offline-banner{
@@ -145,7 +145,7 @@
     }
 
     .card-actions{display:flex;gap:10px;align-items:center}
-    .del-btn{
+    .pin-btn, .del-btn{
       width:42px;height:42px;
       display:grid;place-items:center;
       border-radius:12px;
@@ -154,9 +154,14 @@
       cursor:pointer;
       transition:transform .06s,box-shadow .2s, background .2s, border-color .2s;
     }
-    .del-btn i{font-size:20px;color:var(--muted)}
-    .del-btn:active{transform:scale(.98)}
-        .del-btn{
+    .pin-btn i, .del-btn i{font-size:20px;color:var(--muted)}
+    .pin-btn:active,.del-btn:active{transform:scale(.98)}
+    .pin-btn.pinned{
+      border-color:color-mix(in oklab,var(--line-accent) 45%, var(--glass-border));
+      background:color-mix(in oklab,var(--line-accent) 14%, var(--surface));
+    }
+    .pin-btn.pinned i{color:color-mix(in oklab,var(--line-accent) 80%, var(--text))}
+    .del-btn{
       border-color:color-mix(in oklab,var(--danger) 35%, var(--glass-border));
       background:color-mix(in oklab,var(--danger) 8%, var(--surface));
     }
@@ -186,7 +191,14 @@
     .stop-picker:hover .caret{ color: var(--primary); }
     .stop-picker[aria-expanded="true"] .caret{ transform: rotate(180deg); }
 
-    
+    .fav{
+      background:none;border:none;cursor:pointer;color:var(--primary);
+      min-width:44px;min-height:44px;display:grid;place-items:center;border-radius:12px;
+      font-size:26px;
+    }
+    .fav.selected{color:#f59e0b}
+    .fav:focus-visible{outline:none;box-shadow:var(--ring)}
+
     /* ALERTAS */
     .alerts{
       position:relative;
@@ -660,6 +672,26 @@
     return (crypto?.randomUUID ? crypto.randomUUID() : ("id-"+Date.now()+"-"+Math.random().toString(16).slice(2))).slice(0,18);
   }
 
+  const getPinned = () => loadJSON("pinned_instances", []);
+  const setPinned = (arr) => saveJSON("pinned_instances", arr);
+  const isPinned = (instanceId) => getPinned().includes(instanceId);
+
+  function setPinnedInstance(instanceId, pinned){
+    let p = getPinned();
+    const has = p.includes(instanceId);
+    if (pinned && !has) p = [...p, instanceId];
+    if (!pinned && has) p = p.filter(x=>x!==instanceId);
+    setPinned(p);
+    updatePinUI(instanceId);
+    renderPanelsOrder();
+    persistAllPanels();
+  }
+  function togglePin(instanceId){ setPinnedInstance(instanceId, !isPinned(instanceId)); }
+
+  const favKey = (instanceId)=>"favorite_"+instanceId;
+  const setFavorite = (instanceId, stop) => saveJSON(favKey(instanceId), stop);
+  const getFavorite = (instanceId) => loadJSON(favKey(instanceId), null);
+  const removeFavorite = (instanceId) => localStorage.removeItem(favKey(instanceId));
 
   const recKey = (lineCode) => "recent_" + lineCode;
   function getRecents(lineCode){ return loadJSON(recKey(lineCode), []); }
@@ -784,11 +816,42 @@
 
   /* ========= Order ========= */
   function renderPanelsOrder(){
-    // Mantener el orden de inserción (el dashboard ya representa la prioridad)
-    // No se aplica ordenación extra.
+    const container = $("#panels-container");
+    const allIds = Object.keys(panels);
+    const pinned = getPinned();
+
+    const ordered = [
+      ...pinned.filter(id => allIds.includes(id)),
+      ...allIds.filter(id => !pinned.includes(id)).sort((a,b)=>{
+        const la = panels[a]?.line?.code || a;
+        const lb = panels[b]?.line?.code || b;
+        return la.localeCompare(lb);
+      })
+    ];
+
+    ordered.forEach(id=>{
+      const el = $("#panel-"+id);
+      if (el) container.appendChild(el);
+    });
   }
 
-  /* ========= Delete ========= */
+  /* ========= Favorites ========= */
+  function toggleFavorite(instanceId){
+    const p = panels[instanceId]; if(!p) return;
+    const fav = getFavorite(instanceId);
+    if (fav && fav.id===p.currentStopId) removeFavorite(instanceId);
+    else setFavorite(instanceId, {id:p.currentStopId, name:p.currentStopName});
+    updateFavIcon(instanceId);
+    persistAllPanels();
+  }
+  function updateFavIcon(instanceId){
+    const p = panels[instanceId]; if(!p) return;
+    const fav = getFavorite(instanceId);
+    const selected = fav && fav.id === p.currentStopId;
+    $("#fav-btn-"+instanceId)?.classList.toggle('selected', selected);
+    const ic = $("#fav-icon-"+instanceId);
+    if (ic) ic.textContent = selected ? "★" : "☆";
+  }
 
   /* ========= Delete ========= */
   function deletePanel(instanceId){
@@ -796,11 +859,24 @@
     if (p?.countdownInterval) clearInterval(p.countdownInterval);
     delete panels[instanceId];
     $("#panel-"+instanceId)?.remove();
+
+    const pins = getPinned();
+    if (pins.includes(instanceId)) setPinned(pins.filter(x=>x!==instanceId));
+
+    renderPanelsOrder();
     updateEmpty();
     persistAllPanels();
   }
 
   /* ========= Create panel ========= */
+  function updatePinUI(instanceId){
+    const pinned = isPinned(instanceId);
+    const btn = $("#pin-btn-"+instanceId);
+    if (btn){
+      btn.classList.toggle("pinned", pinned);
+      btn.setAttribute("aria-pressed", String(pinned));
+      btn.title = pinned ? "Desfijar" : "Fijar";
+    }
   }
 
   function setStatus(instanceId, text){
@@ -1023,7 +1099,7 @@
     `;
   }
 
-  function createPanel(line, {focus=false} = {}){
+  function createPanel(line, {focus=false, pinOnAdd=false} = {}){
     const instanceId = uid();
 
     const card = document.createElement('section');
@@ -1058,7 +1134,10 @@
         </div>
 
         <div class="card-actions">
-<button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
+          <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
+            <i class="material-icons">push_pin</i>
+          </button>
+          <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
             <i class="material-icons">close</i>
           </button>
         </div>
@@ -1071,7 +1150,10 @@
           <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
           <i class="material-icons caret" aria-hidden="true">expand_more</i>
         </button>
-</div><div class="stack">
+        <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
+          <span id="fav-icon-${instanceId}">☆</span>
+        </button>
+      </div><div class="stack">
         <div id="info-${instanceId}">
           <div class="next-time" id="count-${instanceId}">—</div>
           <div class="hint">Cargando…</div>
@@ -1098,15 +1180,24 @@
     };
 
     $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
+    $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
+    $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
     $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
 
+    updateFavIcon(instanceId);
     ensureLineColor(line);
 
+    if (pinOnAdd) setPinnedInstance(instanceId, true);
+    else updatePinUI(instanceId);
+
     loadStopsForPanel(instanceId).then(()=>{
+      renderPanelsOrder();
       updateEmpty();
       persistAllPanels();
       if (focus) $("#panel-"+instanceId)?.scrollIntoView({behavior:"smooth", block:"start"});
     });
+
+    renderPanelsOrder();
     updateEmpty();
     persistAllPanels();
     return instanceId;
@@ -1132,6 +1223,8 @@
           updatePinUI(instanceId);
         }
       }
+
+      const fav = getFavorite(instanceId);
       if (fav){
         panel.currentStopId=fav.id; panel.currentStopName=fav.name;
       } else {
@@ -1141,6 +1234,7 @@
       }
 
       $("#stop-name-"+instanceId).textContent = panel.currentStopName || "Parada no disponible";
+      updateFavIcon(instanceId);
 
       await refreshPanel(instanceId);
     }catch(err){
@@ -1364,6 +1458,7 @@
     pushRecent(p.line.code, {id: stopId, name});
     closeStops();
     refreshPanel(instanceId);
+    updateFavIcon(instanceId);
     persistAllPanels();
   }
 
@@ -1384,10 +1479,18 @@
     try{
       const data = await getJSON(panel.line.stopsUrl);
       if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
+
+      const fav = getFavorite(instanceId);
       const recents = getRecents(panel.line.code);
 
       const cont = $("#stopsListContainer");
       cont.innerHTML = "";
+
+      if (fav && fav.id) {
+        cont.insertAdjacentHTML("beforeend", `<div class="section-title">⭐ Favorita</div>`);
+        cont.appendChild(renderStopItem({ id: fav.id, nombre: fav.name, selected: fav.id === panel.currentStopId, isFav: true }));
+        cont.insertAdjacentHTML("beforeend", `<div class="divider"></div>`);
+      }
 
       if (recents.length) {
         cont.insertAdjacentHTML("beforeend", `<div class="section-title">🕘 Recientes</div>`);
@@ -1488,7 +1591,7 @@
       const code = it.dataset.code;
       const line = lines.find(x=>x.code===code);
       if (line){
-        createPanel(line, {focus:true});
+        createPanel(line, {focus:true, pinOnAdd:true});
         closeAddModal();
       }
     };
@@ -1499,7 +1602,7 @@
         const code = it.dataset.code;
         const line = lines.find(x=>x.code===code);
         if (line){
-          createPanel(line, {focus:true});
+          createPanel(line, {focus:true, pinOnAdd:true});
           closeAddModal();
         }
       }
@@ -1514,7 +1617,9 @@
       return {
         id,
         lineCode: p.line.code,
+        pinned: isPinned(id),
         stop: p.currentStopId ? { id: p.currentStopId, name: p.currentStopName } : null,
+        favorite: getFavorite(id)
       };
     });
     saveJSON("panel_instances", snapshot);
@@ -1529,15 +1634,20 @@
     snapshot.forEach(item=>{
       const line = lines.find(l=>l.code===item.lineCode);
       if (!line) return;
-      const id = createPanel(line, {focus:false});
+      const id = createPanel(line, {focus:false, pinOnAdd:item.pinned});
       if (item.stop?.id){
         panels[id].currentStopId = item.stop.id;
         panels[id].currentStopName = item.stop.name || null;
         $("#stop-name-"+id).textContent = panels[id].currentStopName || "Parada";
       }
+      if (item.favorite?.id){
+        setFavorite(id, item.favorite);
+        updateFavIcon(id);
+      }
       refreshPanel(id);
     });
     persistAllPanels();
+    renderPanelsOrder();
     updateEmpty();
   }
 
