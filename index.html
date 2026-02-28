@@ -342,7 +342,7 @@
     .dest-pill.dir-pill i{
       color: color-mix(in oklab, var(--primary) 80%, var(--text));
     }
-    .dest-label{
+.dest-label{
       font-size:11px;
       letter-spacing:.14em;
       text-transform:uppercase;
@@ -500,118 +500,6 @@
       display:flex;align-items:center;gap:8px;
     }
     .divider{height:1px;background:var(--glass-border);margin:10px 0}
-
-    /* ===== Timeline popup (siguientes paradas) ===== */
-    .count-btn{
-      appearance:none;
-      border:none;
-      background:none;
-      padding:0;
-      margin:0;
-      cursor:pointer;
-      color:inherit;
-      border-radius:16px;
-    }
-    .count-btn:focus-visible{ outline:none; box-shadow:var(--ring); }
-    .count-btn .next-time{ transition: transform .06s; }
-    .count-btn:active .next-time{ transform: scale(.99); }
-    .count-hint{
-      display:inline-flex;align-items:center;gap:6px;
-      font-size:12px;color:var(--muted);
-      margin-top:6px;justify-content:center;
-    }
-    .count-hint i{ font-size:16px; color: color-mix(in oklab,var(--primary) 80%, var(--muted)); }
-
-    #timelineModal .sheet{ width:min(760px,96vw); }
-    .timeline-sub{
-      margin:6px 0 0;
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center;
-      color:var(--muted);font-size:12px;font-weight:900;
-    }
-    .timeline-sub .pill{ background:var(--surface-2); }
-    .timeline{
-      margin-top:12px;
-      display:grid;
-      gap:10px;
-    }
-    .tl-item{
-      display:grid;
-      grid-template-columns:18px 1fr auto;
-      gap:10px;
-      align-items:flex-start;
-      padding:12px;
-      border-radius:16px;
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-    }
-    .tl-rail{
-      position:relative;
-      width:18px;
-      display:flex;
-      justify-content:center;
-    }
-    .tl-rail::before{
-      content:"";
-      position:absolute;
-      top:10px;bottom:10px;
-      width:2px;
-      border-radius:999px;
-      background:color-mix(in oklab,var(--line-accent) 42%, var(--glass-border));
-      opacity:.95;
-    }
-    .tl-dot{
-      width:10px;height:10px;border-radius:50%;
-      background:var(--line-accent);
-      margin-top:6px;
-      box-shadow:0 0 0 5px color-mix(in oklab,var(--line-accent) 14%, transparent);
-      z-index:1;
-    }
-    .tl-item.current .tl-dot{
-      background:var(--primary);
-      box-shadow:0 0 0 5px rgba(11,99,255,.18);
-    }
-    .tl-main{ min-width:0; }
-    .tl-stop{
-      font-weight:950;
-      letter-spacing:-.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .tl-meta{
-      margin-top:2px;
-      color:var(--muted);
-      font-size:12px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .tl-time{
-      font-variant-numeric:tabular-nums;
-      font-weight:950;
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      color:var(--text);
-      white-space:nowrap;
-      align-self:center;
-    }
-    .tl-time.muted{ color:var(--muted); }
-    .tl-time.soon{
-      border-color: color-mix(in oklab,var(--primary) 42%, var(--glass-border));
-      background: color-mix(in oklab,var(--primary) 10%, var(--surface));
-    }
-    .tl-empty{
-      padding:14px;
-      border-radius:16px;
-      border:1px dashed var(--glass-border);
-      background:var(--surface);
-      color:var(--muted);
-      text-align:center;
-    }
-
   </style>
 </head>
 
@@ -690,23 +578,6 @@
              autocapitalize="none" autocomplete="off" spellcheck="false" />
 
       <div id="stopsListContainer" role="listbox"></div>
-    </div>
-  </div>
-
-  <!-- Modal timeline (siguientes paradas) -->
-  <div id="timelineModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="timelineModalTitle">
-    <div class="sheet">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-        <div style="min-width:0">
-          <h3 id="timelineModalTitle" style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Siguientes paradas</h3>
-          <div id="timelineModalSub" class="timeline-sub"></div>
-        </div>
-        <button class="btn" id="closeTimeline" aria-label="Cerrar">
-          <i class="material-icons">close</i>
-        </button>
-      </div>
-
-      <div id="timelineBody" class="timeline" aria-live="polite"></div>
     </div>
   </div>
 
@@ -1209,14 +1080,11 @@
         </div>
 
         <div>
-          <button class="count-btn" type="button" data-action="timeline" data-dest="${escapeHtml(destName)}" aria-label="Ver llegada en siguientes paradas">
-            <div class="next-time">${
-              (Number.isFinite(secVal) && secVal < 60)
-                ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
-                : `${escapeHtml(etaBig)}`
-            }</div>
-          </button>
-          <div class="count-hint"><i class="material-icons" aria-hidden="true">timeline</i><span>Ver siguientes paradas</span></div>
+          <div class="next-time">${
+            (Number.isFinite(secVal) && secVal < 60)
+              ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
+              : `${escapeHtml(etaBig)}`
+          }</div>
           <div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
             ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
@@ -1287,10 +1155,7 @@
         </button>
       </div><div class="stack">
         <div id="info-${instanceId}">
-          <button class="count-btn" type="button" data-action="timeline" aria-label="Ver llegada en siguientes paradas">
-            <div class="next-time" id="count-${instanceId}">—</div>
-          </button>
-          <div class="count-hint"><i class="material-icons" aria-hidden="true">timeline</i><span>Ver siguientes paradas</span></div>
+          <div class="next-time" id="count-${instanceId}">—</div>
           <div class="hint">Cargando…</div>
         </div>
 
@@ -1311,24 +1176,13 @@
       currentStopId:null,
       currentStopName:null,
       countdownInterval:null,
-      lastUpdated: 0,
-      stops: null,
-      lastArrivals: null,
-      lastArrivalsAtStop: null
+      lastUpdated: 0
     };
 
     $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
     $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
     $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
     $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
-
-    // Click en contador -> abrir timeline
-    card.addEventListener('click', (e)=>{
-      const btn = e.target.closest('.count-btn');
-      if (!btn) return;
-      const dest = btn.dataset.dest || null;
-      openTimeline(instanceId, { destination: dest });
-    });
 
     updateFavIcon(instanceId);
     ensureLineColor(line);
@@ -1357,9 +1211,6 @@
       setStatus(instanceId, "Cargando paradas…");
       const data = await getJSON(line.stopsUrl);
       if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
-
-      // Cache de paradas para timeline
-      panel.stops = data.recorrido;
 
       if (line.type==='bus' && data.color){
         const col = parseHexColor(data.color);
@@ -1397,13 +1248,6 @@
     }
   }
 
-  function getRouteCode(line){
-    const isTram = line.type === "tram";
-    return isTram
-      ? line.code
-      : ((line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code);
-  }
-
   async function refreshPanel(instanceId){
     const p = panels[instanceId]; if(!p || !p.currentStopId) return;
     const { line } = p;
@@ -1420,7 +1264,9 @@
 
     try{
       const isTram = line.type === "tram";
-      const routeCode = getRouteCode(line);
+      const routeCode = isTram
+        ? line.code
+        : ((line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code);
 
       const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
       const data = await getJSON(url);
@@ -1430,10 +1276,6 @@
       let arr = (data.llegadas||[]);
       if (isTram) arr = arr.filter(x=>x.line===line.code);
       else arr = arr.filter(x=>x.line===routeCode);
-
-      // Cache para timeline
-      p.lastArrivals = arr;
-      p.lastArrivalsAtStop = { stopId: p.currentStopId, at: started };
 
       if (!arr.length){
         $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">${isTram ? "🚊" : "🚍"} No hay más llegadas hoy.</div>`;
@@ -1515,10 +1357,7 @@
         : '';
 
       $("#info-"+instanceId).innerHTML = `
-        <button class="count-btn" type="button" data-action="timeline" aria-label="Ver llegada en siguientes paradas">
-          <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
-        </button>
-        <div class="count-hint"><i class="material-icons" aria-hidden="true">timeline</i><span>Ver siguientes paradas</span></div>
+        <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
         <div class="hint">
           <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
           ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
@@ -1683,144 +1522,6 @@
       $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">⚠️ No se pudieron cargar las paradas.</div>`;
       console.warn('Stops modal error', err);
     }
-  }
-
-  /* ========= Timeline modal (siguientes paradas) ========= */
-  let timelineForInstance = null;
-
-  function closeTimeline(){
-    const modal = $("#timelineModal");
-    modal.classList.remove("open");
-    detachViewportShim(modal);
-    unlockBodyScroll();
-    timelineForInstance = null;
-  }
-
-  function renderTimelineItems({instanceId, items, destination}){
-    const panel = panels[instanceId];
-    const accent = getComputedStyle($("#panel-"+instanceId)).getPropertyValue("--line-accent").trim() || "var(--primary)";
-    $("#timelineModal").style.setProperty("--line-accent", accent);
-
-    const host = $("#timelineBody");
-    if (!items.length){
-      host.innerHTML = `<div class="tl-empty">No hay datos de llegada para las siguientes paradas.</div>`;
-      return;
-    }
-
-    host.innerHTML = items.map(it=>{
-      const cls = it.isCurrent ? "tl-item current" : "tl-item";
-      const timeCls = it.timeText === "—" ? "tl-time muted" : (it.isCurrent ? "tl-time soon" : "tl-time");
-      const rel = it.minutes != null ? (it.minutes === 0 ? "ahora" : `en ${it.minutes} min`) : "";
-      return `
-        <div class="${cls}">
-          <div class="tl-rail"><div class="tl-dot"></div></div>
-          <div class="tl-main">
-            <div class="tl-stop" title="${escapeHtml(it.stopName)}">${escapeHtml(it.stopName)}</div>
-            <div class="tl-meta">
-              ${it.isCurrent ? `<span class="pill" style="padding:3px 10px">Parada actual</span>` : ``}
-              ${rel ? `<span>${escapeHtml(rel)}</span>` : ``}
-            </div>
-          </div>
-          <div class="${timeCls}">${escapeHtml(it.timeText)}</div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  async function fetchArrivalForStop({stopId, line, routeCode, destination}){
-    const url = ARRIVALS_TPL.replace("{stopId}", stopId).replace("{lineCode}", routeCode);
-    const data = await getJSON(url);
-    let arr = (data.llegadas || []);
-    if (line.type === "tram") {
-      arr = arr.filter(x => x.line === line.code);
-      if (destination) arr = arr.filter(x => String(x.destination||"") === String(destination));
-    } else {
-      arr = arr.filter(x => x.line === routeCode);
-      if (destination) arr = arr.filter(x => String(x.destination||"") === String(destination));
-    }
-    arr.sort((a,b)=>(a.seconds??1e12)-(b.seconds??1e12));
-    return arr[0] || null;
-  }
-
-  async function openTimeline(instanceId, {destination=null} = {}){
-    const panel = panels[instanceId];
-    if (!panel?.currentStopId) return;
-
-    // Asegura tener el recorrido cacheado
-    if (!Array.isArray(panel.stops) || !panel.stops.length){
-      try{
-        const data = await getJSON(panel.line.stopsUrl);
-        if (data?.recorrido) panel.stops = data.recorrido;
-      }catch(_){}
-    }
-
-    const stops = Array.isArray(panel.stops) ? panel.stops : [];
-    const idx = stops.findIndex(s => String(s.idParada) === String(panel.currentStopId));
-    const current = idx >= 0 ? stops[idx] : { idParada: panel.currentStopId, nombre: panel.currentStopName || "Parada actual" };
-
-    // Tomamos la dirección/destino del próximo vehículo si no viene forzada
-    let dest = destination;
-    if (!dest && Array.isArray(panel.lastArrivals) && panel.lastArrivals.length){
-      dest = panel.lastArrivals[0]?.destination || null;
-    }
-
-    // UI modal
-    timelineForInstance = instanceId;
-    $("#timelineModalTitle").textContent = `Siguientes paradas • ${panel.line.code}`;
-    const sub = [];
-    sub.push(`<span class="pill">Parada: <strong>${escapeHtml(panel.currentStopName || "—")}</strong></span>`);
-    if (dest) sub.push(`<span class="pill">Destino: <strong>${escapeHtml(dest)}</strong></span>`);
-    $("#timelineModalSub").innerHTML = sub.join("");
-
-    $("#timelineBody").innerHTML = `<div class="tl-empty">Cargando…</div>`;
-    $("#timelineModal").classList.add("open");
-    lockBodyScroll();
-    attachViewportShim($("#timelineModal"));
-
-    // Stops a mostrar: actual + siguientes (limitadas)
-    const nextStops = (idx >= 0 ? stops.slice(idx, idx + 11) : [current]).map(s=>({ id: s.idParada, name: s.nombre }));
-    const routeCode = getRouteCode(panel.line);
-
-    // Construye items (current de forma instantánea si tenemos lastArrivals)
-    const items = [];
-
-    // Para cada parada, pedimos la próxima llegada de ESA línea y (si existe) mismo destino.
-    // Se hace secuencialmente para evitar saturar la API/proxy.
-    for (let i=0;i<nextStops.length;i++){
-      const st = nextStops[i];
-      let top = null;
-
-      // En la parada actual intentamos reutilizar lo ya descargado
-      if (i === 0 && Array.isArray(panel.lastArrivals) && panel.lastArrivals.length){
-        let arr = panel.lastArrivals;
-        if (dest) arr = arr.filter(x => String(x.destination||"") === String(dest));
-        top = arr[0] || panel.lastArrivals[0] || null;
-      } else {
-        try{
-          top = await fetchArrivalForStop({ stopId: st.id, line: panel.line, routeCode, destination: dest });
-        }catch(_){ top = null; }
-      }
-
-      const timeText = top
-        ? (typeof top.realtimeArrival === "number" ? fmtHHMM(top.realtimeArrival) :
-           (typeof top.scheduledArrival === "number" ? `≈${fmtHHMM(top.scheduledArrival)}` : "—"))
-        : "—";
-
-      // Aproximación de minutos usando seconds si viene en la respuesta
-      const mins = (top && typeof top.seconds === "number")
-        ? Math.max(0, Math.ceil(top.seconds / 60))
-        : null;
-
-      items.push({
-        stopId: st.id,
-        stopName: st.name || "—",
-        timeText,
-        minutes: mins,
-        isCurrent: i === 0
-      });
-    }
-
-    renderTimelineItems({ instanceId, items, destination: dest });
   }
 
   /* ========= Add modal ========= */
@@ -1996,17 +1697,12 @@
     $("#chipTram").addEventListener("click", ()=> setAddFilter("tram"));
 
     $("#closeStops").addEventListener('click', closeStops);
-
-    $("#closeTimeline").addEventListener('click', closeTimeline);
-    $("#timelineModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeTimeline(); });
-
     $("#stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
 
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){
         closeAddModal();
         closeStops();
-        closeTimeline();
       }
     });
 
@@ -2054,15 +1750,15 @@
       });
     }
 
-    // timers globales (tu lógica original)
-    loadInitialPanels();
-    refreshAll();
-
+    globalLastRefresh = Date.now();
+    updateGlobalUpdated();
     if (globalTickTimer) clearInterval(globalTickTimer);
-    globalTickTimer = setInterval(updateGlobalUpdated, 1000);
+    globalTickTimer = setInterval(()=> updateGlobalUpdated(), 1000);
+
+    loadInitialPanels();
 
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(refreshAll, 35 * 1000);
+    autoRefreshTimer = setInterval(()=> refreshAll(), 30000);
   });
   </script>
 </body>
