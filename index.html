@@ -3,764 +3,558 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Gasteiz Lines</title>
+  <title>Gasteiz Lines — Bus & Tranvía</title>
+
+  <meta id="metaThemeLight" name="theme-color" content="#f6f8fc" media="(prefers-color-scheme: light)">
+  <meta id="metaThemeDark"  name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#0b1020;
-      --surface:rgba(255,255,255,.08);
-      --surface-2:rgba(255,255,255,.10);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.68);
-      --glass-border:rgba(255,255,255,.14);
-      --shadow:0 18px 48px rgba(0,0,0,.35);
-      --ring:0 0 0 3px rgba(124,92,255,.35);
-      --primary:#7c5cff;
-      --danger:#ff4d6d;
-      --ok:#22c55e;
-      --warn:#f59e0b;
-      --radius:18px;
-      --radius-lg:22px;
-      --max:1100px;
-      --card-pad:14px;
-      --blur:16px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      --ease: cubic-bezier(.22,1,.36,1);
-    }
-    @media (prefers-color-scheme: light){
-      :root{
-        --bg:#f6f7fb;
-        --surface:rgba(255,255,255,.74);
-        --surface-2:rgba(255,255,255,.86);
-        --text:rgba(13,18,40,.92);
-        --muted:rgba(13,18,40,.60);
-        --glass-border:rgba(13,18,40,.12);
-        --shadow:0 18px 48px rgba(16,24,40,.10);
-        --ring:0 0 0 3px rgba(124,92,255,.24);
-      }
-    }
 
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background:
-        radial-gradient(1200px 650px at 15% 5%, rgba(124,92,255,.22), transparent 60%),
-        radial-gradient(900px 500px at 85% 0%, rgba(34,197,94,.18), transparent 60%),
-        radial-gradient(900px 500px at 50% 95%, rgba(245,158,11,.16), transparent 60%),
-        var(--bg);
-      color:var(--text);
-      overflow-x:hidden;
-    }
+/* === UI Redesign (2025) — modern, fluid, mobile-first === */
+:root{
+  --bg: #f6f7fb;
+  --surface: rgba(255,255,255,.86);
+  --surface-2:#ffffff;
+  --text:#0b1220;
+  --muted:#5b667a;
+  --muted-2:#7b879d;
+  --border: rgba(15,23,42,.10);
+  --shadow: 0 18px 50px rgba(16,24,40,.12);
+  --shadow-sm: 0 10px 26px rgba(16,24,40,.10);
+  --radius: 20px;
+  --radius-sm: 14px;
 
-    /* Layout */
-    .app{
-      max-width: var(--max);
-      margin:0 auto;
-      padding: 18px 14px 92px;
-      box-sizing:border-box;
-    }
+  --primary:#2563eb;
+  --primary-2:#1d4ed8;
 
-    header{
-      position: sticky;
-      top:0;
-      z-index: 50;
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      background: linear-gradient(to bottom, rgba(0,0,0,.38), rgba(0,0,0,.10));
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    [data-theme="light"] header{
-      background: linear-gradient(to bottom, rgba(255,255,255,.74), rgba(255,255,255,.42));
-      border-bottom: 1px solid rgba(13,18,40,.08);
-    }
-    .topbar{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 14px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      box-sizing:border-box;
-    }
+  --warn-bg: rgba(245,158,11,.12);
+  --warn-border: rgba(245,158,11,.28);
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-    }
-    .logo{
-      width:38px;height:38px;border-radius:14px;
-      display:grid;place-items:center;
-      background: linear-gradient(135deg, rgba(124,92,255,.85), rgba(245,158,11,.80));
-      box-shadow: 0 14px 28px rgba(124,92,255,.20);
-      flex:0 0 auto;
-    }
-    .logo i{font-size:22px}
-    .title{
-      display:flex;
-      flex-direction:column;
-      min-width:0;
-    }
-    .title strong{
-      font-size:14px;
-      letter-spacing:.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .title span{
-      font-size:12px;color:var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+  --danger-bg: rgba(239,68,68,.10);
+  --danger-border: rgba(239,68,68,.22);
 
-    .actions{
-      display:flex;align-items:center;gap:10px;
-    }
+  --focus: 0 0 0 4px rgba(37,99,235,.18);
 
-    .btn{
-      border:none;
-      outline:none;
-      padding:10px 12px;
-      border-radius:14px;
-      cursor:pointer;
-      color:var(--text);
-      background: var(--surface);
-      border:1px solid var(--glass-border);
-      box-shadow: 0 10px 26px rgba(0,0,0,.16);
-      display:inline-flex;align-items:center;gap:8px;
-      transition: transform .08s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
-      user-select:none;
-    }
-    .btn:active{ transform: translateY(1px) scale(.99); }
-    .btn:focus-visible{ box-shadow: var(--ring), 0 10px 26px rgba(0,0,0,.16); }
-    .btn .material-icons{ font-size:20px; line-height:0; opacity:.92}
-    .btn.primary{
-      background: linear-gradient(135deg, rgba(124,92,255,.92), rgba(124,92,255,.62));
-      border: 1px solid rgba(124,92,255,.35);
-    }
-    .btn.danger{
-      background: linear-gradient(135deg, rgba(255,77,109,.92), rgba(255,77,109,.62));
-      border: 1px solid rgba(255,77,109,.35);
-    }
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
 
-    .hint{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .hint .dot{
-      width:6px;height:6px;border-radius:99px;background:rgba(255,255,255,.35);
-    }
+html[data-theme="dark"]{
+  --bg:#0b1220;
+  --surface: rgba(17,24,39,.72);
+  --surface-2:#0f172a;
+  --text:#e8eefc;
+  --muted:#a8b3c7;
+  --muted-2:#93a0b8;
+  --border: rgba(148,163,184,.16);
+  --shadow: 0 18px 55px rgba(0,0,0,.45);
+  --shadow-sm: 0 10px 26px rgba(0,0,0,.35);
 
-    /* Panels grid */
-    .grid{
-      margin-top: 18px;
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 14px;
-      align-items: start;
-    }
-    @media (max-width: 980px){
-      .grid{ gap:12px; }
-    }
-    @media (max-width: 680px){
-      .app{ padding-bottom: 112px; }
-      .grid{ grid-template-columns: 1fr; }
-    }
+  --warn-bg: rgba(245,158,11,.14);
+  --warn-border: rgba(245,158,11,.30);
 
-    .card{
-      grid-column: span 4;
-      background: var(--surface);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      position:relative;
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      transition: transform .14s var(--ease), box-shadow .2s var(--ease);
-    }
-    @media (hover:hover){
-      .card:hover{ transform: translateY(-2px); box-shadow: 0 26px 64px rgba(0,0,0,.32); }
-      [data-theme="light"] .card:hover{ box-shadow: 0 26px 64px rgba(16,24,40,.16); }
-    }
-    @media (max-width: 980px){
-      .card{ grid-column: span 6; }
-    }
-    @media (max-width: 680px){
-      .card{ grid-column: span 12; }
-    }
+  --danger-bg: rgba(239,68,68,.14);
+  --danger-border: rgba(239,68,68,.30);
 
-    .card::before{
-      content:"";
-      position:absolute;inset:0;
-      background:
-        radial-gradient(420px 180px at 30% -10%, rgba(255,255,255,.10), transparent 60%),
-        radial-gradient(320px 160px at 80% 0%, rgba(124,92,255,.12), transparent 60%);
-      pointer-events:none;
-      opacity:.9;
-    }
+  --focus: 0 0 0 4px rgba(96,165,250,.22);
+}
 
-    .card-inner{ position:relative; padding: var(--card-pad); display:flex; flex-direction:column; gap:10px; }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: var(--font);
+  color:var(--text);
+  background:
+    radial-gradient(1100px 500px at 20% -10%, rgba(37,99,235,.18), transparent 60%),
+    radial-gradient(900px 480px at 100% 10%, rgba(168,85,247,.14), transparent 55%),
+    radial-gradient(900px 520px at 70% 115%, rgba(16,185,129,.10), transparent 55%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+  padding-bottom: 88px; /* bottom nav room */
+}
 
-    .card-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .line-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.10);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing:.2px;
-      user-select:none;
-    }
-    [data-theme="light"] .line-pill{ background: rgba(255,255,255,.30); border:1px solid rgba(13,18,40,.08); }
-    .line-pill i{ font-size:18px; opacity:.9 }
-    .line-code{
-      font-family: var(--mono);
-      font-weight: 900;
-      letter-spacing: .6px;
-    }
+/* --- a11y focus --- */
+:focus-visible{outline:none; box-shadow: var(--focus); border-radius: 12px}
 
-    .card-tools{
-      display:flex; gap:8px; align-items:center;
-    }
-    .iconbtn{
-      width:36px;height:36px;border-radius:14px;
-      display:grid;place-items:center;
-      border:1px solid var(--glass-border);
-      background: rgba(0,0,0,.08);
-      cursor:pointer;
-      transition: transform .08s var(--ease), background .2s var(--ease);
-      user-select:none;
-    }
-    [data-theme="light"] .iconbtn{ background: rgba(255,255,255,.38); }
-    .iconbtn:active{ transform: translateY(1px) scale(.99); }
-    .iconbtn i{ font-size:20px; opacity:.85 }
-    .iconbtn:hover{ background: rgba(255,255,255,.14); }
-    [data-theme="light"] .iconbtn:hover{ background: rgba(255,255,255,.64); }
+/* --- App Bar --- */
+.appbar{
+  position: sticky;
+  top:0;
+  z-index: 20;
+  padding: 14px 16px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.50));
+  border-bottom: 1px solid var(--border);
+}
+html[data-theme="dark"] .appbar{
+  background: linear-gradient(180deg, rgba(15,23,42,.80), rgba(15,23,42,.55));
+}
+.brand{display:flex; gap:12px; align-items:center;}
+.logo{
+  width:44px; height:44px;
+  border-radius: 16px;
+  display:grid; place-items:center;
+  background: linear-gradient(135deg, rgba(37,99,235,.18), rgba(99,102,241,.14));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.logo .material-icons{font-size:22px}
+.title strong{font-size: 18px; letter-spacing:.2px}
+.sub{
+  margin-top: 4px;
+  display:flex; gap:10px; align-items:center;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.dot{
+  width:4px; height:4px; border-radius:999px;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+  opacity:.9;
+}
+.pill{
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space:nowrap;
+}
 
-    .row{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:12px;
-    }
+.actions{display:flex; align-items:center; gap:10px}
+.appbar{display:flex; align-items:center; justify-content:space-between}
 
-    .stop-name{
-      font-weight: 800;
-      letter-spacing:-.2px;
-      line-height: 1.2;
-      font-size: 14px;
-      min-width:0;
-    }
-    .stop-name span{
-      display:inline-block;
-      max-width: 100%;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      vertical-align:bottom;
-    }
+/* --- Buttons --- */
+button{font:inherit}
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--text);
+  cursor:pointer;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease;
+}
+.btn:hover{transform: translateY(-1px)}
+.btn .material-icons{font-size:20px}
+.btn span{font-size:13px; color: var(--muted)}
 
-    .next-time{
-      font-size: 22px;
-      font-weight: 950;
-      letter-spacing:-.5px;
-      line-height:1.1;
-      display:flex;
-      align-items:baseline;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .next-time small{
-      font-size:12px;
-      font-weight:800;
-      color:var(--muted);
-      letter-spacing:.2px;
-    }
+/* --- Layout grid --- */
+.grid{
+  padding: 14px 12px;
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media (min-width: 680px){
+  .grid{padding: 18px 18px; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px;}
+}
+@media (min-width: 1024px){
+  .grid{grid-template-columns: repeat(3, minmax(0,1fr));}
+}
 
-    .delay{
-      font-size:12px;
-      font-weight:900;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.14);
-      user-select:none;
-    }
-    [data-theme="light"] .delay{ background: rgba(255,255,255,.50); border:1px solid rgba(13,18,40,.10); }
-    .delay-ok{ color: rgba(34,197,94,.96); }
-    .delay-bad{ color: rgba(255,77,109,.98); }
-    .delay-neutral{ color: var(--muted); }
-    .delay-warn{ color: rgba(245,158,11,.98); }
+/* --- Card --- */
+.card{
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  position:relative;
+  transform: translateZ(0);
+}
+.card::before{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  background: linear-gradient(180deg, rgba(255,255,255,.55), transparent 36%);
+  opacity:.55;
+}
+html[data-theme="dark"] .card::before{opacity:.22}
 
-    .pill{
-      font-size:12px;
-      font-weight:800;
-      padding:4px 9px;
-      border-radius:999px;
-      background: rgba(124,92,255,.16);
-      border:1px solid rgba(124,92,255,.26);
-      color: rgba(124,92,255,.98);
-      user-select:none;
-    }
+.card-top{
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 14px 14px 10px;
+}
+.line-row{display:flex; gap:10px; align-items:center; min-width:0}
+.line-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .2px;
+  white-space:nowrap;
+}
+.line-pill .material-icons{font-size:18px; opacity:.95}
+.line-name{
+  font-weight: 750;
+  font-size: 15px;
+  color: var(--text);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  max-width: 62vw;
+}
+@media(min-width:680px){ .line-name{max-width: 26vw;} }
 
-    .arrivals{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top: 2px;
-    }
-    .chip{
-      padding: 7px 9px;
-      border-radius: 14px;
-      border:1px solid var(--glass-border);
-      background: rgba(0,0,0,.10);
-      display:flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
-    }
-    [data-theme="light"] .chip{ background: rgba(255,255,255,.34); }
-    .chip .when{
-      font-weight: 950;
-      font-size:12px;
-      letter-spacing:.2px;
-    }
-    .chip .clock{
-      font-size:12px;
-      color: var(--muted);
-      font-weight: 800;
-    }
+.meta-small{
+  margin-top:6px;
+  display:flex; gap:10px; align-items:center;
+  font-size: 12.5px;
+  color: var(--muted);
+}
 
-    .notice{
-      margin-top: 10px;
-      padding: 10px 11px;
-      border-radius: 16px;
-      border:1px solid rgba(245,158,11,.32);
-      background: rgba(245,158,11,.12);
-      color: rgba(245,158,11,.96);
-      font-size: 12px;
-      display:none;
-      line-height:1.3;
-    }
-    .notice.show{ display:block; }
+.card-actions{display:flex; gap:8px; align-items:flex-start}
+.pin-btn,.del-btn{
+  width: 40px; height: 40px;
+  border-radius: 14px;
+  display:grid; place-items:center;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 75%, transparent);
+  cursor:pointer;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease;
+}
+.pin-btn:hover,.del-btn:hover{transform: translateY(-1px)}
+.pin-btn[aria-pressed="true"]{
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface-2));
+}
+.del-btn{
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+}
+.pin-btn .material-icons,.del-btn .material-icons{font-size:20px}
 
-    /* Bottom nav */
-    nav.bottom{
-      position: fixed;
-      left:0;right:0;bottom:0;
-      z-index:60;
-      padding: 10px 12px;
-      background: linear-gradient(to top, rgba(0,0,0,.48), rgba(0,0,0,.0));
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-    }
-    [data-theme="light"] nav.bottom{
-      background: linear-gradient(to top, rgba(255,255,255,.84), rgba(255,255,255,.0));
-    }
-    .navinner{
-      max-width: var(--max);
-      margin:0 auto;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding: 10px 10px;
-      border-radius: 22px;
-      background: var(--surface);
-      border:1px solid var(--glass-border);
-      box-shadow: var(--shadow);
-    }
-    .navbtn{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:4px;
-      padding: 10px 8px;
-      border-radius: 18px;
-      border:1px solid transparent;
-      cursor:pointer;
-      user-select:none;
-      transition: background .2s var(--ease), transform .08s var(--ease);
-    }
-    .navbtn:active{ transform: translateY(1px) scale(.99); }
-    .navbtn i{ font-size:22px; opacity:.92 }
-    .navbtn span{ font-size:11px; font-weight:850; color: var(--muted); }
-    .navbtn.active{
-      background: rgba(124,92,255,.16);
-      border:1px solid rgba(124,92,255,.26);
-    }
-    .navbtn.active span{ color: rgba(124,92,255,.96); }
+/* --- Stop selector row --- */
+.stop-row{
+  position:relative;
+  display:flex; gap:10px; align-items:center;
+  padding: 0 14px 12px;
+}
+.stop-picker{
+  flex:1;
+  display:flex; align-items:center; gap:10px;
+  padding: 12px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  cursor:pointer;
+  min-width: 0;
+  transition: transform .15s ease, border-color .2s ease, background .2s ease;
+}
+.stop-picker:hover{transform: translateY(-1px)}
+.stop-picker .material-icons{font-size:20px; opacity:.9}
+.stop-name{
+  font-weight: 650;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.stop-picker .caret{margin-left:auto; opacity:.65}
+.fav{
+  width: 44px; height: 44px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  display:grid; place-items:center;
+  cursor:pointer;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease;
+}
+.fav:hover{transform: translateY(-1px)}
+.fav span{font-size: 18px}
 
-    /* Modals */
-    .modal{
-      position: fixed;
-      inset:0;
-      z-index: 90;
-      display:none;
-      align-items:flex-end;
-      justify-content:center;
-      padding: 16px;
-      box-sizing:border-box;
-      background: rgba(0,0,0,.44);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    [data-theme="light"] .modal{ background: rgba(16,24,40,.24); }
-    .modal.open{ display:flex; }
-    .sheet{
-      width: min(720px, 96vw);
-      max-height: min(86vh, 840px);
-      overflow:auto;
-      border-radius: 26px;
-      background: var(--surface-2);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      box-sizing:border-box;
-      animation: pop .18s var(--ease);
-    }
-    @keyframes pop{ from{ transform: translateY(18px) scale(.98); opacity:0 } to{ transform: translateY(0) scale(1); opacity:1 } }
+/* --- Alerts --- */
+.alerts{
+  margin: 0 14px 12px;
+  border-radius: 16px;
+  border: 1px dashed var(--warn-border);
+  background: var(--warn-bg);
+  padding: 12px 12px;
+  display:none;
+  gap:10px;
+  align-items:flex-start;
+  position:relative;
+}
+.alerts.show{display:flex}
+.alerts .material-icons{font-size:20px; opacity:.9; margin-top:1px}
+.alert-text{min-width:0}
+.alert-text b{display:block; font-size:13px; letter-spacing:.2px}
+.alert-meta{margin-top:4px; font-size:12.5px; color: var(--muted)}
+.alerts-close{
+  margin-left:auto;
+  width: 34px; height: 34px;
+  border-radius: 12px;
+  border: 1px solid var(--warn-border);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  display:grid; place-items:center;
+  cursor:pointer;
+}
+.alerts-close .material-icons{font-size:18px}
 
-    .search{
-      width:100%;
-      box-sizing:border-box;
-      border-radius: 16px;
-      padding: 12px 12px;
-      font-size: 14px;
-      outline:none;
-      border:1px solid var(--glass-border);
-      background: rgba(0,0,0,.10);
-      color: var(--text);
-      margin-top: 12px;
-    }
-    [data-theme="light"] .search{ background: rgba(255,255,255,.64); }
+/* --- Main stack: countdown + next chips --- */
+.stack{
+  position:relative;
+  padding: 0 14px 14px;
+}
+#info-{ /* placeholder to avoid accidental */
+}
 
-    .tabs{
-      margin-top: 12px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .chipbtn{
-      padding: 8px 10px;
-      border-radius: 999px;
-      border:1px solid var(--glass-border);
-      background: rgba(0,0,0,.10);
-      font-size: 12px;
-      font-weight: 900;
-      cursor:pointer;
-      user-select:none;
-      transition: background .2s var(--ease), transform .08s var(--ease);
-    }
-    [data-theme="light"] .chipbtn{ background: rgba(255,255,255,.42); }
-    .chipbtn:active{ transform: translateY(1px) scale(.99); }
-    .chipbtn.active{
-      background: rgba(124,92,255,.20);
-      border:1px solid rgba(124,92,255,.30);
-      color: rgba(124,92,255,.98);
-    }
+.next-time{
+  margin-top: 6px;
+  text-align:center;
+  font-weight: 850;
+  font-size: 56px;
+  letter-spacing: -1px;
+  line-height: 1.0;
+  font-variant-numeric: tabular-nums;
+}
+.next-time small{
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .2px;
+  margin-left: 6px;
+}
+.hint{
+  text-align:center;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.next-compact{
+  margin-top: 12px;
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.next-chip{
+  display:inline-flex;
+  gap:8px;
+  align-items:baseline;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  box-shadow: 0 8px 20px rgba(16,24,40,.06);
+}
+.next-chip b{font-variant-numeric: tabular-nums}
+.next-chip span{font-size: 12.5px; color: var(--muted)}
 
-    .list{
-      margin-top: 12px;
-      display:grid;
-      gap:10px;
-    }
-    .item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding: 12px 12px;
-      border-radius: 18px;
-      border:1px solid var(--glass-border);
-      background: rgba(0,0,0,.08);
-      cursor:pointer;
-      user-select:none;
-      transition: background .2s var(--ease), transform .08s var(--ease);
-    }
-    [data-theme="light"] .item{ background: rgba(255,255,255,.42); }
-    .item:active{ transform: translateY(1px) scale(.995); }
-    .item:hover{ background: rgba(255,255,255,.12); }
-    [data-theme="light"] .item:hover{ background: rgba(255,255,255,.70); }
-    .item strong{ font-weight: 950; font-size: 14px; letter-spacing:-.2px; }
-    .item small{ color: var(--muted); font-weight: 800; }
+/* --- Tram destination blocks --- */
+.dest-block{
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+  padding: 12px;
+  margin-top: 12px;
+}
+.dest-head{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-bottom: 6px;
+}
+.dest-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.dest-label{
+  font-size: 12px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.dest-value{
+  font-weight: 800;
+  color: var(--text);
+}
+.dest-block .next-time{font-size: 48px; margin-top: 8px}
 
-    .empty{
-      padding: 14px;
-      color: var(--muted);
-      font-size: 13px;
-      text-align:center;
-    }
+/* --- Offline banner / empty --- */
+#offlineBanner{
+  margin: 10px 12px 0;
+  border-radius: 16px;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
+  padding: 10px 12px;
+  color: var(--text);
+}
+#empty-message{
+  margin: 12px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  background: color-mix(in srgb, var(--surface) 65%, transparent);
+  padding: 18px;
+  color: var(--muted);
+}
 
-    .offline{
-      display:none;
-      margin: 14px 0 0;
-      padding: 11px 12px;
-      border-radius: 18px;
-      border:1px solid rgba(255,77,109,.32);
-      background: rgba(255,77,109,.10);
-      color: rgba(255,77,109,.95);
-      font-size: 12px;
-      font-weight: 850;
-      line-height: 1.3;
-    }
+/* --- Bottom nav --- */
+.bottom-nav{
+  position: fixed;
+  left: 12px; right: 12px; bottom: 12px;
+  display:flex; gap: 12px;
+  padding: 10px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+  z-index: 30;
+}
+.nav-btn{
+  flex:1;
+  display:flex; align-items:center; justify-content:center;
+  gap:10px;
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  cursor:pointer;
+  transition: transform .15s ease, background .2s ease, border-color .2s ease;
+}
+.nav-btn:hover{transform: translateY(-1px)}
+.nav-btn .material-icons{font-size:22px}
+.nav-btn span{font-weight: 750}
+.nav-btn.primary{
+  background: linear-gradient(180deg, color-mix(in srgb, var(--primary) 92%, #fff), color-mix(in srgb, var(--primary-2) 92%, #fff));
+  color:#fff;
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+.nav-btn.primary span{color:#fff}
+.nav-btn.secondary span{color: var(--text)}
 
-    .spin{ animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* --- Modal (Add / Stops) --- */
+.modal{
+  position: fixed;
+  inset: 0;
+  display:none;
+  place-items:end center;
+  background: rgba(2,6,23,.45);
+  z-index: 50;
+}
+.modal.show{display:grid}
+.sheet{
+  width: min(720px, 100%);
+  max-height: 88vh;
+  overflow:auto;
+  border-radius: 22px 22px 0 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+.section-title{
+  display:flex; align-items:center; justify-content:space-between;
+  gap: 12px;
+  padding: 4px 4px 10px;
+}
+.section-title h3{margin:0; font-size: 16px}
 
-    /* Tram blocks */
-    .dest-block{
-      margin-top: 8px;
-      padding: 10px 10px;
-      border-radius: 18px;
-      border: 1px solid var(--glass-border);
-      background: rgba(0,0,0,.08);
-    }
-    [data-theme="light"] .dest-block{ background: rgba(255,255,255,.42); }
-    .dest-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom: 8px;
-    }
-    .dest-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-size: 12px;
-      font-weight: 900;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid var(--glass-border);
-      background: rgba(0,0,0,.12);
-      user-select:none;
-    }
-    [data-theme="light"] .dest-pill{ background: rgba(255,255,255,.54); }
-    .dest-pill i{ font-size:18px; opacity:.9 }
-    .dest-label{ color: var(--muted); font-weight: 900; }
-    .dest-value{
-      font-weight: 950;
-      letter-spacing:-.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 240px;
-      display:inline-block;
-      vertical-align:bottom;
-    }
+.search{width:100%}
+input.search{width:100%; padding: 12px 12px; border-radius: 14px; border: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 35%, transparent); color: var(--text);} 
+.search input{
+  width:100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 35%, transparent);
+  color: var(--text);
+}
+.chips{display:flex; gap:10px; padding: 10px 2px 0; flex-wrap:wrap}
+.chip{
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor:pointer;
+  color: var(--muted);
+  font-weight: 650;
+}
+.chip.active{
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+  color: var(--text);
+}
+.add-item{
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff0;
+  padding: 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap: 10px;
+  cursor:pointer;
+  transition: transform .15s ease, background .2s ease;
+}
+.add-item:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--primary) 7%, transparent)}
+.row-title{font-weight: 800}
+.row-sub{color: var(--muted); font-size: 12.5px; margin-top: 3px}
+.row-right{color: var(--muted-2); font-size: 12.5px; white-space:nowrap}
 
-    .tram-sec{
-      font-weight: 1000;
-      font-size: 26px;
-      letter-spacing:-.8px;
-      font-variant-numeric: tabular-nums;
-    }
+/* --- Motion preferences --- */
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important; animation:none !important; scroll-behavior:auto !important;}
+}
 
-    .viewport-shim{
-      height: env(safe-area-inset-bottom);
-    }
-
-    /* === Click en contador (trigger) === */
-    .timeline-trigger{
-      cursor:pointer;
-      border-radius:14px;
-      padding:6px 10px;
-      margin:-6px -10px;
-      transition:transform .06s, box-shadow .2s, background .2s;
-      background:transparent;
-    }
-    .timeline-trigger:active{ transform:scale(.99); }
-    .timeline-trigger:focus-visible{ outline:none; box-shadow:var(--ring); }
-    @media (hover:hover) and (pointer:fine){
-      .timeline-trigger:hover{
-        background:color-mix(in oklab,var(--surface-2) 70%, transparent);
-        box-shadow:0 10px 26px rgba(16,24,40,.10);
-      }
-    }
-
-    /* === Modal Timeline === */
-    #timelineModal .sheet{
-      width:min(820px,96vw);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .timeline-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .timeline-sub{
-      color:var(--muted);
-      font-size:12px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .timeline-list{
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-      border-radius:16px;
-      overflow:hidden;
-    }
-    .tl-item{
-      display:grid;
-      grid-template-columns: 22px 1fr auto;
-      gap:12px;
-      padding:12px 14px;
-      border-bottom:1px solid var(--glass-border);
-      align-items:flex-start;
-    }
-    .tl-item:last-child{ border-bottom:none; }
-    .tl-rail{
-      position:relative;
-      display:flex;
-      justify-content:center;
-      padding-top:2px;
-    }
-    .tl-dot{
-      width:12px;height:12px;border-radius:50%;
-      background: color-mix(in oklab, var(--line-accent) 78%, var(--text));
-      box-shadow:0 8px 16px rgba(16,24,40,.12);
-      border:2px solid color-mix(in oklab, var(--surface) 80%, transparent);
-    }
-    .tl-line{
-      position:absolute;
-      top:16px; bottom:-12px;
-      width:2px;
-      background: color-mix(in oklab, var(--line-accent) 35%, var(--glass-border));
-      border-radius:99px;
-    }
-    .tl-main{ min-width:0; }
-    .tl-stop{
-      font-weight:950;
-      letter-spacing:-.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .tl-meta{
-      margin-top:3px;
-      color:var(--muted);
-      font-size:12px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .tl-right{
-      text-align:right;
-      font-variant-numeric:tabular-nums;
-      white-space:nowrap;
-    }
-    .tl-eta{
-      font-weight:950;
-      font-size:14px;
-    }
-    .tl-clock{
-      margin-top:4px;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:850;
-    }
-    .tl-current .tl-dot{
-      background: color-mix(in oklab, var(--primary) 70%, var(--line-accent));
-    }
-    .tl-badge{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid var(--glass-border);
-      background:color-mix(in oklab,var(--surface) 80%, transparent);
-      color:var(--muted);
-      font-size:12px;
-      font-weight:950;
-    }
-  </style>
+</style>
 </head>
 
 <body>
-  <header>
-    <div class="topbar">
+  <div class="app">
+    <header class="appbar" aria-label="Barra superior">
       <div class="brand">
-        <div class="logo" aria-hidden="true"><i class="material-icons">directions_transit</i></div>
+        <div class="logo"><i class="material-icons">directions_transit</i></div>
         <div class="title">
           <strong>Gasteiz Lines</strong>
-          <span id="subtitle">Llegadas en tiempo real • Dashboard</span>
+          <div class="sub">
+            <span>Bus & Tranvía</span>
+            <span class="dot"></span>
+            <span id="globalUpdated" class="pill">Actualizado: —</span>
+          </div>
         </div>
       </div>
 
       <div class="actions">
-        <button class="btn" id="themeToggle" title="Cambiar tema">
-          <i class="material-icons">brightness_6</i>
-          <span style="font-weight:900;font-size:12px">Tema</span>
-        </button>
-        <button class="btn primary" id="navAdd" title="Añadir línea">
-          <i class="material-icons">add</i>
-          <span style="font-weight:900;font-size:12px">Añadir</span>
+        <button class="btn" id="themeToggle" aria-label="Cambiar tema">
+          <i id="themeIcon" class="material-icons">dark_mode</i><span>Tema</span>
         </button>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <div class="app">
-    <div id="offlineBanner" class="offline">
-      ⚠️ Estás sin conexión. Se mostrarán los últimos datos disponibles.
+    <div id="offlineBanner" class="offline-banner">Sin conexión. Los datos pueden estar desactualizados.</div>
+
+    <div id="empty-message" class="notice">
+      No has añadido ninguna línea todavía.<br>
+      Pulsa <strong>+ Añadir</strong> para empezar.
     </div>
 
-    <div class="grid" id="panels-container"></div>
-
-    <div class="empty" id="emptyState" style="display:none">
-      No tienes líneas añadidas. Pulsa <strong>Añadir</strong> para empezar.
-    </div>
+    <main id="panels-container" class="grid" aria-live="polite"></main>
   </div>
 
-  <!-- Bottom nav -->
-  <nav class="bottom" aria-label="Acciones principales">
-    <div class="navinner">
-      <div class="navbtn active" id="navDashboard">
-        <i class="material-icons">dashboard</i>
-        <span>Dashboard</span>
-      </div>
-      <div class="navbtn" id="navRefresh">
-        <i class="material-icons">refresh</i>
-        <span>Actualizar</span>
-      </div>
-      <div class="navbtn" id="navSettings">
-        <i class="material-icons">tune</i>
-        <span>Opciones</span>
-      </div>
-    </div>
+  <nav class="bottom-nav" aria-label="Acciones">
+    <button class="nav-btn primary" id="navAdd"><i class="material-icons">add</i><span>Añadir</span></button>
+    <button class="nav-btn secondary" id="navRefresh"><i class="material-icons">refresh</i><span>Actualizar</span></button>
   </nav>
 
-  <!-- Modal add -->
+  <!-- Modal añadir línea -->
   <div id="addModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="sheet">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -768,13 +562,14 @@
         <button class="btn" id="closeAdd"><i class="material-icons">close</i></button>
       </div>
 
-      <input id="addSearchInput" class="search" type="search" placeholder="Buscar línea…" inputmode="search"
-             enterkeyhint="search" autocapitalize="none" autocomplete="off" spellcheck="false" />
+      <input id="addSearchInput" class="search" type="search"
+             placeholder="Buscar por código o nombre…" inputmode="search" enterkeyhint="search"
+             autocapitalize="none" autocomplete="off" spellcheck="false" />
 
-      <div class="tabs">
-        <button class="chipbtn active" id="chipAll">Todas</button>
-        <button class="chipbtn" id="chipBus">Bus</button>
-        <button class="chipbtn" id="chipTram">Tranvía</button>
+      <div class="chips" aria-label="Filtros">
+        <button class="chip active" id="chipAll" type="button">Todas</button>
+        <button class="chip" id="chipBus" type="button">Bus</button>
+        <button class="chip" id="chipTram" type="button">Tranvía</button>
       </div>
 
       <div id="addList" role="listbox"></div>
@@ -800,25 +595,6 @@
     </div>
   </div>
 
-  <!-- Modal timeline (llegadas por siguientes paradas) -->
-  <div id="timelineModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="timelineModalTitle">
-    <div class="sheet">
-      <div class="timeline-head">
-        <div style="min-width:0">
-          <h3 id="timelineModalTitle" style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-            Siguientes paradas
-          </h3>
-          <div id="timelineModalSub" class="timeline-sub"></div>
-        </div>
-        <button class="btn" id="closeTimeline" aria-label="Cerrar">
-          <i class="material-icons">close</i>
-        </button>
-      </div>
-
-      <div id="timelineList" class="timeline-list" aria-live="polite"></div>
-    </div>
-  </div>
-
   <script>
   /* ========= State ========= */
   let currentStopsForInstance = null;
@@ -834,461 +610,454 @@
   const ARRIVALS_TPL = "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_PARADAS&idParada={stopId}&idRuta={lineCode}";
 
   const lines = [
-    { code:"E1",  name:"Cementerio El Salvador", type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E1" },
-    { code:"E2",  name:"Circular",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E2" },
-    { code:"E3",  name:"Betoño",                 type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E3" },
-    { code:"E4",  name:"Lakua - Abetxuko",        type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E4" },
-    { code:"E5",  name:"Salburua",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E5" },
-    { code:"E6",  name:"Arana",                   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E6" },
-    { code:"E7",  name:"Zabalgana",              type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E7" },
-    { code:"E8",  name:"Universidades",          type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E8" },
-    { code:"E9",  name:"Mariturri",              type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E9" },
-    { code:"E10", name:"Aretxabaleta",           type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E10" },
-
-    { code:"L1",  name:"Circular",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=1" },
-    { code:"L2A", name:"Circular A",             type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=L2A" },
-    { code:"L2B", name:"Circular B",             type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=L2B" },
-    { code:"L3",  name:"Aranbizkarra",           type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=3" },
-    { code:"L4",  name:"Lakua",                  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=4" },
-    { code:"L5",  name:"Salburua",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=5" },
-    { code:"L6",  name:"Zabalgana",              type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=6" },
-    { code:"L7",  name:"Borina",                 type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=7" },
-
-    { code:"T",   name:"Tranvía",                type:"tram", stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=T" }
+    { code:"E1",  name:"Cementerio El Salvador", type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000017&idioma=ES" },
+    { code:"G1",  name:"Lakua - Abetxuko",       type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000019&idioma=ES" },
+    { code:"G2",  name:"Adurtza - Salburua",     type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000018&idioma=ES" },
+    { code:"G3",  name:"Armentia - Zabalgana",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000015&idioma=ES" },
+    { code:"G4",  name:"Sansomendi - Lakua",     type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000014&idioma=ES" },
+    { code:"G6",  name:"Salburua - Aranbizkarra",type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000016&idioma=ES" },
+    { code:"L1",  name:"Circular",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000004&idioma=ES" },
+    { code:"L2A", name:"BEI A",                  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000012&idioma=ES" },
+    { code:"L2B", name:"BEI B",                  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000013&idioma=ES" },
+    { code:"L3",  name:"Betoño - Goikolarra",    type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000002&idioma=ES" },
+    { code:"L4",  name:"Lakua - Mariturri",      type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000022&idioma=ES" },
+    { code:"L5",  name:"Arkaiate - Elejalde",    type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000007&idioma=ES" },
+    { code:"L5A", name:"Arkaiate - Astegieta",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
+    { code:"L5B", name:"Arkaiate - Ariñez",      type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
+    { code:"L5C", name:"Arkaiate - Júndiz-ITV",  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000010&idioma=ES" },
+    { code:"L5D", name:"Arkaiate - Ariñez-ITV",  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000011&idioma=ES" },
+    { code:"L6",  name:"Zabalgana - Arkaiate",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000006&idioma=ES" },
+    { code:"L7",  name:"Borinbizkarra - Paz",    type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000005&idioma=ES" },
+    { code:"L8",  name:"Unibertsitatea",         type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000001&idioma=ES" },
+    { code:"L9",  name:"Gamarra - Goikolarra",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000000&idioma=ES" },
+    { code:"L10", name:"Aldaia - Larrein",       type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000003&idioma=ES" },
+    { code:"TG1", name:"Abetxuko-Unibertsitatea",type:"tram", stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000021&idioma=ES" },
+    { code:"TG2", name:"Ibaiondo-Salburua",      type:"tram", stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000020&idioma=ES" }
   ];
 
-  /* ========= Helpers ========= */
-  const $  = (sel, root=document)=> root.querySelector(sel);
-  const $$ = (sel, root=document)=> Array.from(root.querySelectorAll(sel));
+  /* ==== Cloudflare Pages Functions proxy: /api/* ==== */
+  const API_BASE = "/api";
+  const API_TARGET_ORIGIN = "https://www.vitoria-gasteiz.org";
 
-  function escapeHtml(s){
-    return String(s ?? "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll("\"","&quot;")
-      .replaceAll("'","&#039;");
+  function toProxiedUrl(input){
+    const u = new URL(input, window.location.origin);
+    if (u.origin === window.location.origin && u.pathname.startsWith(API_BASE + "/")){
+      return u.pathname + u.search;
+    }
+    if (u.origin !== API_TARGET_ORIGIN){
+      throw new Error("URL no permitida para proxy: " + u.origin);
+    }
+    return API_BASE + u.pathname + u.search;
   }
-  function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
 
+  async function getText(url){
+    const toFetch = toProxiedUrl(url);
+    const res = await fetch(toFetch, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status + " en " + toFetch);
+    return await res.text();
+  }
+
+  function tryParseJSON(text){
+    try{ return JSON.parse(text); }catch(_){}
+    const m = text.match(/\{[\s\S]*"(recorrido|llegadas|posiciones|color|alertas)"[\s\S]*\}/);
+    if (m){ try{ return JSON.parse(m[0]); }catch(_){ } }
+    const stripped = text.replace(/<[^>]*>/g,'').trim();
+    try{ return JSON.parse(stripped); }catch(_){}
+    throw new Error("Respuesta no es JSON");
+  }
+
+  async function getJSON(url){
+    const t = await getText(url);
+    return tryParseJSON(t);
+  }
+
+  /* ========= Storage ========= */
   function loadJSON(key, fallback){
     try{
-      const raw = localStorage.getItem(key);
-      if(!raw) return fallback;
-      return JSON.parse(raw);
-    }catch(e){ return fallback; }
+      const v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    }catch{ return fallback; }
   }
   function saveJSON(key, value){
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  function pref(){
-    const v = localStorage.getItem("theme");
-    return v || "auto";
-  }
-  function applyTheme(mode){
-    document.documentElement.dataset.theme = mode==="auto" ? (matchMedia('(prefers-color-scheme: light)').matches ? "light":"dark") : mode;
-    localStorage.setItem("theme", mode);
-    $("#subtitle").textContent = `Llegadas en tiempo real • Tema: ${mode}`;
-  }
-  function cycleTheme(){
-    const curr = localStorage.getItem("theme") || "auto";
-    const next = curr==="auto" ? "dark" : (curr==="dark" ? "light" : "auto");
-    applyTheme(next);
+  function uid(){
+    return (crypto?.randomUUID ? crypto.randomUUID() : ("id-"+Date.now()+"-"+Math.random().toString(16).slice(2))).slice(0,18);
   }
 
-  function toProxiedUrl(url){
-    // Pages Function proxy: /api?u=<encoded>
-    return `/api?u=${encodeURIComponent(url)}`;
+  const getPinned = () => loadJSON("pinned_instances", []);
+  const setPinned = (arr) => saveJSON("pinned_instances", arr);
+  const isPinned = (instanceId) => getPinned().includes(instanceId);
+
+  function setPinnedInstance(instanceId, pinned){
+    let p = getPinned();
+    const has = p.includes(instanceId);
+    if (pinned && !has) p = [...p, instanceId];
+    if (!pinned && has) p = p.filter(x=>x!==instanceId);
+    setPinned(p);
+    updatePinUI(instanceId);
+    renderPanelsOrder();
+    persistAllPanels();
+  }
+  function togglePin(instanceId){ setPinnedInstance(instanceId, !isPinned(instanceId)); }
+
+  const favKey = (instanceId)=>"favorite_"+instanceId;
+  const setFavorite = (instanceId, stop) => saveJSON(favKey(instanceId), stop);
+  const getFavorite = (instanceId) => loadJSON(favKey(instanceId), null);
+  const removeFavorite = (instanceId) => localStorage.removeItem(favKey(instanceId));
+
+  const recKey = (lineCode) => "recent_" + lineCode;
+  function getRecents(lineCode){ return loadJSON(recKey(lineCode), []); }
+  function pushRecent(lineCode, stop){
+    if (!stop?.id || !stop?.name) return;
+    let r = getRecents(lineCode).filter(x => x.id !== stop.id);
+    r.unshift(stop);
+    r = r.slice(0, 6);
+    saveJSON(recKey(lineCode), r);
   }
 
-  async function getText(url){
-    const res = await fetch(toProxiedUrl(url), { cache:"no-store" });
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    return await res.text();
+  /* ========= UI ========= */
+  const $ = (s, r=document)=>r.querySelector(s);
+  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+
+  function updateEmpty(){
+    $("#empty-message").style.display = Object.keys(panels).length ? "none" : "block";
   }
-  async function getJSON(url){
-    const txt = await getText(url);
-    const j = tryParseJSON(txt);
-    return j;
+
+  function parseHexColor(v){
+    if(!v) return null;
+    let s=String(v).trim().replace(/^#/,'');
+    if(/^[0-9a-fA-F]{3}$/.test(s)) return '#'+s;
+    if(/^[0-9a-fA-F]{6}$/.test(s)) return '#'+s;
+    return null;
   }
-  function tryParseJSON(txt){
-    try{ return JSON.parse(txt); }catch(_){
-      // Some endpoints return JS object-ish; try to salvage
-      return null;
+
+  function fmtHHMM(secondsFromMidnight) {
+    if (typeof secondsFromMidnight !== 'number') return '—';
+    const h = Math.floor(secondsFromMidnight / 3600);
+    const m = Math.floor((secondsFromMidnight % 3600) / 60);
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+
+  function fmtETA(seconds, status) {
+    if (status === 'STOPPED_AT' || seconds <= 0) return 'En la parada';
+    if (seconds < 60) return `${seconds} s`;
+    return `${Math.ceil(seconds / 60)} min`;
+  }
+
+  function fmtEtaOrClock(seconds, status, hourText){
+    if (typeof seconds === "number" && seconds >= 60*60 && hourText && hourText !== '—'){
+      return hourText;
     }
+    return fmtETA(seconds, status);
   }
 
-  function lockBodyScroll(){
-    document.body.style.overflow = "hidden";
+  function delayInfo(item) {
+    const rt = item?.realtimeArrival;
+    const sch = item?.scheduledArrival;
+    if (typeof rt !== 'number' || typeof sch !== 'number') return { label: null, cls: 'delay-neutral' };
+    const diff = rt - sch;
+    const abs = Math.abs(diff);
+    if (abs <= 60) return { label: null, cls: 'delay-neutral' };
+    const mins = Math.round(abs / 60);
+    return diff > 60 ? { label: `+${mins}m`, cls: 'delay-late' } : { label: `–${mins}m`, cls: 'delay-early' };
   }
-  function unlockBodyScroll(){
-    document.body.style.overflow = "";
+
+  function relTime(ts){
+    if (!ts) return "—";
+    const s = Math.max(0, Math.floor((Date.now() - ts)/1000));
+    if (s < 5) return "ahora";
+    if (s < 60) return `hace ${s}s`;
+    const m = Math.floor(s/60);
+    if (m < 60) return `hace ${m}m`;
+    const h = Math.floor(m/60);
+    return `hace ${h}h`;
   }
+
+  function updateGlobalUpdated(){
+    $("#globalUpdated").textContent = `Actualizado: ${relTime(globalLastRefresh)}`;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* ========= Modal helpers ========= */
+  function lockBodyScroll(){ document.body.classList.add('modal-open'); }
+  function unlockBodyScroll(){ document.body.classList.remove('modal-open'); }
+
   function attachViewportShim(modal){
-    // iOS safe-area bottom support for sheet + nav overlap
-    if(!modal.querySelector(".viewport-shim")){
-      const shim = document.createElement("div");
-      shim.className = "viewport-shim";
-      modal.appendChild(shim);
-    }
+    const vv = window.visualViewport; if(!vv) return;
+    const sheet = modal.querySelector('.sheet');
+    const onResize = ()=>{
+      const overlap = Math.max(0, (window.innerHeight - vv.height - vv.offsetTop));
+      sheet.style.paddingBottom = (14 + overlap) + 'px';
+    };
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    onResize();
+    modal._vvDetach = ()=>{ vv.removeEventListener('resize', onResize); vv.removeEventListener('scroll', onResize); sheet.style.paddingBottom=''; };
   }
-  function detachViewportShim(modal){
-    modal.querySelector(".viewport-shim")?.remove();
-  }
+  function detachViewportShim(modal){ if(modal && modal._vvDetach){ modal._vvDetach(); modal._vvDetach=null; } }
 
-  function fmtHHMM(epochMs){
+  /* ========= Colors ========= */
+  async function ensureLineColor(line){
+    if (line.type !== "bus") return;
+    if (colorCache[line.code]) return;
+    if (inflightColor.has(line.code)) return;
+    inflightColor.add(line.code);
     try{
-      const d = new Date(epochMs);
-      return d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-    }catch(e){ return "—"; }
+      const data = await getJSON(line.stopsUrl);
+      const col = parseHexColor(data?.color);
+      if (col){
+        colorCache[line.code] = col;
+        saveJSON("line_colors", colorCache);
+        $$(".add-item").forEach(it=>{
+          if (it.dataset.code === line.code){
+            it.style.setProperty("--chip-accent", col);
+          }
+        });
+        Object.keys(panels).forEach(id=>{
+          const p = panels[id];
+          if (p?.line?.code === line.code){
+            $("#panel-"+id)?.style.setProperty("--line-accent", col);
+          }
+        });
+      }
+    }catch(_){} finally{ inflightColor.delete(line.code); }
   }
 
-  function delayInfo(a){
-    // Uses realtimeDelay if present; fall back to scheduled vs realtime
-    if(!a) return {label:null, cls:"delay-neutral"};
+  /* ========= Order ========= */
+  function renderPanelsOrder(){
+    const container = $("#panels-container");
+    const allIds = Object.keys(panels);
+    const pinned = getPinned();
 
-    const d = (typeof a.realtimeDelay === "number") ? a.realtimeDelay : null;
-    if(d==null) return {label:null, cls:"delay-neutral"};
+    const ordered = [
+      ...pinned.filter(id => allIds.includes(id)),
+      ...allIds.filter(id => !pinned.includes(id)).sort((a,b)=>{
+        const la = panels[a]?.line?.code || a;
+        const lb = panels[b]?.line?.code || b;
+        return la.localeCompare(lb);
+      })
+    ];
 
-    // Negative means early; positive means delayed
-    const min = Math.round(d/60);
-    if(min===0) return {label:"En hora", cls:"delay-ok"};
-    if(min>0){
-      if(min>=5) return {label:`+${min} min`, cls:"delay-bad"};
-      return {label:`+${min} min`, cls:"delay-warn"};
-    }
-    return {label:`${min} min`, cls:"delay-warn"};
-  }
-
-  function fmtEtaOrClock(sec, status, clock){
-    if(status && /cancel/i.test(status)) return "Cancelado";
-    if(!Number.isFinite(sec)) return clock || "—";
-    if(sec<=0) return "Ahora";
-    if(sec<60) return `${sec} s`;
-    return `${Math.ceil(sec/60)} min`;
-  }
-
-  function setEmptyState(){
-    const any = Object.keys(panels).length>0;
-    $("#emptyState").style.display = any ? "none" : "block";
-  }
-
-  /* ========= Rendering ========= */
-  function lineIcon(type){ return type==="tram" ? "tram" : "directions_bus"; }
-
-  function computeAccent(line){
-    const key = line.code;
-    if(colorCache[key]) return colorCache[key];
-
-    // simple deterministic hash to generate hue
-    let h=0;
-    for(const ch of key) h = (h*31 + ch.charCodeAt(0))>>>0;
-    const hue = h % 360;
-    const col = `hsl(${hue} 80% 60%)`;
-    colorCache[key] = col;
-    saveJSON("line_colors", colorCache);
-    return col;
-  }
-
-  function createPanel(instanceId, line){
-    const accent = computeAccent(line);
-    const el = document.createElement("div");
-    el.className = "card";
-    el.id = `panel-${instanceId}`;
-    el.dataset.instanceId = instanceId;
-    el.style.setProperty("--line-accent", accent);
-
-    el.innerHTML = `
-      <div class="card-inner">
-        <div class="card-head">
-          <div class="line-pill" style="border-color: color-mix(in oklab, var(--line-accent) 50%, rgba(255,255,255,.14)); background: color-mix(in oklab, var(--line-accent) 18%, rgba(0,0,0,.10));">
-            <i class="material-icons" aria-hidden="true">${lineIcon(line.type)}</i>
-            <span class="line-code">${escapeHtml(line.code)}</span>
-            <span style="font-weight:800; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px">${escapeHtml(line.name)}</span>
-          </div>
-
-          <div class="card-tools">
-            <div class="iconbtn" title="Cambiar parada" data-action="stops"><i class="material-icons">place</i></div>
-            <div class="iconbtn" title="Eliminar" data-action="remove"><i class="material-icons">delete</i></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="stop-name">
-            <span id="stop-${instanceId}">Selecciona una parada</span>
-          </div>
-          <span class="pill" id="badge-${instanceId}" style="display:none">Live</span>
-        </div>
-
-        <div id="info-${instanceId}">
-          <div class="next-time" style="opacity:.7">—</div>
-          <div class="hint">Sin datos</div>
-        </div>
-
-        <div class="notice" id="notice-${instanceId}"></div>
-      </div>
-    `;
-
-    // card tools events
-    el.addEventListener("click", (e)=>{
-      const btn = e.target.closest("[data-action]");
-      if(!btn) return;
-      const action = btn.dataset.action;
-      if(action==="remove") removePanel(instanceId);
-      if(action==="stops") openStops(instanceId);
+    ordered.forEach(id=>{
+      const el = $("#panel-"+id);
+      if (el) container.appendChild(el);
     });
-
-    return el;
   }
 
-  function renderAddList(){
-    const q = ($("#addSearchInput").value || "").toLowerCase().trim();
-    let arr = lines.slice();
+  /* ========= Favorites ========= */
+  function toggleFavorite(instanceId){
+    const p = panels[instanceId]; if(!p) return;
+    const fav = getFavorite(instanceId);
+    if (fav && fav.id===p.currentStopId) removeFavorite(instanceId);
+    else setFavorite(instanceId, {id:p.currentStopId, name:p.currentStopName});
+    updateFavIcon(instanceId);
+    persistAllPanels();
+  }
+  function updateFavIcon(instanceId){
+    const p = panels[instanceId]; if(!p) return;
+    const fav = getFavorite(instanceId);
+    const selected = fav && fav.id === p.currentStopId;
+    $("#fav-btn-"+instanceId)?.classList.toggle('selected', selected);
+    const ic = $("#fav-icon-"+instanceId);
+    if (ic) ic.textContent = selected ? "★" : "☆";
+  }
 
-    if(addFilter!=="all") arr = arr.filter(l=>l.type===addFilter);
-    if(q) arr = arr.filter(l=> (l.code+l.name).toLowerCase().includes(q));
+  /* ========= Delete ========= */
+  function deletePanel(instanceId){
+    const p = panels[instanceId];
+    if (p?.countdownInterval) clearInterval(p.countdownInterval);
+    delete panels[instanceId];
+    $("#panel-"+instanceId)?.remove();
 
-    const list = $("#addList");
-    list.innerHTML = "";
+    const pins = getPinned();
+    if (pins.includes(instanceId)) setPinned(pins.filter(x=>x!==instanceId));
 
-    if(!arr.length){
-      list.innerHTML = `<div class="empty">No hay resultados.</div>`;
+    renderPanelsOrder();
+    updateEmpty();
+    persistAllPanels();
+  }
+
+  /* ========= Create panel ========= */
+  function updatePinUI(instanceId){
+    const pinned = isPinned(instanceId);
+    const btn = $("#pin-btn-"+instanceId);
+    if (btn){
+      btn.classList.toggle("pinned", pinned);
+      btn.setAttribute("aria-pressed", String(pinned));
+      btn.title = pinned ? "Desfijar" : "Fijar";
+    }
+  }
+
+  function setStatus(instanceId, text){
+    const el = $("#status-"+instanceId);
+    if (el) el.textContent = "Estado: " + text;
+  }
+  function setUpdated(instanceId, ts){
+    const el = $("#updated-"+instanceId);
+    if (el) el.textContent = "Actualizado: " + relTime(ts);
+  }
+
+  function renderStoppedText(instanceId, targetEl){
+    const p = panels[instanceId];
+    const icon = p?.line?.type === "tram" ? "tram" : "directions_bus";
+    const el = targetEl || $("#count-"+instanceId);
+    if (!el) return;
+    el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:10px">
+      <i class="material-icons" aria-hidden="true" style="font-size:.85em;opacity:.9">${icon}</i>
+      <span>En la parada</span>
+    </span>`;
+  }
+
+  function tramAlertLineNumber(code){
+    if (code === "TG1") return "1";
+    if (code === "TG2") return "2";
+    return code.replace(/\D+/g,'') || code;
+  }
+
+  function filterAlertsForPanel(panel, alerts){
+    const arr = Array.isArray(alerts) ? alerts : [];
+    if (!arr.length) return [];
+
+    const stopId = String(panel.currentStopId || "");
+    const isTram = panel.line.type === "tram";
+    const lineMatch = isTram ? tramAlertLineNumber(panel.line.code) : panel.line.code;
+    const lineType = isTram ? "3" : null;
+
+    return arr.filter(a=>{
+      const aStop = String(a.stopId ?? "*");
+      if (!(aStop === "*" || aStop === stopId)) return false;
+
+      const aLine = String(a.line ?? "*");
+      if (!(aLine === "*" || aLine === lineMatch)) return false;
+
+      if (lineType && a.lineType != null && String(a.lineType) !== String(lineType)) return false;
+
+      return true;
+    });
+  }
+
+  function fmtAlertWindow(a){
+    const start = Number(a?.alertPeriodStart);
+    const end = Number(a?.alertPeriodEnd);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return "";
+
+    const s = new Date(start * 1000);
+    const e = new Date(end * 1000);
+
+    const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+    const today = new Date();
+    const day0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const dayS = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+    const dayE = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+
+    const dayLabel = (d)=>{
+      const diffDays = Math.round((d - day0) / (24*3600*1000));
+      if (diffDays === 0) return "Hoy";
+      if (diffDays === 1) return "Mañana";
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    };
+
+    if (dayS.getTime() !== dayE.getTime()){
+      return `${dayLabel(dayS)} ${hhmm(s)} → ${dayLabel(dayE)} ${hhmm(e)}`;
+    }
+    return `${dayLabel(dayS)} ${hhmm(s)}–${hhmm(e)}`;
+  }
+
+  function setAlerts(instanceId, alertsRaw){
+    const box = $("#alerts-"+instanceId);
+    if (!box) return;
+
+    const panel = panels[instanceId];
+    const stopId = String(panel?.currentStopId || "");
+
+    const dismissKey = `alerts_dismiss_${instanceId}_${stopId}`;
+    if (sessionStorage.getItem(dismissKey) === "1") {
+      box.classList.remove("show");
+      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
       return;
     }
 
-    const wrap = document.createElement("div");
-    wrap.className = "list";
-    arr.forEach(line=>{
-      const item = document.createElement("div");
-      item.className = "item";
-      item.role="option";
-      item.innerHTML = `
-        <div>
-          <strong>${escapeHtml(line.code)} · ${escapeHtml(line.name)}</strong><br/>
-          <small>${line.type==="tram" ? "Tranvía" : "Autobús"}</small>
-        </div>
-        <i class="material-icons" style="opacity:.85">add_circle</i>
-      `;
-      item.addEventListener("click", ()=>{
-        addLine(line);
-        closeAddModal();
-      });
-      wrap.appendChild(item);
-    });
-    list.appendChild(wrap);
-  }
+    const relevant = filterAlertsForPanel(panel, alertsRaw);
 
-  function setAddFilter(f){
-    addFilter=f;
-    ["chipAll","chipBus","chipTram"].forEach(id=>$("#"+id).classList.remove("active"));
-    $("#chip"+(f==="all"?"All":(f==="bus"?"Bus":"Tram"))).classList.add("active");
-    renderAddList();
-  }
-
-  /* ========= Persistence ========= */
-  function loadPanels(){
-    const saved = loadJSON("panels", []);
-    saved.forEach(p=>{
-      const line = lines.find(l=> l.code===p.lineCode);
-      if(!line) return;
-      const instanceId = p.instanceId || crypto.randomUUID();
-      panels[instanceId] = {
-        instanceId,
-        line,
-        currentStopId: p.stopId || null,
-        currentStopName: p.stopName || null,
-      };
-      mountPanel(instanceId);
-    });
-    setEmptyState();
-  }
-  function savePanels(){
-    const arr = Object.values(panels).map(p=>({
-      instanceId: p.instanceId,
-      lineCode: p.line.code,
-      stopId: p.currentStopId,
-      stopName: p.currentStopName,
-    }));
-    saveJSON("panels", arr);
-  }
-
-  function addLine(line){
-    const instanceId = crypto.randomUUID();
-    panels[instanceId] = {
-      instanceId,
-      line,
-      currentStopId: null,
-      currentStopName: null
-    };
-    mountPanel(instanceId);
-    savePanels();
-    setEmptyState();
-  }
-
-  function mountPanel(instanceId){
-    const p = panels[instanceId];
-    const el = createPanel(instanceId, p.line);
-    $("#panels-container").appendChild(el);
-
-    if(p.currentStopName){
-      $(`#stop-${instanceId}`).textContent = p.currentStopName;
+    if (!relevant.length){
+      box.classList.remove("show");
+      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
+      return;
     }
-    // initial fetch if stop already set
-    if(p.currentStopId) refreshPanel(instanceId);
-  }
 
-  function removePanel(instanceId){
-    delete panels[instanceId];
-    document.getElementById(`panel-${instanceId}`)?.remove();
-    savePanels();
-    setEmptyState();
-  }
+    relevant.sort((a,b)=>{
+      const as = String(a.stopId) !== "*" ? 0 : 1;
+      const bs = String(b.stopId) !== "*" ? 0 : 1;
+      if (as !== bs) return as - bs;
 
-  /* ========= Data fetch & refresh ========= */
-  function scheduleAutoRefresh(){
-    clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(refreshAll, 15000);
-  }
+      const sa = Number(a.alertPeriodStart);
+      const sb = Number(b.alertPeriodStart);
+      if (Number.isFinite(sa) && Number.isFinite(sb)) return sa - sb;
 
-  function startGlobalTick(){
-    if(globalTickTimer) clearInterval(globalTickTimer);
-    globalTickTimer = setInterval(()=>{
-      // Update per-second countdown spans
-      $$(".tram-sec").forEach(span=>{
-        const v = Number(span.dataset.seconds);
-        if(!Number.isFinite(v)) return;
-        const next = v-1;
-        span.dataset.seconds = String(next);
-        span.textContent = String(Math.max(0,next));
-      });
-      // Update bus main counters if showing seconds (rare)
-      // (handled by refresh)
-    }, 1000);
-  }
+      return (Number(b.realtime) - Number(a.realtime));
+    });
 
-  async function refreshAll(){
-    globalLastRefresh = Date.now();
-    const ids = Object.keys(panels);
-    for(const id of ids){
-      if(panels[id].currentStopId) refreshPanel(id);
-    }
-  }
+    const top = relevant.slice(0, 2);
 
-  async function refreshPanel(instanceId){
-    const p = panels[instanceId];
-    if(!p || !p.currentStopId) return;
+    const items = top.map(a=>{
+      const head = a.alertHeader || "Aviso";
+      const desc = a.alertDescription || "";
+      const win = fmtAlertWindow(a);
 
-    const stopId = p.currentStopId;
-    const line = p.line;
-
-    // For bus lines, route id in arrivals endpoint is usually the numeric code without leading "L" (except L2A/L2B)
-    const routeCode = line.type==="tram" ? line.code : (line.code.startsWith('L') && !['L2A','L2B'].includes(line.code) ? line.code.substring(1) : line.code);
-
-    const url = ARRIVALS_TPL.replace("{stopId}", stopId).replace("{lineCode}", routeCode);
-
-    try{
-      const data = await getJSON(url);
-      const arrivals = (data && data.llegadas) ? data.llegadas : [];
-      const notices = (data && data.avisos) ? data.avisos : [];
-
-      const badge = $(`#badge-${instanceId}`);
-      badge.style.display = "inline-flex";
-      badge.textContent = "Live";
-
-      const noticeEl = $(`#notice-${instanceId}`);
-      if(notices && notices.length){
-        noticeEl.classList.add("show");
-        noticeEl.innerHTML = `<strong> Avisos </strong><br/>` + notices.map(n=>`• ${escapeHtml(n)}`).join("<br/>");
-      }else{
-        noticeEl.classList.remove("show");
-        noticeEl.textContent = "";
-      }
-
-      if(line.type==="tram"){
-        // Tram: arrivals include destination
-        const byDest = {};
-        arrivals.filter(a=>a.line===line.code).forEach(a=>{
-          const dest = a.destination || "—";
-          (byDest[dest] ||= []).push(a);
-        });
-
-        const blocks = Object.entries(byDest).map(([dest, arr])=>{
-          arr.sort((a,b)=> (a.seconds??1e9)-(b.seconds??1e9));
-          const nx = arr[0] || null;
-          const rest = arr.slice(1);
-          return renderDestinationBlock(instanceId, dest, nx, rest);
-        }).join("");
-
-        $(`#info-${instanceId}`).innerHTML = blocks || `<div class="hint">Sin llegadas para esta línea.</div>`;
-      }else{
-        // Bus: filter by routeCode
-        const arr = arrivals.filter(a=>a.line===routeCode);
-        arr.sort((a,b)=> (a.seconds??1e9)-(b.seconds??1e9));
-        const nx = arr[0] || null;
-
-        if(!nx){
-          $(`#info-${instanceId}`).innerHTML = `
-            <div class="next-time" style="opacity:.7">—</div>
-            <div class="hint">Sin llegadas previstas</div>
-          `;
-          return;
-        }
-
-        const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
-                    : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
-
-        const secVal = (nx && nx.seconds != null) ? Number(nx.seconds) : NaN;
-        const etaBig = fmtEtaOrClock(Number.isFinite(secVal) ? secVal : nx.seconds, nx.status, hour);
-        const dly = delayInfo(nx);
-        const etaSmall = Number.isFinite(secVal)
-          ? (secVal < 60 ? `en ${secVal}s` : `en ${Math.ceil(secVal/60)} min`)
-          : '';
-
-        const chips = arr.slice(1,4).map(a=>{
-          const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
-                  : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-          const aSec = (a && a.seconds != null) ? Number(a.seconds) : NaN;
-          const eta = Number.isFinite(aSec) ? (aSec < 60 ? `en ${aSec} s` : `en ${Math.ceil(aSec/60)} min`) : '';
-          const dl = delayInfo(a);
-          return { hourText: h, bigText: eta || "—", delayLabel: dl.label, delayCls: dl.cls };
-        });
-
-        $(`#info-${instanceId}`).innerHTML = `
-          <div class="next-time timeline-trigger" role="button" tabindex="0" title="Ver siguientes paradas" id="count-${instanceId}">${
-            (Number.isFinite(secVal) && secVal < 60)
-              ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
-              : `${escapeHtml(etaBig)}`
-          }
-            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ``}
-          </div>
-          <div class="hint">
-            <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
-            ${etaBig === hour && etaSmall ?'<span class="dot"></span><span>'+escapeHtml(etaSmall)+'</span>':''}
-          </div>
-          ${chips.length ? `
-            <div class="arrivals">
-              ${chips.map(c=>`
-                <div class="chip">
-                  <span class="when">${escapeHtml(c.bigText)}</span>
-                  <span class="clock">${escapeHtml(c.hourText)}</span>
-                  ${c.delayLabel ? `<span class="delay ${c.delayCls}">${escapeHtml(c.delayLabel)}</span>` : ``}
-                </div>
-              `).join("")}
+      return `
+        <div style="margin-top:8px">
+          ${win ? `
+            <div class="alert-meta">
+              <i class="material-icons" aria-hidden="true">schedule</i>
+              <span>${escapeHtml(win)}</span>
             </div>
-          `:''}
-        `;
-      }
+            <br>
+          ` : ``}
 
-    }catch(err){
-      console.warn("refresh error", err);
-      const badge = $(`#badge-${instanceId}`);
-      badge.style.display = "none";
-      $(`#info-${instanceId}`).innerHTML = `
-        <div class="next-time" style="opacity:.7">—</div>
-        <div class="hint">Error al cargar</div>
+          <strong>${escapeHtml(head)}</strong><br>
+          ${desc ? `<span>${escapeHtml(desc)}</span><br>` : ``}
+        </div>
       `;
-    }
+    }).join("");
+
+    box.innerHTML = `
+      <button class="alerts-close" type="button" title="Ocultar avisos" aria-label="Ocultar avisos">
+        <i class="material-icons" aria-hidden="true">close</i>
+      </button>
+
+      <i class="material-icons" aria-hidden="true">warning_amber</i>
+      <div class="alert-text">
+        <strong>Avisos</strong>
+        ${items}
+      </div>
+    `;
+    box.classList.add("show");
+
+    const btn = box.querySelector(".alerts-close");
+    btn?.addEventListener("click", (e)=>{
+      e.preventDefault();
+      sessionStorage.setItem(dismissKey, "1");
+      box.classList.remove("show");
+      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
+    }, { once:true });
+  }
+
+  function renderNextChipsHtml(items){
+    return items.map(it=>{
+      return `
+        <div class="next-chip">
+          <span class="t">${escapeHtml(it.hourText)}</span>
+          <span class="eta">${escapeHtml(it.etaText)}</span>
+          ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
+        </div>
+      `;
+    }).join("");
   }
 
   function renderDestinationBlock(instanceId, destName, nx, restArr){
@@ -1297,326 +1066,585 @@
     const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
                 : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
 
-    const secVal = (nx && nx.seconds != null) ? Number(nx.seconds) : NaN;
-
-    const etaBig = fmtEtaOrClock(Number.isFinite(secVal) ? secVal : nx.seconds, nx.status, hour);
+    const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
     const dly = delayInfo(nx);
-    const etaSmall = Number.isFinite(secVal)
-      ? (secVal < 60 ? `en ${secVal}s` : `en ${Math.ceil(secVal/60)} min`)
+    const etaSmall = (typeof nx.seconds === 'number')
+      ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
       : '';
 
     const chips = restArr.slice(0,2).map(a=>{
       const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
               : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-      const aSec = (a && a.seconds != null) ? Number(a.seconds) : NaN;
-      const eta = Number.isFinite(aSec) ? (aSec < 60 ? `en ${aSec} s` : `en ${Math.ceil(aSec/60)} min`) : '';
+      const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
       const dl = delayInfo(a);
-      return { hourText: h, bigText: eta || "—", delayLabel: dl.label, delayCls: dl.cls };
+      return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
     });
 
     return `
       <div class="dest-block">
         <div class="dest-head">
-          <span class="dest-pill ${isTram ? 'dir-pill' : ''}">
+          <span class="dest-pill">
             <i class="material-icons" aria-hidden="true">${isTram?'tram':'directions_bus'}</i>
-            <span class="dest-label">${isTram ? 'Dirección' : 'Destino'}</span>
+            <span class="dest-label">Destino</span>
             <span class="dest-value">${escapeHtml(destName)}</span>
           </span>
         </div>
 
         <div>
-          <div class="next-time timeline-trigger" role="button" tabindex="0" data-dest="${escapeHtml(destName)}" title="Ver siguientes paradas">${
-            (Number.isFinite(secVal) && secVal < 60)
-              ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
-              : `${escapeHtml(etaBig)}`
-          }</div>
+          <div class="next-time">${escapeHtml(etaBig)}</div>
           <div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
-            ${etaBig === hour && etaSmall ?'<span class="dot"></span><span>'+escapeHtml(etaSmall)+'</span>':''}
-            ${dly.label ? `<span class="dot"></span><span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ``}
+            ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
+            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
           </div>
+        </div>
 
-          ${chips.length ? `
-            <div class="arrivals">
-              ${chips.map(c=>`
-                <div class="chip">
-                  <span class="when">${escapeHtml(c.bigText)}</span>
-                  <span class="clock">${escapeHtml(c.hourText)}</span>
-                  ${c.delayLabel ? `<span class="delay ${c.delayCls}">${escapeHtml(c.delayLabel)}</span>` : ``}
-                </div>
-              `).join("")}
-            </div>
-          `:''}
+        <div class="next-compact ${chips.length?'show':''}" style="max-width:520px;margin:0 auto;justify-content:center">
+          ${chips.length ? renderNextChipsHtml(chips) : ``}
         </div>
       </div>
     `;
   }
 
+  function createPanel(line, {focus=false, pinOnAdd=false} = {}){
+    const instanceId = uid();
+
+    const card = document.createElement('section');
+    card.className='card';
+    card.id='panel-'+instanceId;
+    card.dataset.instanceId = instanceId;
+    card.dataset.lineCode = line.code;
+
+    const initialAccent =
+      line.type==="tram"
+        ? "var(--accent-tram)"
+        : (colorCache[line.code] ? colorCache[line.code] : "var(--accent-bus)");
+
+    card.style.setProperty('--line-accent', initialAccent);
+
+    const ico = line.type==='bus'?'directions_bus':'tram';
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div>
+          <div class="line-row">
+            <span class="line-pill">
+              <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}
+            </span>
+            <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
+          </div>
+          <div class="meta-small">
+            <span id="updated-${instanceId}">Actualizado: —</span>
+            <span class="dot"></span>
+            <span id="status-${instanceId}">Estado: —</span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
+            <i class="material-icons">push_pin</i>
+          </button>
+          <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
+            <i class="material-icons">close</i>
+          </button>
+        </div>
+      </div>
+
+      <div class="stop-row">
+        <button class="stop-picker" id="stop-picker-${instanceId}" type="button"
+                aria-haspopup="dialog" aria-controls="stopsModal" aria-expanded="false" title="Cambiar parada">
+          <i class="material-icons" aria-hidden="true">place</i>
+          <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
+          <i class="material-icons caret" aria-hidden="true">expand_more</i>
+        </button>
+        <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
+          <span id="fav-icon-${instanceId}">☆</span>
+        </button>
+      </div>
+
+      <div class="alerts" id="alerts-${instanceId}">
+        <i class="material-icons" aria-hidden="true">warning_amber</i>
+      </div>
+
+      <div class="stack">
+        <div id="info-${instanceId}">
+          <div class="next-time" id="count-${instanceId}">—</div>
+          <div class="hint">Cargando…</div>
+        </div>
+
+        <div class="next-compact" id="next-${instanceId}"></div>
+      </div>
+    `;
+
+    $("#panels-container").appendChild(card);
+
+    panels[instanceId] = {
+      id: instanceId,
+      line,
+      currentStopId:null,
+      currentStopName:null,
+      countdownInterval:null,
+      lastUpdated: 0
+    };
+
+    $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
+    $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
+    $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
+    $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
+
+    updateFavIcon(instanceId);
+    ensureLineColor(line);
+
+    if (pinOnAdd) setPinnedInstance(instanceId, true);
+    else updatePinUI(instanceId);
+
+    loadStopsForPanel(instanceId).then(()=>{
+      renderPanelsOrder();
+      updateEmpty();
+      persistAllPanels();
+      if (focus) $("#panel-"+instanceId)?.scrollIntoView({behavior:"smooth", block:"start"});
+    });
+
+    renderPanelsOrder();
+    updateEmpty();
+    persistAllPanels();
+    return instanceId;
+  }
+
+  async function loadStopsForPanel(instanceId){
+    const panel = panels[instanceId]; if(!panel) return;
+    const line = panel.line;
+
+    try{
+      setStatus(instanceId, "Cargando paradas…");
+      const data = await getJSON(line.stopsUrl);
+      if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
+
+      if (line.type==='bus' && data.color){
+        const col = parseHexColor(data.color);
+        if (col){
+          $("#panel-"+instanceId).style.setProperty('--line-accent', col);
+          if (!colorCache[line.code]){
+            colorCache[line.code] = col;
+            saveJSON("line_colors", colorCache);
+          }
+          updatePinUI(instanceId);
+        }
+      }
+
+      const fav = getFavorite(instanceId);
+      if (fav){
+        panel.currentStopId=fav.id; panel.currentStopName=fav.name;
+      } else {
+        const s=data.recorrido[0];
+        panel.currentStopId=s.idParada;
+        panel.currentStopName=s.nombre;
+      }
+
+      $("#stop-name-"+instanceId).textContent = panel.currentStopName || "Parada no disponible";
+      updateFavIcon(instanceId);
+
+      await refreshPanel(instanceId);
+    }catch(err){
+      $("#stop-name-"+instanceId).textContent = "Error al cargar paradas";
+      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ No se pudieron cargar las paradas.</div>`;
+      $("#next-"+instanceId).classList.remove("show");
+      $("#next-"+instanceId).innerHTML = "";
+      setAlerts(instanceId, []);
+      setStatus(instanceId, "Error");
+      console.warn('Paradas -', line.code, err);
+    }
+  }
+
+  async function refreshPanel(instanceId){
+    const p = panels[instanceId]; if(!p || !p.currentStopId) return;
+    const { line } = p;
+
+    if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
+
+    setStatus(instanceId, "Actualizando…");
+    const started = Date.now();
+
+    try{
+      const isTram = line.type === "tram";
+      const routeCode = isTram
+        ? line.code
+        : ((line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code);
+
+      const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
+      const data = await getJSON(url);
+
+      setAlerts(instanceId, data?.alertas || []);
+
+      let arr = (data.llegadas||[]);
+      if (isTram) arr = arr.filter(x=>x.line===line.code);
+      else arr = arr.filter(x=>x.line===routeCode);
+
+      if (!arr.length){
+        $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">${isTram ? "🚊" : "🚍"} No hay más llegadas hoy.</div>`;
+        $("#next-"+instanceId).classList.remove("show");
+        $("#next-"+instanceId).innerHTML = "";
+        setStatus(instanceId, "Sin llegadas");
+        p.lastUpdated = started; setUpdated(instanceId, started);
+        return;
+      }
+
+      if (isTram){
+        const groups = {};
+        arr.forEach(a=>{
+          const k = (a.destination || "Destino").toString();
+          (groups[k] ??= []).push(a);
+        });
+        Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
+
+        const dests = Object.keys(groups).sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds);
+        const firstTwo = dests.slice(0,2);
+
+        const blocksHtml = firstTwo.map(dest=>{
+          const g = groups[dest];
+          const nx = g[0];
+          const rest = g.slice(1);
+          return renderDestinationBlock(instanceId, dest, nx, rest);
+        }).join("");
+
+        $("#info-"+instanceId).innerHTML = blocksHtml;
+        $("#next-"+instanceId).classList.remove("show");
+        $("#next-"+instanceId).innerHTML = "";
+
+        setStatus(instanceId, "OK");
+        p.lastUpdated = started; setUpdated(instanceId, started);
+        return;
+      }
+
+      const nx = arr[0];
+      const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
+                  : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
+
+      const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
+      const dly = delayInfo(nx);
+      const etaSmall = (typeof nx.seconds === 'number')
+        ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
+        : '';
+
+      $("#info-"+instanceId).innerHTML = `
+        <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
+        <div class="hint">
+          <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+          ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
+          ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
+        </div>
+      `;
+
+      const cdEl = $("#count-"+instanceId);
+      if (typeof nx.seconds === "number" && nx.seconds < 60){
+        cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
+        p.countdownInterval = setInterval(()=>{
+          const el = $("#sec-"+instanceId);
+          if(!el){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+          let n = parseInt(el.textContent,10);
+          if(!Number.isFinite(n)){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
+          if (n <= 1){
+            clearInterval(p.countdownInterval); p.countdownInterval=null;
+            renderStoppedText(instanceId);
+            return;
+          }
+          el.textContent = String(n-1);
+        }, 1000);
+      } else if (nx.status === 'STOPPED_AT' || nx.seconds <= 0){
+        renderStoppedText(instanceId);
+      }
+
+      const rest = arr.slice(1,3);
+      const chips = rest.map(a=>{
+        const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
+                : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
+        const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
+        const dl = delayInfo(a);
+        return { hourText: h, etaText: eta, delayLabel: dl.label, delayCls: dl.cls };
+      });
+
+      const nextBox = $("#next-"+instanceId);
+      if (chips.length){
+        nextBox.classList.add("show");
+        nextBox.innerHTML = renderNextChipsHtml(chips);
+      } else {
+        nextBox.classList.remove("show");
+        nextBox.innerHTML = "";
+      }
+
+      setStatus(instanceId, "OK");
+      p.lastUpdated = started; setUpdated(instanceId, started);
+    }catch(e){
+      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ Error al actualizar</div>`;
+      $("#next-"+instanceId).classList.remove("show");
+      $("#next-"+instanceId).innerHTML = "";
+      setAlerts(instanceId, []);
+      setStatus(instanceId, "Error");
+      console.warn('Arrivals error', e);
+    }
+  }
+
+  /* ========= Stops modal ========= */
+  function renderStopItem({id, nombre, selected, latitud, longitud, isFav, isRecent}){
+    const div = document.createElement("div");
+    div.className = "stop-item" + (selected ? " selected" : "");
+    div.dataset.id = id;
+    div.dataset.name = nombre;
+    if (latitud) div.dataset.lat = latitud;
+    if (longitud) div.dataset.lng = longitud;
+
+    const tags = [];
+    if (isFav) tags.push("★ favorita");
+    if (isRecent) tags.push("reciente");
+
+    div.innerHTML = `
+      <div class="row-main">
+        <div class="row-title">${escapeHtml(nombre)}</div>
+        <div class="row-sub">${tags.length ? escapeHtml(tags.join(" · ")) : ""}</div>
+      </div>
+      <div class="row-right"><i class="material-icons" style="font-size:18px;color:var(--muted)">chevron_right</i></div>
+    `;
+    return div;
+  }
+
+  function closeStops(){
+    const modal = $("#stopsModal");
+    modal.classList.remove('open');
+    detachViewportShim(modal);
+    unlockBodyScroll();
+    const instanceId = currentStopsForInstance;
+    if (instanceId) $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','false');
+  }
+
+  function selectStop(stopId, name){
+    const instanceId = currentStopsForInstance; if(!instanceId || !panels[instanceId]) return;
+    const p = panels[instanceId];
+
+    p.currentStopId = stopId;
+    p.currentStopName = name;
+
+    $("#stop-name-"+instanceId).textContent = name;
+
+    pushRecent(p.line.code, {id: stopId, name});
+    closeStops();
+    refreshPanel(instanceId);
+    updateFavIcon(instanceId);
+    persistAllPanels();
+  }
+
+  async function showStopsList(instanceId){
+    currentStopsForInstance = instanceId;
+    const panel = panels[instanceId]; if(!panel) return;
+
+    $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','true');
+
+    $("#stopsModalTitle").textContent = `Paradas • ${panel.line.code} — ${panel.line.name}`;
+    $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
+    $("#stopSearchInput").value = "";
+    $("#stopsModal").classList.add('open');
+    lockBodyScroll();
+    attachViewportShim($("#stopsModal"));
+    setTimeout(()=>{ $("#stopSearchInput")?.focus({preventScroll:true}); }, 50);
+
+    try{
+      const data = await getJSON(panel.line.stopsUrl);
+      if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
+
+      const fav = getFavorite(instanceId);
+      const recents = getRecents(panel.line.code);
+
+      const cont = $("#stopsListContainer");
+      cont.innerHTML = "";
+
+      if (fav && fav.id) {
+        cont.insertAdjacentHTML("beforeend", `<div class="section-title">⭐ Favorita</div>`);
+        cont.appendChild(renderStopItem({ id: fav.id, nombre: fav.name, selected: fav.id === panel.currentStopId, isFav: true }));
+        cont.insertAdjacentHTML("beforeend", `<div class="divider"></div>`);
+      }
+
+      if (recents.length) {
+        cont.insertAdjacentHTML("beforeend", `<div class="section-title">🕘 Recientes</div>`);
+        recents.forEach(r=>{
+          cont.appendChild(renderStopItem({ id: r.id, nombre: r.name, selected: r.id === panel.currentStopId, isRecent: true }));
+        });
+        cont.insertAdjacentHTML("beforeend", `<div class="divider"></div>`);
+      }
+
+      cont.insertAdjacentHTML("beforeend", `<div class="section-title">Todas las paradas</div>`);
+
+      data.recorrido.forEach(st=>{
+        cont.appendChild(renderStopItem({
+          id: st.idParada,
+          nombre: st.nombre,
+          selected: st.idParada === panel.currentStopId,
+          latitud: st.latitud,
+          longitud: st.longitud,
+          isFav: fav && fav.id === st.idParada
+        }));
+      });
+
+      cont.onclick = (e)=>{
+        const it = e.target.closest('.stop-item');
+        if(!it) return;
+        selectStop(it.dataset.id, it.dataset.name);
+      };
+    }catch(err){
+      $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">⚠️ No se pudieron cargar las paradas.</div>`;
+      console.warn('Stops modal error', err);
+    }
+  }
+
   /* ========= Add modal ========= */
   function openAddModal(){
-    renderAddList();
     $("#addModal").classList.add("open");
-    $("#addSearchInput").value = "";
     lockBodyScroll();
     attachViewportShim($("#addModal"));
-    setTimeout(()=> $("#addSearchInput").focus(), 20);
+    $("#addSearchInput").value = "";
+    renderAddList();
+    setTimeout(()=>$("#addSearchInput")?.focus({preventScroll:true}), 50);
   }
   function closeAddModal(){
     $("#addModal").classList.remove("open");
     detachViewportShim($("#addModal"));
     unlockBodyScroll();
   }
-
-  /* ========= Timeline modal ========= */
-  let currentTimeline = { instanceId:null, dest:null, abort:null };
-
-  function closeTimeline(){
-    const modal = $("#timelineModal");
-    if (!modal) return;
-    modal.classList.remove("open");
-    detachViewportShim(modal);
-    unlockBodyScroll();
-    if (currentTimeline.abort) currentTimeline.abort.abort();
-    currentTimeline = { instanceId:null, dest:null, abort:null };
+  function setAddFilter(type){
+    addFilter = type;
+    $("#chipAll").classList.toggle("active", type==="all");
+    $("#chipBus").classList.toggle("active", type==="bus");
+    $("#chipTram").classList.toggle("active", type==="tram");
+    renderAddList();
   }
 
-  function mapLimit(items, limit, mapper){
-    const ret = [];
-    let i = 0;
-    const workers = Array.from({length: Math.min(limit, items.length)}, async ()=>{
-      while(i < items.length){
-        const idx = i++;
-        ret[idx] = await mapper(items[idx], idx);
+  function renderAddList(){
+    const q = ($("#addSearchInput").value || "").trim().toLowerCase();
+
+    const filtered = lines
+      .filter(l => addFilter==="all" ? true : l.type===addFilter)
+      .filter(l => !q || l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q))
+      .sort((a,b)=>{
+        if (a.type !== b.type) return a.type.localeCompare(b.type);
+        return a.code.localeCompare(b.code);
+      });
+
+    const host = $("#addList");
+    if (!filtered.length){
+      host.innerHTML = `<div style="padding:12px;color:var(--muted)">No hay resultados.</div>`;
+      return;
+    }
+
+    host.innerHTML = filtered.map(l=>{
+      const ico = l.type==="bus" ? "directions_bus" : "tram";
+      const accent =
+        l.type==="tram" ? "var(--accent-tram)" :
+        (colorCache[l.code] ? colorCache[l.code] : "var(--accent-bus)");
+
+      return `
+        <div class="add-item" role="option" tabindex="0" data-code="${escapeHtml(l.code)}" style="--chip-accent:${accent}">
+          <span class="line-pill" style="--line-accent:var(--chip-accent)">
+            <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(l.code)}
+          </span>
+          <div class="row-main">
+            <div class="row-title">${escapeHtml(l.name)}</div>
+            <div class="row-sub">${l.type==="bus" ? "Autobús" : "Tranvía"}</div>
+          </div>
+          <div class="row-right">Añadir</div>
+        </div>
+      `;
+    }).join("");
+
+    filtered.forEach(l => ensureLineColor(l));
+
+    host.onclick = (e)=>{
+      const it = e.target.closest(".add-item");
+      if (!it) return;
+      const code = it.dataset.code;
+      const line = lines.find(x=>x.code===code);
+      if (line){
+        createPanel(line, {focus:true, pinOnAdd:true});
+        closeAddModal();
       }
+    };
+    host.onkeydown = (e)=>{
+      if (e.key==="Enter"){
+        const it = e.target.closest(".add-item");
+        if (!it) return;
+        const code = it.dataset.code;
+        const line = lines.find(x=>x.code===code);
+        if (line){
+          createPanel(line, {focus:true, pinOnAdd:true});
+          closeAddModal();
+        }
+      }
+    };
+  }
+
+  /* ========= Persist ========= */
+  function persistAllPanels(){
+    const ids = Object.keys(panels);
+    const snapshot = ids.map(id=>{
+      const p = panels[id];
+      return {
+        id,
+        lineCode: p.line.code,
+        pinned: isPinned(id),
+        stop: p.currentStopId ? { id: p.currentStopId, name: p.currentStopName } : null,
+        favorite: getFavorite(id)
+      };
     });
-    return Promise.all(workers).then(()=>ret);
+    saveJSON("panel_instances", snapshot);
   }
 
-  function pickArrivalForLine(data, { line, routeCode, isTram, dest }){
-    let arr = (data?.llegadas || []);
-    if (isTram){
-      arr = arr.filter(x => x.line === line.code);
-      if (dest) arr = arr.filter(x => String(x.destination||"") === String(dest));
-    }else{
-      arr = arr.filter(x => x.line === routeCode);
+  function loadInitialPanels(){
+    const snapshot = loadJSON("panel_instances", []);
+    if (!snapshot.length){
+      updateEmpty();
+      return;
     }
-    if (!arr.length) return null;
-    arr.sort((a,b)=>(a.seconds??1e9)-(b.seconds??1e9));
-    return arr[0];
-  }
-
-  function arrivalToUi(a){
-    if(!a) return { eta:"—", clock:"—", delay:null, delayCls:"delay-neutral" };
-
-    const hour = typeof a.realtimeArrival === "number" ? fmtHHMM(a.realtimeArrival)
-              : (typeof a.scheduledArrival === "number" ? `≈${fmtHHMM(a.scheduledArrival)}` : "—");
-
-    const sec = (a && a.seconds != null) ? Number(a.seconds) : NaN;
-    const eta = Number.isFinite(sec) ? (sec < 60 ? `${sec} s` : `${Math.ceil(sec/60)} min`) : "—";
-    const dly = delayInfo(a);
-
-    return { eta, clock: hour, delay: dly.label, delayCls: dly.cls };
-  }
-
-  async function openTimeline(instanceId, dest=null){
-    const p = panels[instanceId];
-    if(!p?.line || !p.currentStopId) return;
-
-    // Cancelar carga anterior si existía
-    if (currentTimeline.abort) currentTimeline.abort.abort();
-    const abort = new AbortController();
-    currentTimeline = { instanceId, dest, abort };
-
-    const modal = $("#timelineModal");
-    const list = $("#timelineList");
-    if (!modal || !list) return;
-
-    // UI base
-    const isTram = p.line.type === "tram";
-    $("#timelineModalTitle").textContent = `Siguientes paradas • ${p.line.code}`;
-    $("#timelineModalSub").innerHTML = `
-      <span class="tl-badge"><i class="material-icons" style="font-size:16px">place</i>${escapeHtml(p.currentStopName || "Parada")}</span>
-      ${dest ? `<span class="tl-badge"><i class="material-icons" style="font-size:16px">${isTram?'tram':'directions_bus'}</i>${escapeHtml(dest)}</span>` : ``}
-      <span class="tl-badge"><i class="material-icons" style="font-size:16px">schedule</i>Estimado en tiempo real</span>
-    `;
-
-    // Acento del panel
-    const accent = getComputedStyle($("#panel-"+instanceId)).getPropertyValue("--line-accent") || "var(--primary)";
-    modal.querySelector(".sheet").style.setProperty("--line-accent", accent.trim());
-
-    list.innerHTML = `<div style="padding:14px;color:var(--muted)">Cargando paradas…</div>`;
-    modal.classList.add("open");
-    lockBodyScroll();
-    attachViewportShim(modal);
-
-    try{
-      // 1) Recuperar recorrido
-      const routeData = await getJSON(p.line.stopsUrl);
-      if (!routeData || !Array.isArray(routeData.recorrido)) throw new Error("Sin recorrido");
-
-      const recorrido = routeData.recorrido;
-      const idx = recorrido.findIndex(s => String(s.idParada) === String(p.currentStopId));
-      const from = Math.max(0, idx);
-      const MAX_NEXT = 8; // ajustable
-      const slice = recorrido.slice(from, from + 1 + MAX_NEXT);
-
-      // 2) Calcular routeCode como en refreshPanel()
-      const routeCode = isTram
-        ? p.line.code
-        : ((p.line.code.startsWith('L') && !['L2A','L2B'].includes(p.line.code)) ? p.line.code.substring(1) : p.line.code);
-
-      // 3) Para cada parada, pedir llegadas y tomar la primera de la línea (y destino si aplica)
-      list.innerHTML = `<div style="padding:14px;color:var(--muted)">Calculando horas por parada…</div>`;
-
-      const results = await mapLimit(slice, 4, async (st, i)=>{
-        if (abort.signal.aborted) return null;
-
-        const stopId = st.idParada;
-        const url = ARRIVALS_TPL.replace("{stopId}", stopId).replace("{lineCode}", routeCode);
-
-        const toFetch = toProxiedUrl(url);
-        const res = await fetch(toFetch, { cache:"no-store", signal: abort.signal });
-        if(!res.ok) throw new Error("HTTP " + res.status);
-
-        const txt = await res.text();
-        const data = tryParseJSON(txt);
-
-        const a = pickArrivalForLine(data, { line: p.line, routeCode, isTram, dest });
-        const ui = arrivalToUi(a);
-
-        return {
-          stopId,
-          name: st.nombre,
-          isCurrent: i===0,
-          eta: ui.eta,
-          clock: ui.clock,
-          delay: ui.delay,
-          delayCls: ui.delayCls
-        };
-      });
-
-      if (abort.signal.aborted) return;
-
-      // 4) Render timeline
-      const safe = results.filter(Boolean);
-      if (!safe.length){
-        list.innerHTML = `<div style="padding:14px;color:var(--muted)">No hay datos para mostrar.</div>`;
-        return;
+    snapshot.forEach(item=>{
+      const line = lines.find(l=>l.code===item.lineCode);
+      if (!line) return;
+      const id = createPanel(line, {focus:false, pinOnAdd:item.pinned});
+      if (item.stop?.id){
+        panels[id].currentStopId = item.stop.id;
+        panels[id].currentStopName = item.stop.name || null;
+        $("#stop-name-"+id).textContent = panels[id].currentStopName || "Parada";
       }
-
-      list.innerHTML = safe.map((it, i)=>{
-        const isLast = i === safe.length - 1;
-        return `
-          <div class="tl-item ${it.isCurrent ? 'tl-current' : ''}">
-            <div class="tl-rail" aria-hidden="true">
-              <div class="tl-dot"></div>
-              ${isLast ? '' : '<div class="tl-line"></div>'}
-            </div>
-
-            <div class="tl-main">
-              <div class="tl-stop">${escapeHtml(it.name)}</div>
-              <div class="tl-meta">
-                ${it.isCurrent ? `<span class="pill">Parada actual</span>` : ``}
-                ${it.delay ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delay)}</span>` : ``}
-              </div>
-            </div>
-
-            <div class="tl-right">
-              <div class="tl-eta">${escapeHtml(it.eta)}</div>
-              <div class="tl-clock">Hora: <strong>${escapeHtml(it.clock)}</strong></div>
-            </div>
-          </div>
-        `;
-      }).join("");
-
-    }catch(err){
-      if (abort.signal.aborted) return;
-      console.warn("Timeline error", err);
-      list.innerHTML = `<div style="padding:14px;color:var(--muted)">⚠️ No se pudieron calcular las horas para las siguientes paradas.</div>`;
-    }
-  }
-
-
-  /* ========= Stops modal ========= */
-  async function openStops(instanceId){
-    currentStopsForInstance = instanceId;
-    const p = panels[instanceId];
-    if(!p) return;
-
-    $("#stopsModalTitle").textContent = `Paradas · ${p.line.code}`;
-    $("#stopsListContainer").innerHTML = `<div class="empty">Cargando paradas…</div>`;
-
-    $("#stopsModal").classList.add("open");
-    lockBodyScroll();
-    attachViewportShim($("#stopsModal"));
-
-    try{
-      const data = await getJSON(p.line.stopsUrl);
-      const stops = (data && data.recorrido) ? data.recorrido : [];
-
-      const cont = $("#stopsListContainer");
-      cont.innerHTML = "";
-
-      if(!stops.length){
-        cont.innerHTML = `<div class="empty">No se pudieron cargar paradas.</div>`;
-        return;
+      if (item.favorite?.id){
+        setFavorite(id, item.favorite);
+        updateFavIcon(id);
       }
-
-      // If API provides coordinates
-      const hasGeo = stops.some(s=> Number.isFinite(+s.latitud) && Number.isFinite(+s.longitud));
-      if(hasGeo){
-        const info = document.createElement("div");
-        info.className = "empty";
-        info.style.textAlign = "left";
-        info.style.padding = "10px 8px";
-        info.innerHTML = `Tip: usa <strong>📍</strong> para ordenar por cercanía.`;
-        cont.appendChild(info);
-      }
-
-      stops.forEach(s=>{
-        const item = document.createElement("div");
-        item.className = "item stop-item";
-        item.role = "option";
-        item.dataset.name = s.nombre || "";
-        item.dataset.lat = s.latitud ?? "";
-        item.dataset.lng = s.longitud ?? "";
-
-        item.innerHTML = `
-          <div style="min-width:0">
-            <strong>${escapeHtml(s.nombre || "Parada")}</strong><br/>
-            <small>ID: ${escapeHtml(s.idParada)}</small>
-          </div>
-          <i class="material-icons" style="opacity:.85">chevron_right</i>
-        `;
-
-        item.addEventListener("click", ()=>{
-          setStop(instanceId, s.idParada, s.nombre);
-          closeStops();
-        });
-
-        cont.appendChild(item);
-      });
-
-    }catch(err){
-      console.warn("stops error", err);
-      $("#stopsListContainer").innerHTML = `<div class="empty">Error cargando paradas.</div>`;
-    }
-  }
-  function closeStops(){
-    $("#stopsModal").classList.remove("open");
-    detachViewportShim($("#stopsModal"));
-    unlockBodyScroll();
+      refreshPanel(id);
+    });
+    persistAllPanels();
+    renderPanelsOrder();
+    updateEmpty();
   }
 
-  function setStop(instanceId, stopId, stopName){
-    const p = panels[instanceId];
-    if(!p) return;
+  /* ========= Theme ========= */
+  function pref(){ return localStorage.getItem('theme_pref')||'auto'; }
+  function sysDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
+  function applyTheme(p){
+    document.documentElement.classList.add('theme-switching');
+    const t=p==='auto'?(sysDark()?'dark':'light'):p;
+    document.documentElement.setAttribute('data-theme',t);
+    $("#themeIcon").textContent=t==='dark'?'light_mode':'dark_mode';
+    const c=t==='dark'?'#0b1220':'#f6f8fc';
+    $("#metaThemeLight").setAttribute('content',c);
+    $("#metaThemeDark").setAttribute('content',c);
+    setTimeout(()=>document.documentElement.classList.remove('theme-switching'),250);
+  }
+  function cycleTheme(){
+    const c=pref();
+    const n=c==='auto'?'light':c==='light'?'dark':'auto';
+    localStorage.setItem('theme_pref',n);
+    applyTheme(n);
+  }
 
-    p.currentStopId = stopId;
-    p.currentStopName = stopName;
-    $(`#stop-${instanceId}`).textContent = stopName;
-    savePanels();
-    refreshPanel(instanceId);
+  function refreshAll(){
+    globalLastRefresh = Date.now();
+    updateGlobalUpdated();
+    Object.keys(panels).forEach(id => refreshPanel(id));
   }
 
   /* ========= Init ========= */
@@ -1641,43 +1669,10 @@
     $("#closeStops").addEventListener('click', closeStops);
     $("#stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
 
-    // Cerrar modal timeline
-    $("#closeTimeline").addEventListener("click", closeTimeline);
-    $("#timelineModal").addEventListener("click", (e)=>{ if(e.target===e.currentTarget) closeTimeline(); });
-
-    // Delegación: click en contador (bus) o en bloque (tranvía)
-    $("#panels-container").addEventListener("click", (e)=>{
-      const trg = e.target.closest(".timeline-trigger");
-      if(!trg) return;
-
-      const card = e.target.closest(".card");
-      const instanceId = card?.dataset?.instanceId;
-      if(!instanceId) return;
-
-      const dest = trg.dataset?.dest || null; // para tranvía (opcional)
-      openTimeline(instanceId, dest);
-    });
-
-    // Accesibilidad teclado (Enter/Espacio)
-    $("#panels-container").addEventListener("keydown", (e)=>{
-      const trg = e.target.closest(".timeline-trigger");
-      if(!trg) return;
-      if(e.key !== "Enter" && e.key !== " ") return;
-      e.preventDefault();
-
-      const card = e.target.closest(".card");
-      const instanceId = card?.dataset?.instanceId;
-      if(!instanceId) return;
-
-      const dest = trg.dataset?.dest || null;
-      openTimeline(instanceId, dest);
-    });
-
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){
         closeAddModal();
         closeStops();
-        closeTimeline();
       }
     });
 
@@ -1720,15 +1715,20 @@
 
     applyTheme(pref());
     if (window.matchMedia){
-      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', ()=>{
-        if(localStorage.getItem("theme")==="auto") applyTheme("auto");
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+        if(pref()==='auto') applyTheme('auto');
       });
     }
 
-    loadPanels();
-    scheduleAutoRefresh();
-    startGlobalTick();
-    refreshAll();
+    globalLastRefresh = Date.now();
+    updateGlobalUpdated();
+    if (globalTickTimer) clearInterval(globalTickTimer);
+    globalTickTimer = setInterval(()=> updateGlobalUpdated(), 1000);
+
+    loadInitialPanels();
+
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(()=> refreshAll(), 30000);
   });
   </script>
 </body>
