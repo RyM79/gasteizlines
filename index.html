@@ -3,544 +3,764 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Gasteiz Lines — Bus & Tranvía</title>
-
-  <meta id="metaThemeLight" name="theme-color" content="#f6f8fc" media="(prefers-color-scheme: light)">
-  <meta id="metaThemeDark"  name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <title>Gasteiz Lines</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#f6f8fc;
-      --bg-accent:radial-gradient(1200px 520px at 50% -10%,color-mix(in oklab,var(--primary) 14%,transparent) 0%,transparent 60%);
-      --surface:rgba(255,255,255,.72);
-      --surface-2:rgba(246,248,252,.80);
-      --glass-border:rgba(15,23,42,.08);
-      --text:#0f172a;
-      --muted:#5b6b82;
-      --primary:#0b63ff;
-      --accent-bus:#22c55e;
-      --accent-tram:#e11d48;
-      --danger:#ef4444;
+      --bg:#0b1020;
+      --surface:rgba(255,255,255,.08);
+      --surface-2:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --glass-border:rgba(255,255,255,.14);
+      --shadow:0 18px 48px rgba(0,0,0,.35);
+      --ring:0 0 0 3px rgba(124,92,255,.35);
+      --primary:#7c5cff;
+      --danger:#ff4d6d;
+      --ok:#22c55e;
+      --warn:#f59e0b;
       --radius:18px;
-      --shadow:0 12px 40px rgba(16,24,40,.12);
-      --ring:0 0 0 3px rgba(11,99,255,.25);
-      color-scheme:light;
+      --radius-lg:22px;
+      --max:1100px;
+      --card-pad:14px;
+      --blur:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --ease: cubic-bezier(.22,1,.36,1);
     }
-    html[data-theme=dark]{
-      --bg:#0b1220;
-      --bg-accent:radial-gradient(1200px 520px at 50% -10%,color-mix(in oklab,var(--primary) 22%,transparent) 0%,transparent 60%);
-      --surface:rgba(17,24,39,.62);
-      --surface-2:rgba(15,23,42,.60);
-      --glass-border:rgba(255,255,255,.085);
-      --text:#e5e7eb;
-      --muted:#a8b6c7;
-      --primary:#3b82f6;
-      --danger:#f87171;
-      --shadow:0 18px 52px rgba(0,0,0,.45);
-      --ring:0 0 0 3px rgba(59,130,246,.25);
-      color-scheme:dark;
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f7fb;
+        --surface:rgba(255,255,255,.74);
+        --surface-2:rgba(255,255,255,.86);
+        --text:rgba(13,18,40,.92);
+        --muted:rgba(13,18,40,.60);
+        --glass-border:rgba(13,18,40,.12);
+        --shadow:0 18px 48px rgba(16,24,40,.10);
+        --ring:0 0 0 3px rgba(124,92,255,.24);
+      }
     }
 
-    *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;
-      background:var(--bg-accent),var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 650px at 15% 5%, rgba(124,92,255,.22), transparent 60%),
+        radial-gradient(900px 500px at 85% 0%, rgba(34,197,94,.18), transparent 60%),
+        radial-gradient(900px 500px at 50% 95%, rgba(245,158,11,.16), transparent 60%),
+        var(--bg);
       color:var(--text);
-      -webkit-tap-highlight-color:transparent;
-    }
-    body.modal-open{overflow:hidden;height:100%}
-    html.theme-switching *{transition:background-color .25s,color .25s,border-color .25s,box-shadow .25s}
-
-    .app{max-width:1080px;margin:0 auto;padding:16px clamp(12px,4vw,24px) 104px;display:grid;gap:14px}
-
-    header.appbar{
-      position:sticky;top:0;z-index:50;
-      display:grid;grid-template-columns: 1fr auto;
-      gap:12px;align-items:center;
-      padding:14px clamp(12px,4vw,24px);
-      margin:-16px calc(clamp(12px,4vw,24px)*-1) 0;
-      background:color-mix(in oklab,var(--surface) 72%,transparent);
-      backdrop-filter:blur(16px) saturate(1.4);
-      border-bottom:1px solid var(--glass-border);
-    }
-    .brand{display:flex;align-items:center;gap:12px;min-width:0}
-    .logo{
-      width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;
-      background:linear-gradient(135deg,var(--primary) 0%,#22c55e 100%);
-      box-shadow:0 10px 24px color-mix(in oklab,var(--primary) 30%,transparent)
-    }
-    .title{display:grid;line-height:1.05;min-width:0}
-    .title strong{font-size:18px;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .title .sub{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:2px}
-    .title .sub span{font-size:12px;color:var(--muted)}
-    .pill{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:4px 10px;border-radius:999px;
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-      font-size:12px;color:var(--muted);
-    }
-    .dot{width:6px;height:6px;border-radius:50%;background:color-mix(in oklab,var(--muted) 55%,transparent);display:inline-block}
-
-    .actions{display:flex;gap:10px;align-items:center}
-    .btn{
-      display:inline-flex;align-items:center;gap:8px;
-      min-height:40px;padding:10px 12px;border-radius:14px;
-      border:1px solid var(--glass-border);background:var(--surface);
-      cursor:pointer;box-shadow:0 1px 0 rgba(16,24,40,.03);
-      transition:transform .06s,box-shadow .2s
-    }
-    .btn i{font-size:20px}
-    .btn span{font-size:12px;color:var(--muted)}
-    .btn:active{transform:scale(.98)}
-    @media (hover:hover) and (pointer:fine){
-      .btn:hover,.pin-btn:hover,.del-btn:hover,.nav-btn:hover,.chip:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+      overflow-x:hidden;
     }
 
-    .offline-banner{
-      position:sticky;top:0;z-index:49;margin:0 -16px;padding:10px 16px;
-      background:#fee2e2;color:#991b1b;border-bottom:1px solid #fecaca;display:none;font-size:13px
+    /* Layout */
+    .app{
+      max-width: var(--max);
+      margin:0 auto;
+      padding: 18px 14px 92px;
+      box-sizing:border-box;
     }
-    html[data-theme=dark] .offline-banner{background:#3f1d1d;color:#fecaca;border-color:#7f1d1d}
 
-    .grid{display:grid;gap:14px}
-    .card{
-      position:relative;
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:14px;
-      display:grid;
+    header{
+      position: sticky;
+      top:0;
+      z-index: 50;
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      background: linear-gradient(to bottom, rgba(0,0,0,.38), rgba(0,0,0,.10));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    [data-theme="light"] header{
+      background: linear-gradient(to bottom, rgba(255,255,255,.74), rgba(255,255,255,.42));
+      border-bottom: 1px solid rgba(13,18,40,.08);
+    }
+    .topbar{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
       gap:12px;
-      overflow:clip;
-      backdrop-filter:blur(14px) saturate(1.25);
-      touch-action: pan-y;
-      user-select:none;
-    }
-    .card::after{content:"";position:absolute;inset:-1px -1px auto -1px;height:6px;border-radius:18px 18px 0 0;background:var(--line-accent,var(--primary));opacity:.92;pointer-events:none}
-
-    .card-top{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
-    .line-row{display:flex;align-items:center;gap:10px;min-width:0}
-    .line-pill{
-      display:inline-flex;align-items:center;gap:6px;
-      padding:4px 10px;border-radius:999px;font-weight:900;letter-spacing:.2px;font-size:12px;
-      background: color-mix(in oklab, var(--line-accent) 18%, var(--surface));
-      border:1px solid color-mix(in oklab, var(--line-accent) 45%, var(--glass-border));
-      color: var(--text); white-space:nowrap;
-    }
-    .line-pill i{font-size:16px;color:color-mix(in oklab, var(--line-accent) 80%, var(--text));}
-    .line-name{font-weight:950;letter-spacing:-.25px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;min-width:0}
-
-    .meta-small{
-      margin-top:2px;
-      font-size:12px;color:var(--muted);
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+      box-sizing:border-box;
     }
 
-    .card-actions{display:flex;gap:10px;align-items:center}
-    .pin-btn, .del-btn{
-      width:42px;height:42px;
-      display:grid;place-items:center;
-      border-radius:12px;
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      cursor:pointer;
-      transition:transform .06s,box-shadow .2s, background .2s, border-color .2s;
-    }
-    .pin-btn i, .del-btn i{font-size:20px;color:var(--muted)}
-    .pin-btn:active,.del-btn:active{transform:scale(.98)}
-    .pin-btn.pinned{
-      border-color:color-mix(in oklab,var(--line-accent) 45%, var(--glass-border));
-      background:color-mix(in oklab,var(--line-accent) 14%, var(--surface));
-    }
-    .pin-btn.pinned i{color:color-mix(in oklab,var(--line-accent) 80%, var(--text))}
-    .del-btn{
-      border-color:color-mix(in oklab,var(--danger) 35%, var(--glass-border));
-      background:color-mix(in oklab,var(--danger) 8%, var(--surface));
-    }
-    .del-btn i{color:color-mix(in oklab,var(--danger) 70%, var(--muted))}
-
-    .stop-row{
-      display:grid;
-      grid-template-columns:1fr auto;
+    .brand{
+      display:flex;
       align-items:center;
       gap:10px;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-    }
-    .stop-picker{
-      display:flex;align-items:center;gap:8px;width:100%;
-      background:none;border:none;padding:0;text-align:left;
-      cursor:pointer;color:inherit;
-      min-height:44px;
-      border-radius:12px;
-    }
-    .stop-picker i{font-size:18px;color:var(--primary)}
-    .stop-picker:focus-visible{outline:none;box-shadow:var(--ring)}
-    .stop-name{font-weight:950;letter-spacing:-.2px;font-size:16.5px;}
-    .caret{margin-left:auto;color:var(--muted);transition: transform .2s ease, color .2s ease;}
-    .stop-picker:hover .caret{ color: var(--primary); }
-    .stop-picker[aria-expanded="true"] .caret{ transform: rotate(180deg); }
-
-    .fav{
-      background:none;border:none;cursor:pointer;color:var(--primary);
-      min-width:44px;min-height:44px;display:grid;place-items:center;border-radius:12px;
-      font-size:26px;
-    }
-    .fav.selected{color:#f59e0b}
-    .fav:focus-visible{outline:none;box-shadow:var(--ring)}
-
-    /* ALERTAS */
-    .alerts{
-      position:relative;
-      display:none;
-      border:1px solid color-mix(in oklab,#f59e0b 40%, var(--glass-border));
-      background:color-mix(in oklab,#f59e0b 14%, var(--surface));
-      border-radius:14px;
-      padding:10px 12px;
-      padding-right:52px; /* espacio para la X */
-      gap:10px;
-      align-items:flex-start;
-    }
-    .alerts.show{display:flex}
-    .alerts i{font-size:18px;color:color-mix(in oklab,#f59e0b 75%, var(--text));margin-top:1px}
-    .alerts .alert-text{
-      font-size:13px;
-      color:color-mix(in oklab,var(--text) 92%, #0000);
-      line-height:1.25;
       min-width:0;
     }
-    .alerts .alert-text strong{font-weight:950}
-    html[data-theme=dark] .alerts{
-      background:color-mix(in oklab,#f59e0b 18%, var(--surface));
-      border-color:color-mix(in oklab,#f59e0b 34%, var(--glass-border));
+    .logo{
+      width:38px;height:38px;border-radius:14px;
+      display:grid;place-items:center;
+      background: linear-gradient(135deg, rgba(124,92,255,.85), rgba(245,158,11,.80));
+      box-shadow: 0 14px 28px rgba(124,92,255,.20);
+      flex:0 0 auto;
+    }
+    .logo i{font-size:22px}
+    .title{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .title strong{
+      font-size:14px;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .title span{
+      font-size:12px;color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    .alerts-close{
-      position:absolute;
-      top:10px;
-      right:10px;
-      width:34px;height:34px;
-      border-radius:12px;
-      border:1px solid color-mix(in oklab,#f59e0b 35%, var(--glass-border));
-      background:color-mix(in oklab,var(--surface) 88%, transparent);
-      color:var(--muted);
-      display:grid;
-      place-items:center;
+    .actions{
+      display:flex;align-items:center;gap:10px;
+    }
+
+    .btn{
+      border:none;
+      outline:none;
+      padding:10px 12px;
+      border-radius:14px;
       cursor:pointer;
+      color:var(--text);
+      background: var(--surface);
+      border:1px solid var(--glass-border);
+      box-shadow: 0 10px 26px rgba(0,0,0,.16);
+      display:inline-flex;align-items:center;gap:8px;
+      transition: transform .08s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
+      user-select:none;
     }
-    .alerts-close i{ font-size:18px; }
-    .alerts-close:active{ transform:scale(.98); }
-    .alerts-close:focus-visible{ outline:none; box-shadow: var(--ring); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn:focus-visible{ box-shadow: var(--ring), 0 10px 26px rgba(0,0,0,.16); }
+    .btn .material-icons{ font-size:20px; line-height:0; opacity:.92}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(124,92,255,.92), rgba(124,92,255,.62));
+      border: 1px solid rgba(124,92,255,.35);
+    }
+    .btn.danger{
+      background: linear-gradient(135deg, rgba(255,77,109,.92), rgba(255,77,109,.62));
+      border: 1px solid rgba(255,77,109,.35);
+    }
 
-    /* Horario resaltado en avisos */
-    .alert-meta{
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .hint .dot{
+      width:6px;height:6px;border-radius:99px;background:rgba(255,255,255,.35);
+    }
+
+    /* Panels grid */
+    .grid{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+    @media (max-width: 980px){
+      .grid{ gap:12px; }
+    }
+    @media (max-width: 680px){
+      .app{ padding-bottom: 112px; }
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      grid-column: span 4;
+      background: var(--surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      transition: transform .14s var(--ease), box-shadow .2s var(--ease);
+    }
+    @media (hover:hover){
+      .card:hover{ transform: translateY(-2px); box-shadow: 0 26px 64px rgba(0,0,0,.32); }
+      [data-theme="light"] .card:hover{ box-shadow: 0 26px 64px rgba(16,24,40,.16); }
+    }
+    @media (max-width: 980px){
+      .card{ grid-column: span 6; }
+    }
+    @media (max-width: 680px){
+      .card{ grid-column: span 12; }
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;inset:0;
+      background:
+        radial-gradient(420px 180px at 30% -10%, rgba(255,255,255,.10), transparent 60%),
+        radial-gradient(320px 160px at 80% 0%, rgba(124,92,255,.12), transparent 60%);
+      pointer-events:none;
+      opacity:.9;
+    }
+
+    .card-inner{ position:relative; padding: var(--card-pad); display:flex; flex-direction:column; gap:10px; }
+
+    .card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .line-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.10);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing:.2px;
+      user-select:none;
+    }
+    [data-theme="light"] .line-pill{ background: rgba(255,255,255,.30); border:1px solid rgba(13,18,40,.08); }
+    .line-pill i{ font-size:18px; opacity:.9 }
+    .line-code{
+      font-family: var(--mono);
+      font-weight: 900;
+      letter-spacing: .6px;
+    }
+
+    .card-tools{
+      display:flex; gap:8px; align-items:center;
+    }
+    .iconbtn{
+      width:36px;height:36px;border-radius:14px;
+      display:grid;place-items:center;
+      border:1px solid var(--glass-border);
+      background: rgba(0,0,0,.08);
+      cursor:pointer;
+      transition: transform .08s var(--ease), background .2s var(--ease);
+      user-select:none;
+    }
+    [data-theme="light"] .iconbtn{ background: rgba(255,255,255,.38); }
+    .iconbtn:active{ transform: translateY(1px) scale(.99); }
+    .iconbtn i{ font-size:20px; opacity:.85 }
+    .iconbtn:hover{ background: rgba(255,255,255,.14); }
+    [data-theme="light"] .iconbtn:hover{ background: rgba(255,255,255,.64); }
+
+    .row{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .stop-name{
+      font-weight: 800;
+      letter-spacing:-.2px;
+      line-height: 1.2;
+      font-size: 14px;
+      min-width:0;
+    }
+    .stop-name span{
+      display:inline-block;
+      max-width: 100%;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      vertical-align:bottom;
+    }
+
+    .next-time{
+      font-size: 22px;
+      font-weight: 950;
+      letter-spacing:-.5px;
+      line-height:1.1;
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .next-time small{
+      font-size:12px;
+      font-weight:800;
+      color:var(--muted);
+      letter-spacing:.2px;
+    }
+
+    .delay{
+      font-size:12px;
+      font-weight:900;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.14);
+      user-select:none;
+    }
+    [data-theme="light"] .delay{ background: rgba(255,255,255,.50); border:1px solid rgba(13,18,40,.10); }
+    .delay-ok{ color: rgba(34,197,94,.96); }
+    .delay-bad{ color: rgba(255,77,109,.98); }
+    .delay-neutral{ color: var(--muted); }
+    .delay-warn{ color: rgba(245,158,11,.98); }
+
+    .pill{
+      font-size:12px;
+      font-weight:800;
+      padding:4px 9px;
+      border-radius:999px;
+      background: rgba(124,92,255,.16);
+      border:1px solid rgba(124,92,255,.26);
+      color: rgba(124,92,255,.98);
+      user-select:none;
+    }
+
+    .arrivals{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top: 2px;
+    }
+    .chip{
+      padding: 7px 9px;
+      border-radius: 14px;
+      border:1px solid var(--glass-border);
+      background: rgba(0,0,0,.10);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    [data-theme="light"] .chip{ background: rgba(255,255,255,.34); }
+    .chip .when{
+      font-weight: 950;
+      font-size:12px;
+      letter-spacing:.2px;
+    }
+    .chip .clock{
+      font-size:12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .notice{
+      margin-top: 10px;
+      padding: 10px 11px;
+      border-radius: 16px;
+      border:1px solid rgba(245,158,11,.32);
+      background: rgba(245,158,11,.12);
+      color: rgba(245,158,11,.96);
+      font-size: 12px;
+      display:none;
+      line-height:1.3;
+    }
+    .notice.show{ display:block; }
+
+    /* Bottom nav */
+    nav.bottom{
+      position: fixed;
+      left:0;right:0;bottom:0;
+      z-index:60;
+      padding: 10px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,.48), rgba(0,0,0,.0));
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+    }
+    [data-theme="light"] nav.bottom{
+      background: linear-gradient(to top, rgba(255,255,255,.84), rgba(255,255,255,.0));
+    }
+    .navinner{
+      max-width: var(--max);
+      margin:0 auto;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 10px;
+      border-radius: 22px;
+      background: var(--surface);
+      border:1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+    }
+    .navbtn{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      padding: 10px 8px;
+      border-radius: 18px;
+      border:1px solid transparent;
+      cursor:pointer;
+      user-select:none;
+      transition: background .2s var(--ease), transform .08s var(--ease);
+    }
+    .navbtn:active{ transform: translateY(1px) scale(.99); }
+    .navbtn i{ font-size:22px; opacity:.92 }
+    .navbtn span{ font-size:11px; font-weight:850; color: var(--muted); }
+    .navbtn.active{
+      background: rgba(124,92,255,.16);
+      border:1px solid rgba(124,92,255,.26);
+    }
+    .navbtn.active span{ color: rgba(124,92,255,.96); }
+
+    /* Modals */
+    .modal{
+      position: fixed;
+      inset:0;
+      z-index: 90;
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 16px;
+      box-sizing:border-box;
+      background: rgba(0,0,0,.44);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    [data-theme="light"] .modal{ background: rgba(16,24,40,.24); }
+    .modal.open{ display:flex; }
+    .sheet{
+      width: min(720px, 96vw);
+      max-height: min(86vh, 840px);
+      overflow:auto;
+      border-radius: 26px;
+      background: var(--surface-2);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      box-sizing:border-box;
+      animation: pop .18s var(--ease);
+    }
+    @keyframes pop{ from{ transform: translateY(18px) scale(.98); opacity:0 } to{ transform: translateY(0) scale(1); opacity:1 } }
+
+    .search{
+      width:100%;
+      box-sizing:border-box;
+      border-radius: 16px;
+      padding: 12px 12px;
+      font-size: 14px;
+      outline:none;
+      border:1px solid var(--glass-border);
+      background: rgba(0,0,0,.10);
+      color: var(--text);
+      margin-top: 12px;
+    }
+    [data-theme="light"] .search{ background: rgba(255,255,255,.64); }
+
+    .tabs{
+      margin-top: 12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .chipbtn{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid var(--glass-border);
+      background: rgba(0,0,0,.10);
+      font-size: 12px;
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
+      transition: background .2s var(--ease), transform .08s var(--ease);
+    }
+    [data-theme="light"] .chipbtn{ background: rgba(255,255,255,.42); }
+    .chipbtn:active{ transform: translateY(1px) scale(.99); }
+    .chipbtn.active{
+      background: rgba(124,92,255,.20);
+      border:1px solid rgba(124,92,255,.30);
+      color: rgba(124,92,255,.98);
+    }
+
+    .list{
+      margin-top: 12px;
+      display:grid;
+      gap:10px;
+    }
+    .item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border:1px solid var(--glass-border);
+      background: rgba(0,0,0,.08);
+      cursor:pointer;
+      user-select:none;
+      transition: background .2s var(--ease), transform .08s var(--ease);
+    }
+    [data-theme="light"] .item{ background: rgba(255,255,255,.42); }
+    .item:active{ transform: translateY(1px) scale(.995); }
+    .item:hover{ background: rgba(255,255,255,.12); }
+    [data-theme="light"] .item:hover{ background: rgba(255,255,255,.70); }
+    .item strong{ font-weight: 950; font-size: 14px; letter-spacing:-.2px; }
+    .item small{ color: var(--muted); font-weight: 800; }
+
+    .empty{
+      padding: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align:center;
+    }
+
+    .offline{
+      display:none;
+      margin: 14px 0 0;
+      padding: 11px 12px;
+      border-radius: 18px;
+      border:1px solid rgba(255,77,109,.32);
+      background: rgba(255,77,109,.10);
+      color: rgba(255,77,109,.95);
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.3;
+    }
+
+    .spin{ animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Tram blocks */
+    .dest-block{
+      margin-top: 8px;
+      padding: 10px 10px;
+      border-radius: 18px;
+      border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,.08);
+    }
+    [data-theme="light"] .dest-block{ background: rgba(255,255,255,.42); }
+    .dest-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .dest-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--glass-border);
+      background: rgba(0,0,0,.12);
+      user-select:none;
+    }
+    [data-theme="light"] .dest-pill{ background: rgba(255,255,255,.54); }
+    .dest-pill i{ font-size:18px; opacity:.9 }
+    .dest-label{ color: var(--muted); font-weight: 900; }
+    .dest-value{
+      font-weight: 950;
+      letter-spacing:-.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 240px;
+      display:inline-block;
+      vertical-align:bottom;
+    }
+
+    .tram-sec{
+      font-weight: 1000;
+      font-size: 26px;
+      letter-spacing:-.8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .viewport-shim{
+      height: env(safe-area-inset-bottom);
+    }
+
+    /* === Click en contador (trigger) === */
+    .timeline-trigger{
+      cursor:pointer;
+      border-radius:14px;
+      padding:6px 10px;
+      margin:-6px -10px;
+      transition:transform .06s, box-shadow .2s, background .2s;
+      background:transparent;
+    }
+    .timeline-trigger:active{ transform:scale(.99); }
+    .timeline-trigger:focus-visible{ outline:none; box-shadow:var(--ring); }
+    @media (hover:hover) and (pointer:fine){
+      .timeline-trigger:hover{
+        background:color-mix(in oklab,var(--surface-2) 70%, transparent);
+        box-shadow:0 10px 26px rgba(16,24,40,.10);
+      }
+    }
+
+    /* === Modal Timeline === */
+    #timelineModal .sheet{
+      width:min(820px,96vw);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .timeline-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .timeline-sub{
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .timeline-list{
+      border:1px solid var(--glass-border);
+      background:var(--surface-2);
+      border-radius:16px;
+      overflow:hidden;
+    }
+    .tl-item{
+      display:grid;
+      grid-template-columns: 22px 1fr auto;
+      gap:12px;
+      padding:12px 14px;
+      border-bottom:1px solid var(--glass-border);
+      align-items:flex-start;
+    }
+    .tl-item:last-child{ border-bottom:none; }
+    .tl-rail{
+      position:relative;
+      display:flex;
+      justify-content:center;
+      padding-top:2px;
+    }
+    .tl-dot{
+      width:12px;height:12px;border-radius:50%;
+      background: color-mix(in oklab, var(--line-accent) 78%, var(--text));
+      box-shadow:0 8px 16px rgba(16,24,40,.12);
+      border:2px solid color-mix(in oklab, var(--surface) 80%, transparent);
+    }
+    .tl-line{
+      position:absolute;
+      top:16px; bottom:-12px;
+      width:2px;
+      background: color-mix(in oklab, var(--line-accent) 35%, var(--glass-border));
+      border-radius:99px;
+    }
+    .tl-main{ min-width:0; }
+    .tl-stop{
+      font-weight:950;
+      letter-spacing:-.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .tl-meta{
+      margin-top:3px;
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .tl-right{
+      text-align:right;
+      font-variant-numeric:tabular-nums;
+      white-space:nowrap;
+    }
+    .tl-eta{
+      font-weight:950;
+      font-size:14px;
+    }
+    .tl-clock{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:850;
+    }
+    .tl-current .tl-dot{
+      background: color-mix(in oklab, var(--primary) 70%, var(--line-accent));
+    }
+    .tl-badge{
       display:inline-flex;
       align-items:center;
       gap:6px;
       padding:4px 10px;
       border-radius:999px;
-      border:1px solid color-mix(in oklab,#f59e0b 45%, var(--glass-border));
-      background: color-mix(in oklab,#f59e0b 18%, var(--surface));
-      color: color-mix(in oklab,var(--text) 92%, #0000);
-      font-weight:950;
-      font-size:12px;
-      margin-bottom:6px;
-    }
-    .alert-meta i{
-      font-size:16px;
-      color: color-mix(in oklab,#f59e0b 80%, var(--text));
-    }
-
-    .stack{display:grid;gap:10px;justify-items:center;text-align:center}
-    .next-time{
-      font-size:clamp(44px,9vw,72px);
-      font-weight:950;
-      letter-spacing:-1px;
-      line-height:.95;
-      font-variant-numeric:tabular-nums;
-    }
-    .hint{
+      border:1px solid var(--glass-border);
+      background:color-mix(in oklab,var(--surface) 80%, transparent);
       color:var(--muted);
       font-size:12px;
-      display:flex;gap:8px;flex-wrap:wrap;
-      justify-content:center;align-items:center;
-    }
-
-    /* Próximas compactas (máximo 2) */
-    .next-compact{
-      width:100%;
-      max-width:520px;
-      display:none;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-    }
-    .next-compact.show{display:flex}
-    .next-chip{
-      display:inline-flex;
-      flex-direction:column;
-      align-items:center;
-      gap:4px;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-      font-variant-numeric:tabular-nums;
-      white-space:nowrap;
-    }
-    .next-chip .big{font-weight:950;font-size:15px;line-height:1}
-    .next-chip .sub{color:var(--muted);font-weight:850;font-size:12px;line-height:1.15}
-
-    /* bloque compacto por destino (tranvía) */
-    .dest-block{
-      width:100%;
-      max-width:540px;
-      border:1px solid var(--glass-border);
-      background:color-mix(in oklab,var(--surface-2) 85%, transparent);
-      border-radius:16px;
-      padding:12px;
-      display:grid;
-      gap:10px;
-      text-align:center;
-    }
-    .dest-head{
-      display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;
-      color:var(--muted);font-weight:900;font-size:12px;
-    }
-
-    /* ✅ DESTINO resaltado */
-    .dest-pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:6px 12px;border-radius:999px;
-      border:1px solid color-mix(in oklab, var(--line-accent) 45%, var(--glass-border));
-      background: color-mix(in oklab, var(--line-accent) 12%, var(--surface));
-      color: var(--text);
-      font-weight:950;
-      box-shadow:0 8px 18px rgba(16,24,40,.08);
-    }
-    .dest-pill i{
-      font-size:18px;
-      color: color-mix(in oklab, var(--line-accent) 85%, var(--text));
-    }
-    
-    /* ✅ DIRECCIÓN (tranvía): estilo neutro para no parecer aviso */
-    .dest-pill.dir-pill{
-      border-color: color-mix(in oklab, var(--primary) 40%, var(--glass-border));
-      background: color-mix(in oklab, var(--primary) 10%, var(--surface));
-      box-shadow:0 8px 18px rgba(16,24,40,.08);
-    }
-    .dest-pill.dir-pill i{
-      color: color-mix(in oklab, var(--primary) 80%, var(--text));
-    }
-.dest-label{
-      font-size:11px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color: var(--muted);
       font-weight:950;
     }
-    .dest-value{
-      font-size:14px;
-      font-weight:950;
-      color: var(--text);
-    }
-
-    .delay{padding:2px 8px;border-radius:999px;border:1px solid var(--glass-border);font-size:12px}
-    .delay-late{background:color-mix(in oklab,#ef4444 16%, var(--surface-2));border-color:color-mix(in oklab,#ef4444 45%, var(--glass-border))}
-    .delay-early{background:color-mix(in oklab,#22c55e 16%, var(--surface-2));border-color:color-mix(in oklab,#22c55e 45%, var(--glass-border))}
-    .delay-neutral{background:var(--surface-2)}
-
-    .notice{
-      display:none;text-align:center;color:var(--muted);
-      border:1px dashed var(--glass-border);
-      background:var(--surface);
-      padding:18px;border-radius:var(--radius);
-      backdrop-filter:blur(10px) saturate(1.2)
-    }
-
-    .bottom-nav{
-      position:fixed;left:0;right:0;bottom:0;z-index:55;
-      display:grid;grid-template-columns:repeat(2,1fr);
-      gap:10px;align-items:center;
-      padding:12px max(12px,env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-right));
-      background:color-mix(in oklab,var(--surface) 72%,transparent);
-      border-top:1px solid var(--glass-border);
-      backdrop-filter:blur(16px) saturate(1.35)
-    }
-    .nav-btn{
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      border-radius:18px;
-      min-height:52px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      cursor:pointer;
-      box-shadow:0 2px 0 rgba(16,24,40,.03);
-      transition:transform .06s,box-shadow .2s;
-      font-size:13px;color:var(--muted);
-      font-weight:900;
-      letter-spacing:.1px;
-    }
-    .nav-btn i{font-size:22px}
-    .nav-btn.primary{
-      background:linear-gradient(135deg,
-        color-mix(in oklab,var(--primary) 78%, #ffffff 0%) 0%,
-        color-mix(in oklab,var(--primary) 58%, #22c55e 0%) 120%);
-      border-color:color-mix(in oklab,var(--primary) 48%, var(--glass-border));
-      color:#fff;
-      text-shadow:0 1px 0 rgba(0,0,0,.18);
-      box-shadow:0 16px 34px color-mix(in oklab,var(--primary) 18%, transparent);
-    }
-    .nav-btn.secondary{
-      background:color-mix(in oklab,var(--surface) 92%, transparent);
-      border-color:color-mix(in oklab,var(--glass-border) 80%, transparent);
-      color:var(--text);
-    }
-    .nav-btn:active{transform:scale(.985)}
-    .spin{animation:spin 1.1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    .modal{position:fixed;inset:0;display:none;place-items:center;padding:16px;z-index:60;background:rgba(0,0,0,.35);overscroll-behavior:contain}
-    .modal.open{display:grid}
-    .sheet{
-      width:min(760px,96vw);
-      max-height:88vh;
-      overflow:auto;
-      background:var(--surface);
-      border:1px solid var(--glass-border);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:14px;
-      backdrop-filter:blur(12px) saturate(1.25);
-      animation:pop .15s ease;
-    }
-    @keyframes pop{from{transform:translateY(6px);opacity:0}}
-
-    #addModal .sheet{
-      height: min(78vh, 640px);
-      max-height: 88vh;
-      display:flex;
-      flex-direction:column;
-    }
-    #stopsModal .sheet{display:flex;flex-direction:column}
-
-    #stopsListContainer, #addList{
-      flex:1;
-      min-height:0;
-      overflow:auto;
-      -webkit-overflow-scrolling:touch;
-      overscroll-behavior:contain;
-      overflow-anchor:none;
-    }
-
-    #addList{
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-      border-radius:16px;
-      padding:6px 0;
-    }
-
-    .search{
-      width:100%;
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      color:var(--text);
-      padding:12px;border-radius:14px;
-      margin:10px 0 10px;
-      font: inherit;
-    }
-    @media (max-width: 600px){
-      .search{ font-size:17px; line-height:1.25; }
-    }
-
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px}
-    .chip{
-      border:1px solid var(--glass-border);
-      background:var(--surface-2);
-      color:var(--muted);
-      padding:8px 10px;border-radius:999px;
-      cursor:pointer;
-      font-size:12px;font-weight:950;
-      transition:transform .06s, background .2s, color .2s;
-      min-height:36px;
-    }
-    .chip.active{
-      background:color-mix(in oklab,var(--primary) 18%, var(--surface));
-      color:var(--text);
-      border-color:color-mix(in oklab,var(--primary) 42%, var(--glass-border));
-    }
-
-    .add-item,.stop-item{
-      padding:12px;border-bottom:1px solid var(--glass-border);
-      cursor:pointer;
-      display:flex;gap:10px;align-items:center;
-    }
-    .add-item:hover,.stop-item:hover{background:color-mix(in oklab,var(--surface) 90%,transparent)}
-    .stop-item.selected{background:color-mix(in oklab,var(--surface) 86%,transparent)}
-    .row-main{min-width:0}
-    .row-title{font-weight:950;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .row-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .row-right{margin-left:auto;color:var(--muted);font-size:12px;font-weight:950;display:flex;align-items:center;gap:8px}
-    .section-title{
-      font-size:12px;color:var(--muted);
-      font-weight:950;letter-spacing:.2px;
-      margin:10px 4px 6px;
-      display:flex;align-items:center;gap:8px;
-    }
-    .divider{height:1px;background:var(--glass-border);margin:10px 0}
   </style>
 </head>
 
 <body>
-  <div class="app">
-    <header class="appbar" aria-label="Barra superior">
+  <header>
+    <div class="topbar">
       <div class="brand">
-        <div class="logo"><i class="material-icons">directions_transit</i></div>
+        <div class="logo" aria-hidden="true"><i class="material-icons">directions_transit</i></div>
         <div class="title">
           <strong>Gasteiz Lines</strong>
-          <div class="sub">
-            <span>Bus & Tranvía</span>
-            <span class="dot"></span>
-            <span id="globalUpdated" class="pill">Actualizado: —</span>
-          </div>
+          <span id="subtitle">Llegadas en tiempo real • Dashboard</span>
         </div>
       </div>
 
       <div class="actions">
-        <button class="btn" id="themeToggle" aria-label="Cambiar tema">
-          <i id="themeIcon" class="material-icons">dark_mode</i><span>Tema</span>
+        <button class="btn" id="themeToggle" title="Cambiar tema">
+          <i class="material-icons">brightness_6</i>
+          <span style="font-weight:900;font-size:12px">Tema</span>
+        </button>
+        <button class="btn primary" id="navAdd" title="Añadir línea">
+          <i class="material-icons">add</i>
+          <span style="font-weight:900;font-size:12px">Añadir</span>
         </button>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <div id="offlineBanner" class="offline-banner">Sin conexión. Los datos pueden estar desactualizados.</div>
-
-    <div id="empty-message" class="notice">
-      No has añadido ninguna línea todavía.<br>
-      Pulsa <strong>+ Añadir</strong> para empezar.
+  <div class="app">
+    <div id="offlineBanner" class="offline">
+      ⚠️ Estás sin conexión. Se mostrarán los últimos datos disponibles.
     </div>
 
-    <main id="panels-container" class="grid" aria-live="polite"></main>
+    <div class="grid" id="panels-container"></div>
+
+    <div class="empty" id="emptyState" style="display:none">
+      No tienes líneas añadidas. Pulsa <strong>Añadir</strong> para empezar.
+    </div>
   </div>
 
-  <nav class="bottom-nav" aria-label="Acciones">
-    <button class="nav-btn primary" id="navAdd"><i class="material-icons">add</i><span>Añadir</span></button>
-    <button class="nav-btn secondary" id="navRefresh"><i class="material-icons">refresh</i><span>Actualizar</span></button>
+  <!-- Bottom nav -->
+  <nav class="bottom" aria-label="Acciones principales">
+    <div class="navinner">
+      <div class="navbtn active" id="navDashboard">
+        <i class="material-icons">dashboard</i>
+        <span>Dashboard</span>
+      </div>
+      <div class="navbtn" id="navRefresh">
+        <i class="material-icons">refresh</i>
+        <span>Actualizar</span>
+      </div>
+      <div class="navbtn" id="navSettings">
+        <i class="material-icons">tune</i>
+        <span>Opciones</span>
+      </div>
+    </div>
   </nav>
 
-  <!-- Modal añadir línea -->
+  <!-- Modal add -->
   <div id="addModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="sheet">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -548,14 +768,13 @@
         <button class="btn" id="closeAdd"><i class="material-icons">close</i></button>
       </div>
 
-      <input id="addSearchInput" class="search" type="search"
-             placeholder="Buscar por código o nombre…" inputmode="search" enterkeyhint="search"
-             autocapitalize="none" autocomplete="off" spellcheck="false" />
+      <input id="addSearchInput" class="search" type="search" placeholder="Buscar línea…" inputmode="search"
+             enterkeyhint="search" autocapitalize="none" autocomplete="off" spellcheck="false" />
 
-      <div class="chips" aria-label="Filtros">
-        <button class="chip active" id="chipAll" type="button">Todas</button>
-        <button class="chip" id="chipBus" type="button">Bus</button>
-        <button class="chip" id="chipTram" type="button">Tranvía</button>
+      <div class="tabs">
+        <button class="chipbtn active" id="chipAll">Todas</button>
+        <button class="chipbtn" id="chipBus">Bus</button>
+        <button class="chipbtn" id="chipTram">Tranvía</button>
       </div>
 
       <div id="addList" role="listbox"></div>
@@ -581,6 +800,25 @@
     </div>
   </div>
 
+  <!-- Modal timeline (llegadas por siguientes paradas) -->
+  <div id="timelineModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="timelineModalTitle">
+    <div class="sheet">
+      <div class="timeline-head">
+        <div style="min-width:0">
+          <h3 id="timelineModalTitle" style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            Siguientes paradas
+          </h3>
+          <div id="timelineModalSub" class="timeline-sub"></div>
+        </div>
+        <button class="btn" id="closeTimeline" aria-label="Cerrar">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div id="timelineList" class="timeline-list" aria-live="polite"></div>
+    </div>
+  </div>
+
   <script>
   /* ========= State ========= */
   let currentStopsForInstance = null;
@@ -596,454 +834,461 @@
   const ARRIVALS_TPL = "https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_PARADAS&idParada={stopId}&idRuta={lineCode}";
 
   const lines = [
-    { code:"E1",  name:"Cementerio El Salvador", type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000017&idioma=ES" },
-    { code:"G1",  name:"Lakua - Abetxuko",       type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000019&idioma=ES" },
-    { code:"G2",  name:"Adurtza - Salburua",     type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000018&idioma=ES" },
-    { code:"G3",  name:"Armentia - Zabalgana",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000015&idioma=ES" },
-    { code:"G4",  name:"Sansomendi - Lakua",     type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000014&idioma=ES" },
-    { code:"G6",  name:"Salburua - Aranbizkarra",type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000016&idioma=ES" },
-    { code:"L1",  name:"Circular",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000004&idioma=ES" },
-    { code:"L2A", name:"BEI A",                  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000012&idioma=ES" },
-    { code:"L2B", name:"BEI B",                  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000013&idioma=ES" },
-    { code:"L3",  name:"Betoño - Goikolarra",    type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000002&idioma=ES" },
-    { code:"L4",  name:"Lakua - Mariturri",      type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000022&idioma=ES" },
-    { code:"L5",  name:"Arkaiate - Elejalde",    type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000007&idioma=ES" },
-    { code:"L5A", name:"Arkaiate - Astegieta",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
-    { code:"L5B", name:"Arkaiate - Ariñez",      type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000008&idioma=ES" },
-    { code:"L5C", name:"Arkaiate - Júndiz-ITV",  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000010&idioma=ES" },
-    { code:"L5D", name:"Arkaiate - Ariñez-ITV",  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000011&idioma=ES" },
-    { code:"L6",  name:"Zabalgana - Arkaiate",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000006&idioma=ES" },
-    { code:"L7",  name:"Borinbizkarra - Paz",    type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000005&idioma=ES" },
-    { code:"L8",  name:"Unibertsitatea",         type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000001&idioma=ES" },
-    { code:"L9",  name:"Gamarra - Goikolarra",   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000000&idioma=ES" },
-    { code:"L10", name:"Aldaia - Larrein",       type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000003&idioma=ES" },
-    { code:"TG1", name:"Abetxuko-Unibertsitatea",type:"tram", stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000021&idioma=ES" },
-    { code:"TG2", name:"Ibaiondo-Salburua",      type:"tram", stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?id=2000000020&idioma=ES" }
+    { code:"E1",  name:"Cementerio El Salvador", type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E1" },
+    { code:"E2",  name:"Circular",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E2" },
+    { code:"E3",  name:"Betoño",                 type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E3" },
+    { code:"E4",  name:"Lakua - Abetxuko",        type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E4" },
+    { code:"E5",  name:"Salburua",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E5" },
+    { code:"E6",  name:"Arana",                   type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E6" },
+    { code:"E7",  name:"Zabalgana",              type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E7" },
+    { code:"E8",  name:"Universidades",          type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E8" },
+    { code:"E9",  name:"Mariturri",              type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E9" },
+    { code:"E10", name:"Aretxabaleta",           type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=E10" },
+
+    { code:"L1",  name:"Circular",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=1" },
+    { code:"L2A", name:"Circular A",             type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=L2A" },
+    { code:"L2B", name:"Circular B",             type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=L2B" },
+    { code:"L3",  name:"Aranbizkarra",           type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=3" },
+    { code:"L4",  name:"Lakua",                  type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=4" },
+    { code:"L5",  name:"Salburua",               type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=5" },
+    { code:"L6",  name:"Zabalgana",              type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=6" },
+    { code:"L7",  name:"Borina",                 type:"bus",  stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=7" },
+
+    { code:"T",   name:"Tranvía",                type:"tram", stopsUrl:"https://www.vitoria-gasteiz.org/j16-02w/detalleAction.do?accion=CONSULTA_RECORRIDO&idRuta=T" }
   ];
 
-  /* ==== Cloudflare Pages Functions proxy: /api/* ==== */
-  const API_BASE = "/api";
-  const API_TARGET_ORIGIN = "https://www.vitoria-gasteiz.org";
+  /* ========= Helpers ========= */
+  const $  = (sel, root=document)=> root.querySelector(sel);
+  const $$ = (sel, root=document)=> Array.from(root.querySelectorAll(sel));
 
-  function toProxiedUrl(input){
-    const u = new URL(input, window.location.origin);
-    if (u.origin === window.location.origin && u.pathname.startsWith(API_BASE + "/")){
-      return u.pathname + u.search;
-    }
-    if (u.origin !== API_TARGET_ORIGIN){
-      throw new Error("URL no permitida para proxy: " + u.origin);
-    }
-    return API_BASE + u.pathname + u.search;
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll("\"","&quot;")
+      .replaceAll("'","&#039;");
   }
+  function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
 
-  async function getText(url){
-    const toFetch = toProxiedUrl(url);
-    const res = await fetch(toFetch, { cache: "no-store" });
-    if (!res.ok) throw new Error("HTTP " + res.status + " en " + toFetch);
-    return await res.text();
-  }
-
-  function tryParseJSON(text){
-    try{ return JSON.parse(text); }catch(_){}
-    const m = text.match(/\{[\s\S]*"(recorrido|llegadas|posiciones|color|alertas)"[\s\S]*\}/);
-    if (m){ try{ return JSON.parse(m[0]); }catch(_){ } }
-    const stripped = text.replace(/<[^>]*>/g,'').trim();
-    try{ return JSON.parse(stripped); }catch(_){}
-    throw new Error("Respuesta no es JSON");
-  }
-
-  async function getJSON(url){
-    const t = await getText(url);
-    return tryParseJSON(t);
-  }
-
-  /* ========= Storage ========= */
   function loadJSON(key, fallback){
     try{
-      const v = localStorage.getItem(key);
-      return v ? JSON.parse(v) : fallback;
-    }catch{ return fallback; }
+      const raw = localStorage.getItem(key);
+      if(!raw) return fallback;
+      return JSON.parse(raw);
+    }catch(e){ return fallback; }
   }
   function saveJSON(key, value){
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  function uid(){
-    return (crypto?.randomUUID ? crypto.randomUUID() : ("id-"+Date.now()+"-"+Math.random().toString(16).slice(2))).slice(0,18);
+  function pref(){
+    const v = localStorage.getItem("theme");
+    return v || "auto";
+  }
+  function applyTheme(mode){
+    document.documentElement.dataset.theme = mode==="auto" ? (matchMedia('(prefers-color-scheme: light)').matches ? "light":"dark") : mode;
+    localStorage.setItem("theme", mode);
+    $("#subtitle").textContent = `Llegadas en tiempo real • Tema: ${mode}`;
+  }
+  function cycleTheme(){
+    const curr = localStorage.getItem("theme") || "auto";
+    const next = curr==="auto" ? "dark" : (curr==="dark" ? "light" : "auto");
+    applyTheme(next);
   }
 
-  const getPinned = () => loadJSON("pinned_instances", []);
-  const setPinned = (arr) => saveJSON("pinned_instances", arr);
-  const isPinned = (instanceId) => getPinned().includes(instanceId);
-
-  function setPinnedInstance(instanceId, pinned){
-    let p = getPinned();
-    const has = p.includes(instanceId);
-    if (pinned && !has) p = [...p, instanceId];
-    if (!pinned && has) p = p.filter(x=>x!==instanceId);
-    setPinned(p);
-    updatePinUI(instanceId);
-    renderPanelsOrder();
-    persistAllPanels();
-  }
-  function togglePin(instanceId){ setPinnedInstance(instanceId, !isPinned(instanceId)); }
-
-  const favKey = (instanceId)=>"favorite_"+instanceId;
-  const setFavorite = (instanceId, stop) => saveJSON(favKey(instanceId), stop);
-  const getFavorite = (instanceId) => loadJSON(favKey(instanceId), null);
-  const removeFavorite = (instanceId) => localStorage.removeItem(favKey(instanceId));
-
-  const recKey = (lineCode) => "recent_" + lineCode;
-  function getRecents(lineCode){ return loadJSON(recKey(lineCode), []); }
-  function pushRecent(lineCode, stop){
-    if (!stop?.id || !stop?.name) return;
-    let r = getRecents(lineCode).filter(x => x.id !== stop.id);
-    r.unshift(stop);
-    r = r.slice(0, 6);
-    saveJSON(recKey(lineCode), r);
+  function toProxiedUrl(url){
+    // Pages Function proxy: /api?u=<encoded>
+    return `/api?u=${encodeURIComponent(url)}`;
   }
 
-  /* ========= UI ========= */
-  const $ = (s, r=document)=>r.querySelector(s);
-  const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-
-  function updateEmpty(){
-    $("#empty-message").style.display = Object.keys(panels).length ? "none" : "block";
+  async function getText(url){
+    const res = await fetch(toProxiedUrl(url), { cache:"no-store" });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    return await res.text();
   }
-
-  function parseHexColor(v){
-    if(!v) return null;
-    let s=String(v).trim().replace(/^#/,'');
-    if(/^[0-9a-fA-F]{3}$/.test(s)) return '#'+s;
-    if(/^[0-9a-fA-F]{6}$/.test(s)) return '#'+s;
-    return null;
+  async function getJSON(url){
+    const txt = await getText(url);
+    const j = tryParseJSON(txt);
+    return j;
   }
-
-  function fmtHHMM(secondsFromMidnight) {
-    if (typeof secondsFromMidnight !== 'number') return '—';
-    const h = Math.floor(secondsFromMidnight / 3600);
-    const m = Math.floor((secondsFromMidnight % 3600) / 60);
-    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-  }
-
-  function fmtETA(seconds, status) {
-    if (status === 'STOPPED_AT' || seconds <= 0) return 'En la parada';
-    if (seconds < 60) return `${seconds} s`;
-    return `${Math.ceil(seconds / 60)} min`;
-  }
-
-  function fmtEtaOrClock(seconds, status, hourText){
-    if (typeof seconds === "number" && seconds >= 60*60 && hourText && hourText !== '—'){
-      return hourText;
+  function tryParseJSON(txt){
+    try{ return JSON.parse(txt); }catch(_){
+      // Some endpoints return JS object-ish; try to salvage
+      return null;
     }
-    return fmtETA(seconds, status);
   }
 
-  function delayInfo(item) {
-    const rt = item?.realtimeArrival;
-    const sch = item?.scheduledArrival;
-    if (typeof rt !== 'number' || typeof sch !== 'number') return { label: null, cls: 'delay-neutral' };
-    const diff = rt - sch;
-    const abs = Math.abs(diff);
-    if (abs <= 60) return { label: null, cls: 'delay-neutral' };
-    const mins = Math.round(abs / 60);
-    return diff > 60 ? { label: `+${mins}m`, cls: 'delay-late' } : { label: `–${mins}m`, cls: 'delay-early' };
+  function lockBodyScroll(){
+    document.body.style.overflow = "hidden";
   }
-
-  function relTime(ts){
-    if (!ts) return "—";
-    const s = Math.max(0, Math.floor((Date.now() - ts)/1000));
-    if (s < 5) return "ahora";
-    if (s < 60) return `hace ${s}s`;
-    const m = Math.floor(s/60);
-    if (m < 60) return `hace ${m}m`;
-    const h = Math.floor(m/60);
-    return `hace ${h}h`;
+  function unlockBodyScroll(){
+    document.body.style.overflow = "";
   }
-
-  function updateGlobalUpdated(){
-    $("#globalUpdated").textContent = `Actualizado: ${relTime(globalLastRefresh)}`;
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  /* ========= Modal helpers ========= */
-  function lockBodyScroll(){ document.body.classList.add('modal-open'); }
-  function unlockBodyScroll(){ document.body.classList.remove('modal-open'); }
-
   function attachViewportShim(modal){
-    const vv = window.visualViewport; if(!vv) return;
-    const sheet = modal.querySelector('.sheet');
-    const onResize = ()=>{
-      const overlap = Math.max(0, (window.innerHeight - vv.height - vv.offsetTop));
-      sheet.style.paddingBottom = (14 + overlap) + 'px';
-    };
-    vv.addEventListener('resize', onResize);
-    vv.addEventListener('scroll', onResize);
-    onResize();
-    modal._vvDetach = ()=>{ vv.removeEventListener('resize', onResize); vv.removeEventListener('scroll', onResize); sheet.style.paddingBottom=''; };
+    // iOS safe-area bottom support for sheet + nav overlap
+    if(!modal.querySelector(".viewport-shim")){
+      const shim = document.createElement("div");
+      shim.className = "viewport-shim";
+      modal.appendChild(shim);
+    }
   }
-  function detachViewportShim(modal){ if(modal && modal._vvDetach){ modal._vvDetach(); modal._vvDetach=null; } }
+  function detachViewportShim(modal){
+    modal.querySelector(".viewport-shim")?.remove();
+  }
 
-  /* ========= Colors ========= */
-  async function ensureLineColor(line){
-    if (line.type !== "bus") return;
-    if (colorCache[line.code]) return;
-    if (inflightColor.has(line.code)) return;
-    inflightColor.add(line.code);
+  function fmtHHMM(epochMs){
     try{
-      const data = await getJSON(line.stopsUrl);
-      const col = parseHexColor(data?.color);
-      if (col){
-        colorCache[line.code] = col;
-        saveJSON("line_colors", colorCache);
-        $$(".add-item").forEach(it=>{
-          if (it.dataset.code === line.code){
-            it.style.setProperty("--chip-accent", col);
-          }
-        });
-        Object.keys(panels).forEach(id=>{
-          const p = panels[id];
-          if (p?.line?.code === line.code){
-            $("#panel-"+id)?.style.setProperty("--line-accent", col);
-          }
-        });
-      }
-    }catch(_){} finally{ inflightColor.delete(line.code); }
+      const d = new Date(epochMs);
+      return d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+    }catch(e){ return "—"; }
   }
 
-  /* ========= Order ========= */
-  function renderPanelsOrder(){
-    const container = $("#panels-container");
-    const allIds = Object.keys(panels);
-    const pinned = getPinned();
+  function delayInfo(a){
+    // Uses realtimeDelay if present; fall back to scheduled vs realtime
+    if(!a) return {label:null, cls:"delay-neutral"};
 
-    const ordered = [
-      ...pinned.filter(id => allIds.includes(id)),
-      ...allIds.filter(id => !pinned.includes(id)).sort((a,b)=>{
-        const la = panels[a]?.line?.code || a;
-        const lb = panels[b]?.line?.code || b;
-        return la.localeCompare(lb);
-      })
-    ];
+    const d = (typeof a.realtimeDelay === "number") ? a.realtimeDelay : null;
+    if(d==null) return {label:null, cls:"delay-neutral"};
 
-    ordered.forEach(id=>{
-      const el = $("#panel-"+id);
-      if (el) container.appendChild(el);
-    });
-  }
-
-  /* ========= Favorites ========= */
-  function toggleFavorite(instanceId){
-    const p = panels[instanceId]; if(!p) return;
-    const fav = getFavorite(instanceId);
-    if (fav && fav.id===p.currentStopId) removeFavorite(instanceId);
-    else setFavorite(instanceId, {id:p.currentStopId, name:p.currentStopName});
-    updateFavIcon(instanceId);
-    persistAllPanels();
-  }
-  function updateFavIcon(instanceId){
-    const p = panels[instanceId]; if(!p) return;
-    const fav = getFavorite(instanceId);
-    const selected = fav && fav.id === p.currentStopId;
-    $("#fav-btn-"+instanceId)?.classList.toggle('selected', selected);
-    const ic = $("#fav-icon-"+instanceId);
-    if (ic) ic.textContent = selected ? "★" : "☆";
-  }
-
-  /* ========= Delete ========= */
-  function deletePanel(instanceId){
-    const p = panels[instanceId];
-    if (p?.countdownInterval) clearInterval(p.countdownInterval);
-    delete panels[instanceId];
-    $("#panel-"+instanceId)?.remove();
-
-    const pins = getPinned();
-    if (pins.includes(instanceId)) setPinned(pins.filter(x=>x!==instanceId));
-
-    renderPanelsOrder();
-    updateEmpty();
-    persistAllPanels();
-  }
-
-  /* ========= Create panel ========= */
-  function updatePinUI(instanceId){
-    const pinned = isPinned(instanceId);
-    const btn = $("#pin-btn-"+instanceId);
-    if (btn){
-      btn.classList.toggle("pinned", pinned);
-      btn.setAttribute("aria-pressed", String(pinned));
-      btn.title = pinned ? "Desfijar" : "Fijar";
+    // Negative means early; positive means delayed
+    const min = Math.round(d/60);
+    if(min===0) return {label:"En hora", cls:"delay-ok"};
+    if(min>0){
+      if(min>=5) return {label:`+${min} min`, cls:"delay-bad"};
+      return {label:`+${min} min`, cls:"delay-warn"};
     }
+    return {label:`${min} min`, cls:"delay-warn"};
   }
 
-  function setStatus(instanceId, text){
-    const el = $("#status-"+instanceId);
-    if (el) el.textContent = "Estado: " + text;
-  }
-  function setUpdated(instanceId, ts){
-    const el = $("#updated-"+instanceId);
-    if (el) el.textContent = "Actualizado: " + relTime(ts);
-  }
-
-  function renderStoppedText(instanceId, targetEl){
-    const p = panels[instanceId];
-    const icon = p?.line?.type === "tram" ? "tram" : "directions_bus";
-    const el = targetEl || $("#count-"+instanceId);
-    if (!el) return;
-    el.innerHTML = `<span style="display:inline-flex;align-items:center;gap:10px">
-      <i class="material-icons" aria-hidden="true" style="font-size:.85em;opacity:.9">${icon}</i>
-      <span>En la parada</span>
-    </span>`;
+  function fmtEtaOrClock(sec, status, clock){
+    if(status && /cancel/i.test(status)) return "Cancelado";
+    if(!Number.isFinite(sec)) return clock || "—";
+    if(sec<=0) return "Ahora";
+    if(sec<60) return `${sec} s`;
+    return `${Math.ceil(sec/60)} min`;
   }
 
-  function tramAlertLineNumber(code){
-    if (code === "TG1") return "1";
-    if (code === "TG2") return "2";
-    return code.replace(/\D+/g,'') || code;
+  function setEmptyState(){
+    const any = Object.keys(panels).length>0;
+    $("#emptyState").style.display = any ? "none" : "block";
   }
 
-  function filterAlertsForPanel(panel, alerts){
-    const arr = Array.isArray(alerts) ? alerts : [];
-    if (!arr.length) return [];
+  /* ========= Rendering ========= */
+  function lineIcon(type){ return type==="tram" ? "tram" : "directions_bus"; }
 
-    const stopId = String(panel.currentStopId || "");
-    const isTram = panel.line.type === "tram";
-    const lineMatch = isTram ? tramAlertLineNumber(panel.line.code) : panel.line.code;
-    const lineType = isTram ? "3" : null;
+  function computeAccent(line){
+    const key = line.code;
+    if(colorCache[key]) return colorCache[key];
 
-    return arr.filter(a=>{
-      const aStop = String(a.stopId ?? "*");
-      if (!(aStop === "*" || aStop === stopId)) return false;
-
-      const aLine = String(a.line ?? "*");
-      if (!(aLine === "*" || aLine === lineMatch)) return false;
-
-      if (lineType && a.lineType != null && String(a.lineType) !== String(lineType)) return false;
-
-      return true;
-    });
+    // simple deterministic hash to generate hue
+    let h=0;
+    for(const ch of key) h = (h*31 + ch.charCodeAt(0))>>>0;
+    const hue = h % 360;
+    const col = `hsl(${hue} 80% 60%)`;
+    colorCache[key] = col;
+    saveJSON("line_colors", colorCache);
+    return col;
   }
 
-  function fmtAlertWindow(a){
-    const start = Number(a?.alertPeriodStart);
-    const end = Number(a?.alertPeriodEnd);
-    if (!Number.isFinite(start) || !Number.isFinite(end)) return "";
+  function createPanel(instanceId, line){
+    const accent = computeAccent(line);
+    const el = document.createElement("div");
+    el.className = "card";
+    el.id = `panel-${instanceId}`;
+    el.dataset.instanceId = instanceId;
+    el.style.setProperty("--line-accent", accent);
 
-    const s = new Date(start * 1000);
-    const e = new Date(end * 1000);
+    el.innerHTML = `
+      <div class="card-inner">
+        <div class="card-head">
+          <div class="line-pill" style="border-color: color-mix(in oklab, var(--line-accent) 50%, rgba(255,255,255,.14)); background: color-mix(in oklab, var(--line-accent) 18%, rgba(0,0,0,.10));">
+            <i class="material-icons" aria-hidden="true">${lineIcon(line.type)}</i>
+            <span class="line-code">${escapeHtml(line.code)}</span>
+            <span style="font-weight:800; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px">${escapeHtml(line.name)}</span>
+          </div>
 
-    const hhmm = d => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-
-    const today = new Date();
-    const day0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const dayS = new Date(s.getFullYear(), s.getMonth(), s.getDate());
-    const dayE = new Date(e.getFullYear(), e.getMonth(), e.getDate());
-
-    const dayLabel = (d)=>{
-      const diffDays = Math.round((d - day0) / (24*3600*1000));
-      if (diffDays === 0) return "Hoy";
-      if (diffDays === 1) return "Mañana";
-      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
-    };
-
-    if (dayS.getTime() !== dayE.getTime()){
-      return `${dayLabel(dayS)} ${hhmm(s)} → ${dayLabel(dayE)} ${hhmm(e)}`;
-    }
-    return `${dayLabel(dayS)} ${hhmm(s)}–${hhmm(e)}`;
-  }
-
-  function setAlerts(instanceId, alertsRaw){
-    const box = $("#alerts-"+instanceId);
-    if (!box) return;
-
-    const panel = panels[instanceId];
-    const stopId = String(panel?.currentStopId || "");
-
-    const dismissKey = `alerts_dismiss_${instanceId}_${stopId}`;
-    if (sessionStorage.getItem(dismissKey) === "1") {
-      box.classList.remove("show");
-      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
-      return;
-    }
-
-    const relevant = filterAlertsForPanel(panel, alertsRaw);
-
-    if (!relevant.length){
-      box.classList.remove("show");
-      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
-      return;
-    }
-
-    relevant.sort((a,b)=>{
-      const as = String(a.stopId) !== "*" ? 0 : 1;
-      const bs = String(b.stopId) !== "*" ? 0 : 1;
-      if (as !== bs) return as - bs;
-
-      const sa = Number(a.alertPeriodStart);
-      const sb = Number(b.alertPeriodStart);
-      if (Number.isFinite(sa) && Number.isFinite(sb)) return sa - sb;
-
-      return (Number(b.realtime) - Number(a.realtime));
-    });
-
-    const top = relevant.slice(0, 2);
-
-    const items = top.map(a=>{
-      const head = a.alertHeader || "Aviso";
-      const desc = a.alertDescription || "";
-      const win = fmtAlertWindow(a);
-
-      return `
-        <div style="margin-top:8px">
-          ${win ? `
-            <div class="alert-meta">
-              <i class="material-icons" aria-hidden="true">schedule</i>
-              <span>${escapeHtml(win)}</span>
-            </div>
-            <br>
-          ` : ``}
-
-          <strong>${escapeHtml(head)}</strong><br>
-          ${desc ? `<span>${escapeHtml(desc)}</span><br>` : ``}
+          <div class="card-tools">
+            <div class="iconbtn" title="Cambiar parada" data-action="stops"><i class="material-icons">place</i></div>
+            <div class="iconbtn" title="Eliminar" data-action="remove"><i class="material-icons">delete</i></div>
+          </div>
         </div>
-      `;
-    }).join("");
 
-    box.innerHTML = `
-      <button class="alerts-close" type="button" title="Ocultar avisos" aria-label="Ocultar avisos">
-        <i class="material-icons" aria-hidden="true">close</i>
-      </button>
+        <div class="row">
+          <div class="stop-name">
+            <span id="stop-${instanceId}">Selecciona una parada</span>
+          </div>
+          <span class="pill" id="badge-${instanceId}" style="display:none">Live</span>
+        </div>
 
-      <i class="material-icons" aria-hidden="true">warning_amber</i>
-      <div class="alert-text">
-        <strong>Avisos</strong>
-        ${items}
+        <div id="info-${instanceId}">
+          <div class="next-time" style="opacity:.7">—</div>
+          <div class="hint">Sin datos</div>
+        </div>
+
+        <div class="notice" id="notice-${instanceId}"></div>
       </div>
     `;
-    box.classList.add("show");
 
-    const btn = box.querySelector(".alerts-close");
-    btn?.addEventListener("click", (e)=>{
-      e.preventDefault();
-      sessionStorage.setItem(dismissKey, "1");
-      box.classList.remove("show");
-      box.innerHTML = `<i class="material-icons" aria-hidden="true">warning_amber</i>`;
-    }, { once:true });
+    // card tools events
+    el.addEventListener("click", (e)=>{
+      const btn = e.target.closest("[data-action]");
+      if(!btn) return;
+      const action = btn.dataset.action;
+      if(action==="remove") removePanel(instanceId);
+      if(action==="stops") openStops(instanceId);
+    });
+
+    return el;
   }
 
-  function renderNextChipsHtml(items){
-    return items.map(it=>{
-      return `
-        <div class="next-chip">
-          <span class="big">${escapeHtml(it.bigText)}</span>
-          <span class="sub">Hora: ${escapeHtml(it.hourText)}</span>
-          ${it.delayLabel ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delayLabel)}</span>` : ``}
+  function renderAddList(){
+    const q = ($("#addSearchInput").value || "").toLowerCase().trim();
+    let arr = lines.slice();
+
+    if(addFilter!=="all") arr = arr.filter(l=>l.type===addFilter);
+    if(q) arr = arr.filter(l=> (l.code+l.name).toLowerCase().includes(q));
+
+    const list = $("#addList");
+    list.innerHTML = "";
+
+    if(!arr.length){
+      list.innerHTML = `<div class="empty">No hay resultados.</div>`;
+      return;
+    }
+
+    const wrap = document.createElement("div");
+    wrap.className = "list";
+    arr.forEach(line=>{
+      const item = document.createElement("div");
+      item.className = "item";
+      item.role="option";
+      item.innerHTML = `
+        <div>
+          <strong>${escapeHtml(line.code)} · ${escapeHtml(line.name)}</strong><br/>
+          <small>${line.type==="tram" ? "Tranvía" : "Autobús"}</small>
         </div>
+        <i class="material-icons" style="opacity:.85">add_circle</i>
       `;
-    }).join("");
+      item.addEventListener("click", ()=>{
+        addLine(line);
+        closeAddModal();
+      });
+      wrap.appendChild(item);
+    });
+    list.appendChild(wrap);
+  }
+
+  function setAddFilter(f){
+    addFilter=f;
+    ["chipAll","chipBus","chipTram"].forEach(id=>$("#"+id).classList.remove("active"));
+    $("#chip"+(f==="all"?"All":(f==="bus"?"Bus":"Tram"))).classList.add("active");
+    renderAddList();
+  }
+
+  /* ========= Persistence ========= */
+  function loadPanels(){
+    const saved = loadJSON("panels", []);
+    saved.forEach(p=>{
+      const line = lines.find(l=> l.code===p.lineCode);
+      if(!line) return;
+      const instanceId = p.instanceId || crypto.randomUUID();
+      panels[instanceId] = {
+        instanceId,
+        line,
+        currentStopId: p.stopId || null,
+        currentStopName: p.stopName || null,
+      };
+      mountPanel(instanceId);
+    });
+    setEmptyState();
+  }
+  function savePanels(){
+    const arr = Object.values(panels).map(p=>({
+      instanceId: p.instanceId,
+      lineCode: p.line.code,
+      stopId: p.currentStopId,
+      stopName: p.currentStopName,
+    }));
+    saveJSON("panels", arr);
+  }
+
+  function addLine(line){
+    const instanceId = crypto.randomUUID();
+    panels[instanceId] = {
+      instanceId,
+      line,
+      currentStopId: null,
+      currentStopName: null
+    };
+    mountPanel(instanceId);
+    savePanels();
+    setEmptyState();
+  }
+
+  function mountPanel(instanceId){
+    const p = panels[instanceId];
+    const el = createPanel(instanceId, p.line);
+    $("#panels-container").appendChild(el);
+
+    if(p.currentStopName){
+      $(`#stop-${instanceId}`).textContent = p.currentStopName;
+    }
+    // initial fetch if stop already set
+    if(p.currentStopId) refreshPanel(instanceId);
+  }
+
+  function removePanel(instanceId){
+    delete panels[instanceId];
+    document.getElementById(`panel-${instanceId}`)?.remove();
+    savePanels();
+    setEmptyState();
+  }
+
+  /* ========= Data fetch & refresh ========= */
+  function scheduleAutoRefresh(){
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(refreshAll, 15000);
+  }
+
+  function startGlobalTick(){
+    if(globalTickTimer) clearInterval(globalTickTimer);
+    globalTickTimer = setInterval(()=>{
+      // Update per-second countdown spans
+      $$(".tram-sec").forEach(span=>{
+        const v = Number(span.dataset.seconds);
+        if(!Number.isFinite(v)) return;
+        const next = v-1;
+        span.dataset.seconds = String(next);
+        span.textContent = String(Math.max(0,next));
+      });
+      // Update bus main counters if showing seconds (rare)
+      // (handled by refresh)
+    }, 1000);
+  }
+
+  async function refreshAll(){
+    globalLastRefresh = Date.now();
+    const ids = Object.keys(panels);
+    for(const id of ids){
+      if(panels[id].currentStopId) refreshPanel(id);
+    }
+  }
+
+  async function refreshPanel(instanceId){
+    const p = panels[instanceId];
+    if(!p || !p.currentStopId) return;
+
+    const stopId = p.currentStopId;
+    const line = p.line;
+
+    // For bus lines, route id in arrivals endpoint is usually the numeric code without leading "L" (except L2A/L2B)
+    const routeCode = line.type==="tram" ? line.code : (line.code.startsWith('L') && !['L2A','L2B'].includes(line.code) ? line.code.substring(1) : line.code);
+
+    const url = ARRIVALS_TPL.replace("{stopId}", stopId).replace("{lineCode}", routeCode);
+
+    try{
+      const data = await getJSON(url);
+      const arrivals = (data && data.llegadas) ? data.llegadas : [];
+      const notices = (data && data.avisos) ? data.avisos : [];
+
+      const badge = $(`#badge-${instanceId}`);
+      badge.style.display = "inline-flex";
+      badge.textContent = "Live";
+
+      const noticeEl = $(`#notice-${instanceId}`);
+      if(notices && notices.length){
+        noticeEl.classList.add("show");
+        noticeEl.innerHTML = `<strong> Avisos </strong><br/>` + notices.map(n=>`• ${escapeHtml(n)}`).join("<br/>");
+      }else{
+        noticeEl.classList.remove("show");
+        noticeEl.textContent = "";
+      }
+
+      if(line.type==="tram"){
+        // Tram: arrivals include destination
+        const byDest = {};
+        arrivals.filter(a=>a.line===line.code).forEach(a=>{
+          const dest = a.destination || "—";
+          (byDest[dest] ||= []).push(a);
+        });
+
+        const blocks = Object.entries(byDest).map(([dest, arr])=>{
+          arr.sort((a,b)=> (a.seconds??1e9)-(b.seconds??1e9));
+          const nx = arr[0] || null;
+          const rest = arr.slice(1);
+          return renderDestinationBlock(instanceId, dest, nx, rest);
+        }).join("");
+
+        $(`#info-${instanceId}`).innerHTML = blocks || `<div class="hint">Sin llegadas para esta línea.</div>`;
+      }else{
+        // Bus: filter by routeCode
+        const arr = arrivals.filter(a=>a.line===routeCode);
+        arr.sort((a,b)=> (a.seconds??1e9)-(b.seconds??1e9));
+        const nx = arr[0] || null;
+
+        if(!nx){
+          $(`#info-${instanceId}`).innerHTML = `
+            <div class="next-time" style="opacity:.7">—</div>
+            <div class="hint">Sin llegadas previstas</div>
+          `;
+          return;
+        }
+
+        const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
+                    : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
+
+        const secVal = (nx && nx.seconds != null) ? Number(nx.seconds) : NaN;
+        const etaBig = fmtEtaOrClock(Number.isFinite(secVal) ? secVal : nx.seconds, nx.status, hour);
+        const dly = delayInfo(nx);
+        const etaSmall = Number.isFinite(secVal)
+          ? (secVal < 60 ? `en ${secVal}s` : `en ${Math.ceil(secVal/60)} min`)
+          : '';
+
+        const chips = arr.slice(1,4).map(a=>{
+          const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
+                  : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
+          const aSec = (a && a.seconds != null) ? Number(a.seconds) : NaN;
+          const eta = Number.isFinite(aSec) ? (aSec < 60 ? `en ${aSec} s` : `en ${Math.ceil(aSec/60)} min`) : '';
+          const dl = delayInfo(a);
+          return { hourText: h, bigText: eta || "—", delayLabel: dl.label, delayCls: dl.cls };
+        });
+
+        $(`#info-${instanceId}`).innerHTML = `
+          <div class="next-time timeline-trigger" role="button" tabindex="0" title="Ver siguientes paradas" id="count-${instanceId}">${
+            (Number.isFinite(secVal) && secVal < 60)
+              ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
+              : `${escapeHtml(etaBig)}`
+          }
+            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ``}
+          </div>
+          <div class="hint">
+            <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
+            ${etaBig === hour && etaSmall ?'<span class="dot"></span><span>'+escapeHtml(etaSmall)+'</span>':''}
+          </div>
+          ${chips.length ? `
+            <div class="arrivals">
+              ${chips.map(c=>`
+                <div class="chip">
+                  <span class="when">${escapeHtml(c.bigText)}</span>
+                  <span class="clock">${escapeHtml(c.hourText)}</span>
+                  ${c.delayLabel ? `<span class="delay ${c.delayCls}">${escapeHtml(c.delayLabel)}</span>` : ``}
+                </div>
+              `).join("")}
+            </div>
+          `:''}
+        `;
+      }
+
+    }catch(err){
+      console.warn("refresh error", err);
+      const badge = $(`#badge-${instanceId}`);
+      badge.style.display = "none";
+      $(`#info-${instanceId}`).innerHTML = `
+        <div class="next-time" style="opacity:.7">—</div>
+        <div class="hint">Error al cargar</div>
+      `;
+    }
   }
 
   function renderDestinationBlock(instanceId, destName, nx, restArr){
@@ -1080,601 +1325,298 @@
         </div>
 
         <div>
-          <div class="next-time">${
+          <div class="next-time timeline-trigger" role="button" tabindex="0" data-dest="${escapeHtml(destName)}" title="Ver siguientes paradas">${
             (Number.isFinite(secVal) && secVal < 60)
               ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
               : `${escapeHtml(etaBig)}`
           }</div>
           <div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
-            ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
-            ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
+            ${etaBig === hour && etaSmall ?'<span class="dot"></span><span>'+escapeHtml(etaSmall)+'</span>':''}
+            ${dly.label ? `<span class="dot"></span><span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ``}
           </div>
-        </div>
 
-        <div class="next-compact ${chips.length?'show':''}" style="max-width:520px;margin:0 auto;justify-content:center">
-          ${chips.length ? renderNextChipsHtml(chips) : ``}
+          ${chips.length ? `
+            <div class="arrivals">
+              ${chips.map(c=>`
+                <div class="chip">
+                  <span class="when">${escapeHtml(c.bigText)}</span>
+                  <span class="clock">${escapeHtml(c.hourText)}</span>
+                  ${c.delayLabel ? `<span class="delay ${c.delayCls}">${escapeHtml(c.delayLabel)}</span>` : ``}
+                </div>
+              `).join("")}
+            </div>
+          `:''}
         </div>
       </div>
     `;
-  }
-
-  function createPanel(line, {focus=false, pinOnAdd=false} = {}){
-    const instanceId = uid();
-
-    const card = document.createElement('section');
-    card.className='card';
-    card.id='panel-'+instanceId;
-    card.dataset.instanceId = instanceId;
-    card.dataset.lineCode = line.code;
-
-    const initialAccent =
-      line.type==="tram"
-        ? "var(--accent-tram)"
-        : (colorCache[line.code] ? colorCache[line.code] : "var(--accent-bus)");
-
-    card.style.setProperty('--line-accent', initialAccent);
-
-    const ico = line.type==='bus'?'directions_bus':'tram';
-
-    card.innerHTML = `
-      <div class="card-top">
-        <div>
-          <div class="line-row">
-            <span class="line-pill">
-              <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(line.code)}
-            </span>
-            <span class="line-name" title="${escapeHtml(line.name)}">${escapeHtml(line.name)}</span>
-          </div>
-          <div class="meta-small">
-            <span id="updated-${instanceId}">Actualizado: —</span>
-            <span class="dot"></span>
-            <span id="status-${instanceId}">Estado: —</span>
-          </div>
-        </div>
-
-        <div class="card-actions">
-          <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
-            <i class="material-icons">push_pin</i>
-          </button>
-          <button class="del-btn" id="del-btn-${instanceId}" type="button" title="Eliminar">
-            <i class="material-icons">close</i>
-          </button>
-        </div>
-      </div>
-
-      <div class="stop-row">
-        <button class="stop-picker" id="stop-picker-${instanceId}" type="button"
-                aria-haspopup="dialog" aria-controls="stopsModal" aria-expanded="false" title="Cambiar parada">
-          <i class="material-icons" aria-hidden="true">place</i>
-          <span class="stop-name" id="stop-name-${instanceId}">Cargando paradas…</span>
-          <i class="material-icons caret" aria-hidden="true">expand_more</i>
-        </button>
-        <button class="fav" id="fav-btn-${instanceId}" type="button" title="Favorita">
-          <span id="fav-icon-${instanceId}">☆</span>
-        </button>
-      </div><div class="stack">
-        <div id="info-${instanceId}">
-          <div class="next-time" id="count-${instanceId}">—</div>
-          <div class="hint">Cargando…</div>
-        </div>
-
-        <div class="next-compact" id="next-${instanceId}"></div>
-      </div>
-
-      <div class="alerts" id="alerts-${instanceId}">
-        <i class="material-icons" aria-hidden="true">warning_amber</i>
-      </div>
-
-    `;
-
-    $("#panels-container").appendChild(card);
-
-    panels[instanceId] = {
-      id: instanceId,
-      line,
-      currentStopId:null,
-      currentStopName:null,
-      countdownInterval:null,
-      lastUpdated: 0
-    };
-
-    $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
-    $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
-    $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
-    $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
-
-    updateFavIcon(instanceId);
-    ensureLineColor(line);
-
-    if (pinOnAdd) setPinnedInstance(instanceId, true);
-    else updatePinUI(instanceId);
-
-    loadStopsForPanel(instanceId).then(()=>{
-      renderPanelsOrder();
-      updateEmpty();
-      persistAllPanels();
-      if (focus) $("#panel-"+instanceId)?.scrollIntoView({behavior:"smooth", block:"start"});
-    });
-
-    renderPanelsOrder();
-    updateEmpty();
-    persistAllPanels();
-    return instanceId;
-  }
-
-  async function loadStopsForPanel(instanceId){
-    const panel = panels[instanceId]; if(!panel) return;
-    const line = panel.line;
-
-    try{
-      setStatus(instanceId, "Cargando paradas…");
-      const data = await getJSON(line.stopsUrl);
-      if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
-
-      if (line.type==='bus' && data.color){
-        const col = parseHexColor(data.color);
-        if (col){
-          $("#panel-"+instanceId).style.setProperty('--line-accent', col);
-          if (!colorCache[line.code]){
-            colorCache[line.code] = col;
-            saveJSON("line_colors", colorCache);
-          }
-          updatePinUI(instanceId);
-        }
-      }
-
-      const fav = getFavorite(instanceId);
-      if (fav){
-        panel.currentStopId=fav.id; panel.currentStopName=fav.name;
-      } else {
-        const s=data.recorrido[0];
-        panel.currentStopId=s.idParada;
-        panel.currentStopName=s.nombre;
-      }
-
-      $("#stop-name-"+instanceId).textContent = panel.currentStopName || "Parada no disponible";
-      updateFavIcon(instanceId);
-
-      await refreshPanel(instanceId);
-    }catch(err){
-      $("#stop-name-"+instanceId).textContent = "Error al cargar paradas";
-      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ No se pudieron cargar las paradas.</div>`;
-      $("#next-"+instanceId).classList.remove("show");
-      $("#next-"+instanceId).innerHTML = "";
-      setAlerts(instanceId, []);
-      setStatus(instanceId, "Error");
-      console.warn('Paradas -', line.code, err);
-    }
-  }
-
-  async function refreshPanel(instanceId){
-    const p = panels[instanceId]; if(!p || !p.currentStopId) return;
-    const { line } = p;
-
-    if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
-
-    if (p.tramCountdownIntervals && p.tramCountdownIntervals.length){
-      p.tramCountdownIntervals.forEach(id=>clearInterval(id));
-      p.tramCountdownIntervals = [];
-    }
-
-    setStatus(instanceId, "Actualizando…");
-    const started = Date.now();
-
-    try{
-      const isTram = line.type === "tram";
-      const routeCode = isTram
-        ? line.code
-        : ((line.code.startsWith('L') && !['L2A','L2B'].includes(line.code)) ? line.code.substring(1) : line.code);
-
-      const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
-      const data = await getJSON(url);
-
-      setAlerts(instanceId, data?.alertas || []);
-
-      let arr = (data.llegadas||[]);
-      if (isTram) arr = arr.filter(x=>x.line===line.code);
-      else arr = arr.filter(x=>x.line===routeCode);
-
-      if (!arr.length){
-        $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">${isTram ? "🚊" : "🚍"} No hay más llegadas hoy.</div>`;
-        $("#next-"+instanceId).classList.remove("show");
-        $("#next-"+instanceId).innerHTML = "";
-        setStatus(instanceId, "Sin llegadas");
-        p.lastUpdated = started; setUpdated(instanceId, started);
-        return;
-      }
-
-      if (isTram){
-        const groups = {};
-        arr.forEach(a=>{
-          const k = (a.destination || "Destino").toString();
-          (groups[k] ??= []).push(a);
-        });
-        Object.values(groups).forEach(g=>g.sort((a,b)=>a.seconds-b.seconds));
-
-        const dests = Object.keys(groups).sort((a,b)=>groups[a][0].seconds - groups[b][0].seconds);
-        const firstTwo = dests.slice(0,2);
-
-        const blocksHtml = firstTwo.map(dest=>{
-          const g = groups[dest];
-          const nx = g[0];
-          const rest = g.slice(1);
-          return renderDestinationBlock(instanceId, dest, nx, rest);
-        }).join("");
-
-        $("#info-"+instanceId).innerHTML = blocksHtml;
-        $("#next-"+instanceId).classList.remove("show");
-        $("#next-"+instanceId).innerHTML = "";
-
-        // Countdown por bloque (tranvía): puede haber dos destinos en la misma parada
-        p.tramCountdownIntervals = [];
-        const panelEl = $("#panel-"+instanceId);
-        const spans = panelEl ? panelEl.querySelectorAll(".tram-sec[data-seconds]") : [];
-        spans.forEach(span=>{
-          const intervalId = setInterval(()=>{
-            // Si el panel se ha eliminado o se ha vuelto a renderizar, paramos
-            if (!document.body.contains(span)){
-              clearInterval(intervalId);
-              return;
-            }
-
-            let n = parseInt(span.dataset.seconds, 10);
-            if (!Number.isFinite(n)){
-              clearInterval(intervalId);
-              return;
-            }
-
-            n = n - 1;
-            if (n <= 0){
-              clearInterval(intervalId);
-              const nextTimeEl = span.closest(".next-time");
-              if (nextTimeEl) renderStoppedText(instanceId, nextTimeEl);
-              return;
-            }
-
-            span.dataset.seconds = String(n);
-            span.textContent = String(n);
-          }, 1000);
-
-          p.tramCountdownIntervals.push(intervalId);
-        });
-
-        setStatus(instanceId, "OK");
-        p.lastUpdated = started; setUpdated(instanceId, started);
-        return;
-      }
-
-      const nx = arr[0];
-      const hour = typeof nx.realtimeArrival === 'number' ? fmtHHMM(nx.realtimeArrival)
-                  : (typeof nx.scheduledArrival === 'number' ? `≈${fmtHHMM(nx.scheduledArrival)}` : '—');
-
-      const etaBig = fmtEtaOrClock(nx.seconds, nx.status, hour);
-      const dly = delayInfo(nx);
-      const etaSmall = (typeof nx.seconds === 'number')
-        ? (nx.seconds < 60 ? `en ${nx.seconds}s` : `en ${Math.ceil(nx.seconds/60)} min`)
-        : '';
-
-      $("#info-"+instanceId).innerHTML = `
-        <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
-        <div class="hint">
-          <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
-          ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
-          ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
-        </div>
-      `;
-
-      const cdEl = $("#count-"+instanceId);
-      if (typeof nx.seconds === "number" && nx.seconds < 60){
-        cdEl.innerHTML = `<span id="sec-${instanceId}">${nx.seconds}</span> s`;
-        p.countdownInterval = setInterval(()=>{
-          const el = $("#sec-"+instanceId);
-          if(!el){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
-          let n = parseInt(el.textContent,10);
-          if(!Number.isFinite(n)){ clearInterval(p.countdownInterval); p.countdownInterval=null; return; }
-          if (n <= 1){
-            clearInterval(p.countdownInterval); p.countdownInterval=null;
-            renderStoppedText(instanceId);
-            return;
-          }
-          el.textContent = String(n-1);
-        }, 1000);
-      } else if (nx.status === 'STOPPED_AT' || nx.seconds <= 0){
-        renderStoppedText(instanceId);
-      }
-
-      const rest = arr.slice(1,3);
-      const chips = rest.map(a=>{
-        const h = typeof a.realtimeArrival === 'number' ? fmtHHMM(a.realtimeArrival)
-                : (typeof a.scheduledArrival === 'number' ? `≈${fmtHHMM(a.scheduledArrival)}` : '—');
-        const eta = a.seconds < 60 ? `en ${a.seconds} s` : `en ${Math.ceil(a.seconds/60)} min`;
-        const dl = delayInfo(a);
-        return { hourText: h, bigText: eta || "—", delayLabel: dl.label, delayCls: dl.cls };
-      });
-
-      const nextBox = $("#next-"+instanceId);
-      if (chips.length){
-        nextBox.classList.add("show");
-        nextBox.innerHTML = renderNextChipsHtml(chips);
-      } else {
-        nextBox.classList.remove("show");
-        nextBox.innerHTML = "";
-      }
-
-      setStatus(instanceId, "OK");
-      p.lastUpdated = started; setUpdated(instanceId, started);
-    }catch(e){
-      $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ Error al actualizar</div>`;
-      $("#next-"+instanceId).classList.remove("show");
-      $("#next-"+instanceId).innerHTML = "";
-      setAlerts(instanceId, []);
-      setStatus(instanceId, "Error");
-      console.warn('Arrivals error', e);
-    }
-  }
-
-  /* ========= Stops modal ========= */
-  function renderStopItem({id, nombre, selected, latitud, longitud, isFav, isRecent}){
-    const div = document.createElement("div");
-    div.className = "stop-item" + (selected ? " selected" : "");
-    div.dataset.id = id;
-    div.dataset.name = nombre;
-    if (latitud) div.dataset.lat = latitud;
-    if (longitud) div.dataset.lng = longitud;
-
-    const tags = [];
-    if (isFav) tags.push("★ favorita");
-    if (isRecent) tags.push("reciente");
-
-    div.innerHTML = `
-      <div class="row-main">
-        <div class="row-title">${escapeHtml(nombre)}</div>
-        <div class="row-sub">${tags.length ? escapeHtml(tags.join(" · ")) : ""}</div>
-      </div>
-      <div class="row-right"><i class="material-icons" style="font-size:18px;color:var(--muted)">chevron_right</i></div>
-    `;
-    return div;
-  }
-
-  function closeStops(){
-    const modal = $("#stopsModal");
-    modal.classList.remove('open');
-    detachViewportShim(modal);
-    unlockBodyScroll();
-    const instanceId = currentStopsForInstance;
-    if (instanceId) $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','false');
-  }
-
-  function selectStop(stopId, name){
-    const instanceId = currentStopsForInstance; if(!instanceId || !panels[instanceId]) return;
-    const p = panels[instanceId];
-
-    p.currentStopId = stopId;
-    p.currentStopName = name;
-
-    $("#stop-name-"+instanceId).textContent = name;
-
-    pushRecent(p.line.code, {id: stopId, name});
-    closeStops();
-    refreshPanel(instanceId);
-    updateFavIcon(instanceId);
-    persistAllPanels();
-  }
-
-  async function showStopsList(instanceId){
-    currentStopsForInstance = instanceId;
-    const panel = panels[instanceId]; if(!panel) return;
-
-    $("#stop-picker-"+instanceId)?.setAttribute('aria-expanded','true');
-
-    $("#stopsModalTitle").textContent = `Paradas • ${panel.line.code} — ${panel.line.name}`;
-    $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">Cargando…</div>`;
-    $("#stopSearchInput").value = "";
-    $("#stopsModal").classList.add('open');
-    lockBodyScroll();
-    attachViewportShim($("#stopsModal"));
-    setTimeout(()=>{ $("#stopSearchInput")?.focus({preventScroll:true}); }, 50);
-
-    try{
-      const data = await getJSON(panel.line.stopsUrl);
-      if (!data || !Array.isArray(data.recorrido)) throw new Error('Respuesta sin recorrido');
-
-      const fav = getFavorite(instanceId);
-      const recents = getRecents(panel.line.code);
-
-      const cont = $("#stopsListContainer");
-      cont.innerHTML = "";
-
-      if (fav && fav.id) {
-        cont.insertAdjacentHTML("beforeend", `<div class="section-title">⭐ Favorita</div>`);
-        cont.appendChild(renderStopItem({ id: fav.id, nombre: fav.name, selected: fav.id === panel.currentStopId, isFav: true }));
-        cont.insertAdjacentHTML("beforeend", `<div class="divider"></div>`);
-      }
-
-      if (recents.length) {
-        cont.insertAdjacentHTML("beforeend", `<div class="section-title">🕘 Recientes</div>`);
-        recents.forEach(r=>{
-          cont.appendChild(renderStopItem({ id: r.id, nombre: r.name, selected: r.id === panel.currentStopId, isRecent: true }));
-        });
-        cont.insertAdjacentHTML("beforeend", `<div class="divider"></div>`);
-      }
-
-      cont.insertAdjacentHTML("beforeend", `<div class="section-title">Todas las paradas</div>`);
-
-      data.recorrido.forEach(st=>{
-        cont.appendChild(renderStopItem({
-          id: st.idParada,
-          nombre: st.nombre,
-          selected: st.idParada === panel.currentStopId,
-          latitud: st.latitud,
-          longitud: st.longitud,
-          isFav: fav && fav.id === st.idParada
-        }));
-      });
-
-      cont.onclick = (e)=>{
-        const it = e.target.closest('.stop-item');
-        if(!it) return;
-        selectStop(it.dataset.id, it.dataset.name);
-      };
-    }catch(err){
-      $("#stopsListContainer").innerHTML = `<div style="padding:12px;color:var(--muted)">⚠️ No se pudieron cargar las paradas.</div>`;
-      console.warn('Stops modal error', err);
-    }
   }
 
   /* ========= Add modal ========= */
   function openAddModal(){
+    renderAddList();
     $("#addModal").classList.add("open");
+    $("#addSearchInput").value = "";
     lockBodyScroll();
     attachViewportShim($("#addModal"));
-    $("#addSearchInput").value = "";
-    renderAddList();
-    setTimeout(()=>$("#addSearchInput")?.focus({preventScroll:true}), 50);
+    setTimeout(()=> $("#addSearchInput").focus(), 20);
   }
   function closeAddModal(){
     $("#addModal").classList.remove("open");
     detachViewportShim($("#addModal"));
     unlockBodyScroll();
   }
-  function setAddFilter(type){
-    addFilter = type;
-    $("#chipAll").classList.toggle("active", type==="all");
-    $("#chipBus").classList.toggle("active", type==="bus");
-    $("#chipTram").classList.toggle("active", type==="tram");
-    renderAddList();
+
+  /* ========= Timeline modal ========= */
+  let currentTimeline = { instanceId:null, dest:null, abort:null };
+
+  function closeTimeline(){
+    const modal = $("#timelineModal");
+    if (!modal) return;
+    modal.classList.remove("open");
+    detachViewportShim(modal);
+    unlockBodyScroll();
+    if (currentTimeline.abort) currentTimeline.abort.abort();
+    currentTimeline = { instanceId:null, dest:null, abort:null };
   }
 
-  function renderAddList(){
-    const q = ($("#addSearchInput").value || "").trim().toLowerCase();
+  function mapLimit(items, limit, mapper){
+    const ret = [];
+    let i = 0;
+    const workers = Array.from({length: Math.min(limit, items.length)}, async ()=>{
+      while(i < items.length){
+        const idx = i++;
+        ret[idx] = await mapper(items[idx], idx);
+      }
+    });
+    return Promise.all(workers).then(()=>ret);
+  }
 
-    const filtered = lines
-      .filter(l => addFilter==="all" ? true : l.type===addFilter)
-      .filter(l => !q || l.code.toLowerCase().includes(q) || l.name.toLowerCase().includes(q))
-      .sort((a,b)=>{
-        if (a.type !== b.type) return a.type.localeCompare(b.type);
-        return a.code.localeCompare(b.code);
+  function pickArrivalForLine(data, { line, routeCode, isTram, dest }){
+    let arr = (data?.llegadas || []);
+    if (isTram){
+      arr = arr.filter(x => x.line === line.code);
+      if (dest) arr = arr.filter(x => String(x.destination||"") === String(dest));
+    }else{
+      arr = arr.filter(x => x.line === routeCode);
+    }
+    if (!arr.length) return null;
+    arr.sort((a,b)=>(a.seconds??1e9)-(b.seconds??1e9));
+    return arr[0];
+  }
+
+  function arrivalToUi(a){
+    if(!a) return { eta:"—", clock:"—", delay:null, delayCls:"delay-neutral" };
+
+    const hour = typeof a.realtimeArrival === "number" ? fmtHHMM(a.realtimeArrival)
+              : (typeof a.scheduledArrival === "number" ? `≈${fmtHHMM(a.scheduledArrival)}` : "—");
+
+    const sec = (a && a.seconds != null) ? Number(a.seconds) : NaN;
+    const eta = Number.isFinite(sec) ? (sec < 60 ? `${sec} s` : `${Math.ceil(sec/60)} min`) : "—";
+    const dly = delayInfo(a);
+
+    return { eta, clock: hour, delay: dly.label, delayCls: dly.cls };
+  }
+
+  async function openTimeline(instanceId, dest=null){
+    const p = panels[instanceId];
+    if(!p?.line || !p.currentStopId) return;
+
+    // Cancelar carga anterior si existía
+    if (currentTimeline.abort) currentTimeline.abort.abort();
+    const abort = new AbortController();
+    currentTimeline = { instanceId, dest, abort };
+
+    const modal = $("#timelineModal");
+    const list = $("#timelineList");
+    if (!modal || !list) return;
+
+    // UI base
+    const isTram = p.line.type === "tram";
+    $("#timelineModalTitle").textContent = `Siguientes paradas • ${p.line.code}`;
+    $("#timelineModalSub").innerHTML = `
+      <span class="tl-badge"><i class="material-icons" style="font-size:16px">place</i>${escapeHtml(p.currentStopName || "Parada")}</span>
+      ${dest ? `<span class="tl-badge"><i class="material-icons" style="font-size:16px">${isTram?'tram':'directions_bus'}</i>${escapeHtml(dest)}</span>` : ``}
+      <span class="tl-badge"><i class="material-icons" style="font-size:16px">schedule</i>Estimado en tiempo real</span>
+    `;
+
+    // Acento del panel
+    const accent = getComputedStyle($("#panel-"+instanceId)).getPropertyValue("--line-accent") || "var(--primary)";
+    modal.querySelector(".sheet").style.setProperty("--line-accent", accent.trim());
+
+    list.innerHTML = `<div style="padding:14px;color:var(--muted)">Cargando paradas…</div>`;
+    modal.classList.add("open");
+    lockBodyScroll();
+    attachViewportShim(modal);
+
+    try{
+      // 1) Recuperar recorrido
+      const routeData = await getJSON(p.line.stopsUrl);
+      if (!routeData || !Array.isArray(routeData.recorrido)) throw new Error("Sin recorrido");
+
+      const recorrido = routeData.recorrido;
+      const idx = recorrido.findIndex(s => String(s.idParada) === String(p.currentStopId));
+      const from = Math.max(0, idx);
+      const MAX_NEXT = 8; // ajustable
+      const slice = recorrido.slice(from, from + 1 + MAX_NEXT);
+
+      // 2) Calcular routeCode como en refreshPanel()
+      const routeCode = isTram
+        ? p.line.code
+        : ((p.line.code.startsWith('L') && !['L2A','L2B'].includes(p.line.code)) ? p.line.code.substring(1) : p.line.code);
+
+      // 3) Para cada parada, pedir llegadas y tomar la primera de la línea (y destino si aplica)
+      list.innerHTML = `<div style="padding:14px;color:var(--muted)">Calculando horas por parada…</div>`;
+
+      const results = await mapLimit(slice, 4, async (st, i)=>{
+        if (abort.signal.aborted) return null;
+
+        const stopId = st.idParada;
+        const url = ARRIVALS_TPL.replace("{stopId}", stopId).replace("{lineCode}", routeCode);
+
+        const toFetch = toProxiedUrl(url);
+        const res = await fetch(toFetch, { cache:"no-store", signal: abort.signal });
+        if(!res.ok) throw new Error("HTTP " + res.status);
+
+        const txt = await res.text();
+        const data = tryParseJSON(txt);
+
+        const a = pickArrivalForLine(data, { line: p.line, routeCode, isTram, dest });
+        const ui = arrivalToUi(a);
+
+        return {
+          stopId,
+          name: st.nombre,
+          isCurrent: i===0,
+          eta: ui.eta,
+          clock: ui.clock,
+          delay: ui.delay,
+          delayCls: ui.delayCls
+        };
       });
 
-    const host = $("#addList");
-    if (!filtered.length){
-      host.innerHTML = `<div style="padding:12px;color:var(--muted)">No hay resultados.</div>`;
-      return;
-    }
+      if (abort.signal.aborted) return;
 
-    host.innerHTML = filtered.map(l=>{
-      const ico = l.type==="bus" ? "directions_bus" : "tram";
-      const accent =
-        l.type==="tram" ? "var(--accent-tram)" :
-        (colorCache[l.code] ? colorCache[l.code] : "var(--accent-bus)");
+      // 4) Render timeline
+      const safe = results.filter(Boolean);
+      if (!safe.length){
+        list.innerHTML = `<div style="padding:14px;color:var(--muted)">No hay datos para mostrar.</div>`;
+        return;
+      }
 
-      return `
-        <div class="add-item" role="option" tabindex="0" data-code="${escapeHtml(l.code)}" style="--chip-accent:${accent}">
-          <span class="line-pill" style="--line-accent:var(--chip-accent)">
-            <i class="material-icons" aria-hidden="true">${ico}</i>${escapeHtml(l.code)}
-          </span>
-          <div class="row-main">
-            <div class="row-title">${escapeHtml(l.name)}</div>
-            <div class="row-sub">${l.type==="bus" ? "Autobús" : "Tranvía"}</div>
+      list.innerHTML = safe.map((it, i)=>{
+        const isLast = i === safe.length - 1;
+        return `
+          <div class="tl-item ${it.isCurrent ? 'tl-current' : ''}">
+            <div class="tl-rail" aria-hidden="true">
+              <div class="tl-dot"></div>
+              ${isLast ? '' : '<div class="tl-line"></div>'}
+            </div>
+
+            <div class="tl-main">
+              <div class="tl-stop">${escapeHtml(it.name)}</div>
+              <div class="tl-meta">
+                ${it.isCurrent ? `<span class="pill">Parada actual</span>` : ``}
+                ${it.delay ? `<span class="delay ${it.delayCls}">${escapeHtml(it.delay)}</span>` : ``}
+              </div>
+            </div>
+
+            <div class="tl-right">
+              <div class="tl-eta">${escapeHtml(it.eta)}</div>
+              <div class="tl-clock">Hora: <strong>${escapeHtml(it.clock)}</strong></div>
+            </div>
           </div>
-          <div class="row-right">Añadir</div>
-        </div>
-      `;
-    }).join("");
+        `;
+      }).join("");
 
-    filtered.forEach(l => ensureLineColor(l));
-
-    host.onclick = (e)=>{
-      const it = e.target.closest(".add-item");
-      if (!it) return;
-      const code = it.dataset.code;
-      const line = lines.find(x=>x.code===code);
-      if (line){
-        createPanel(line, {focus:true, pinOnAdd:true});
-        closeAddModal();
-      }
-    };
-    host.onkeydown = (e)=>{
-      if (e.key==="Enter"){
-        const it = e.target.closest(".add-item");
-        if (!it) return;
-        const code = it.dataset.code;
-        const line = lines.find(x=>x.code===code);
-        if (line){
-          createPanel(line, {focus:true, pinOnAdd:true});
-          closeAddModal();
-        }
-      }
-    };
-  }
-
-  /* ========= Persist ========= */
-  function persistAllPanels(){
-    const ids = Object.keys(panels);
-    const snapshot = ids.map(id=>{
-      const p = panels[id];
-      return {
-        id,
-        lineCode: p.line.code,
-        pinned: isPinned(id),
-        stop: p.currentStopId ? { id: p.currentStopId, name: p.currentStopName } : null,
-        favorite: getFavorite(id)
-      };
-    });
-    saveJSON("panel_instances", snapshot);
-  }
-
-  function loadInitialPanels(){
-    const snapshot = loadJSON("panel_instances", []);
-    if (!snapshot.length){
-      updateEmpty();
-      return;
+    }catch(err){
+      if (abort.signal.aborted) return;
+      console.warn("Timeline error", err);
+      list.innerHTML = `<div style="padding:14px;color:var(--muted)">⚠️ No se pudieron calcular las horas para las siguientes paradas.</div>`;
     }
-    snapshot.forEach(item=>{
-      const line = lines.find(l=>l.code===item.lineCode);
-      if (!line) return;
-      const id = createPanel(line, {focus:false, pinOnAdd:item.pinned});
-      if (item.stop?.id){
-        panels[id].currentStopId = item.stop.id;
-        panels[id].currentStopName = item.stop.name || null;
-        $("#stop-name-"+id).textContent = panels[id].currentStopName || "Parada";
-      }
-      if (item.favorite?.id){
-        setFavorite(id, item.favorite);
-        updateFavIcon(id);
-      }
-      refreshPanel(id);
-    });
-    persistAllPanels();
-    renderPanelsOrder();
-    updateEmpty();
   }
 
-  /* ========= Theme ========= */
-  function pref(){ return localStorage.getItem('theme_pref')||'auto'; }
-  function sysDark(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; }
-  function applyTheme(p){
-    document.documentElement.classList.add('theme-switching');
-    const t=p==='auto'?(sysDark()?'dark':'light'):p;
-    document.documentElement.setAttribute('data-theme',t);
-    $("#themeIcon").textContent=t==='dark'?'light_mode':'dark_mode';
-    const c=t==='dark'?'#0b1220':'#f6f8fc';
-    $("#metaThemeLight").setAttribute('content',c);
-    $("#metaThemeDark").setAttribute('content',c);
-    setTimeout(()=>document.documentElement.classList.remove('theme-switching'),250);
+
+  /* ========= Stops modal ========= */
+  async function openStops(instanceId){
+    currentStopsForInstance = instanceId;
+    const p = panels[instanceId];
+    if(!p) return;
+
+    $("#stopsModalTitle").textContent = `Paradas · ${p.line.code}`;
+    $("#stopsListContainer").innerHTML = `<div class="empty">Cargando paradas…</div>`;
+
+    $("#stopsModal").classList.add("open");
+    lockBodyScroll();
+    attachViewportShim($("#stopsModal"));
+
+    try{
+      const data = await getJSON(p.line.stopsUrl);
+      const stops = (data && data.recorrido) ? data.recorrido : [];
+
+      const cont = $("#stopsListContainer");
+      cont.innerHTML = "";
+
+      if(!stops.length){
+        cont.innerHTML = `<div class="empty">No se pudieron cargar paradas.</div>`;
+        return;
+      }
+
+      // If API provides coordinates
+      const hasGeo = stops.some(s=> Number.isFinite(+s.latitud) && Number.isFinite(+s.longitud));
+      if(hasGeo){
+        const info = document.createElement("div");
+        info.className = "empty";
+        info.style.textAlign = "left";
+        info.style.padding = "10px 8px";
+        info.innerHTML = `Tip: usa <strong>📍</strong> para ordenar por cercanía.`;
+        cont.appendChild(info);
+      }
+
+      stops.forEach(s=>{
+        const item = document.createElement("div");
+        item.className = "item stop-item";
+        item.role = "option";
+        item.dataset.name = s.nombre || "";
+        item.dataset.lat = s.latitud ?? "";
+        item.dataset.lng = s.longitud ?? "";
+
+        item.innerHTML = `
+          <div style="min-width:0">
+            <strong>${escapeHtml(s.nombre || "Parada")}</strong><br/>
+            <small>ID: ${escapeHtml(s.idParada)}</small>
+          </div>
+          <i class="material-icons" style="opacity:.85">chevron_right</i>
+        `;
+
+        item.addEventListener("click", ()=>{
+          setStop(instanceId, s.idParada, s.nombre);
+          closeStops();
+        });
+
+        cont.appendChild(item);
+      });
+
+    }catch(err){
+      console.warn("stops error", err);
+      $("#stopsListContainer").innerHTML = `<div class="empty">Error cargando paradas.</div>`;
+    }
   }
-  function cycleTheme(){
-    const c=pref();
-    const n=c==='auto'?'light':c==='light'?'dark':'auto';
-    localStorage.setItem('theme_pref',n);
-    applyTheme(n);
+  function closeStops(){
+    $("#stopsModal").classList.remove("open");
+    detachViewportShim($("#stopsModal"));
+    unlockBodyScroll();
   }
 
-  function refreshAll(){
-    globalLastRefresh = Date.now();
-    updateGlobalUpdated();
-    Object.keys(panels).forEach(id => refreshPanel(id));
+  function setStop(instanceId, stopId, stopName){
+    const p = panels[instanceId];
+    if(!p) return;
+
+    p.currentStopId = stopId;
+    p.currentStopName = stopName;
+    $(`#stop-${instanceId}`).textContent = stopName;
+    savePanels();
+    refreshPanel(instanceId);
   }
 
   /* ========= Init ========= */
@@ -1699,10 +1641,43 @@
     $("#closeStops").addEventListener('click', closeStops);
     $("#stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
 
+    // Cerrar modal timeline
+    $("#closeTimeline").addEventListener("click", closeTimeline);
+    $("#timelineModal").addEventListener("click", (e)=>{ if(e.target===e.currentTarget) closeTimeline(); });
+
+    // Delegación: click en contador (bus) o en bloque (tranvía)
+    $("#panels-container").addEventListener("click", (e)=>{
+      const trg = e.target.closest(".timeline-trigger");
+      if(!trg) return;
+
+      const card = e.target.closest(".card");
+      const instanceId = card?.dataset?.instanceId;
+      if(!instanceId) return;
+
+      const dest = trg.dataset?.dest || null; // para tranvía (opcional)
+      openTimeline(instanceId, dest);
+    });
+
+    // Accesibilidad teclado (Enter/Espacio)
+    $("#panels-container").addEventListener("keydown", (e)=>{
+      const trg = e.target.closest(".timeline-trigger");
+      if(!trg) return;
+      if(e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+
+      const card = e.target.closest(".card");
+      const instanceId = card?.dataset?.instanceId;
+      if(!instanceId) return;
+
+      const dest = trg.dataset?.dest || null;
+      openTimeline(instanceId, dest);
+    });
+
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){
         closeAddModal();
         closeStops();
+        closeTimeline();
       }
     });
 
@@ -1745,20 +1720,15 @@
 
     applyTheme(pref());
     if (window.matchMedia){
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
-        if(pref()==='auto') applyTheme('auto');
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', ()=>{
+        if(localStorage.getItem("theme")==="auto") applyTheme("auto");
       });
     }
 
-    globalLastRefresh = Date.now();
-    updateGlobalUpdated();
-    if (globalTickTimer) clearInterval(globalTickTimer);
-    globalTickTimer = setInterval(()=> updateGlobalUpdated(), 1000);
-
-    loadInitialPanels();
-
-    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(()=> refreshAll(), 30000);
+    loadPanels();
+    scheduleAutoRefresh();
+    startGlobalTick();
+    refreshAll();
   });
   </script>
 </body>
