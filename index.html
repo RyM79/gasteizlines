@@ -333,7 +333,7 @@
       color: color-mix(in oklab, var(--line-accent) 85%, var(--text));
     }
     
-    /* ✅ DIRECCIÓN (tranvía): estilo neutro */
+    /* ✅ DIRECCIÓN (tranvía): estilo neutro para no parecer aviso */
     .dest-pill.dir-pill{
       border-color: color-mix(in oklab, var(--primary) 40%, var(--glass-border));
       background: color-mix(in oklab, var(--primary) 10%, var(--surface));
@@ -342,7 +342,7 @@
     .dest-pill.dir-pill i{
       color: color-mix(in oklab, var(--primary) 80%, var(--text));
     }
-    .dest-label{
+.dest-label{
       font-size:11px;
       letter-spacing:.14em;
       text-transform:uppercase;
@@ -500,7 +500,6 @@
       display:flex;align-items:center;gap:8px;
     }
     .divider{height:1px;background:var(--glass-border);margin:10px 0}
-
     /* ===== Timeline popup (siguientes paradas) ===== */
     .count-btn{
       appearance:none;
@@ -519,32 +518,7 @@
     .count-btn:active .next-time{ transform: scale(.99); }
 
     /* Botón "timeline" integrado sin ocupar espacio */
-    .count-btn::after{
-      content:"timeline";
-      font-family:"Material Icons";
-      position:absolute;
-      top:-10px;
-      right:-10px;
-      width:30px;
-      height:30px;
-      border-radius:999px;
-      display:grid;
-      place-items:center;
-      font-size:18px;
-      border:1px solid var(--glass-border);
-      background:var(--surface);
-      color:color-mix(in oklab,var(--primary) 70%, var(--muted));
-      box-shadow:0 10px 24px rgba(16,24,40,.10);
-      opacity:.75;
-      transition:opacity .18s ease, transform .06s ease;
-      pointer-events:none; /* el click es el del contador */
-    }
-    @media (hover:hover) and (pointer:fine){
-      .count-btn::after{ opacity:.55; }
-      .count-btn:hover::after{ opacity:1; }
-    }
-    .count-btn:active::after{ transform:scale(.98); }
-
+    
     #timelineModal .sheet{ width:min(760px,96vw); }
     .timeline-sub{
       margin:6px 0 0;
@@ -634,6 +608,8 @@
       color:var(--muted);
       text-align:center;
     }
+
+  </style>
   </style>
 </head>
 
@@ -714,6 +690,7 @@
       <div id="stopsListContainer" role="listbox"></div>
     </div>
   </div>
+
 
   <!-- Modal timeline (siguientes paradas) -->
   <div id="timelineModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="timelineModalTitle">
@@ -1233,13 +1210,12 @@
         <div>
           <button class="count-btn" type="button" data-action="timeline" data-dest="${escapeHtml(destName)}" aria-label="Ver llegada en siguientes paradas">
             <div class="next-time">${
-              (Number.isFinite(secVal) && secVal < 60)
-                ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
-                : `${escapeHtml(etaBig)}`
-            }</div>
+            (Number.isFinite(secVal) && secVal < 60)
+              ? `<span class="tram-sec" data-seconds="${secVal}">${secVal}</span> s`
+              : `${escapeHtml(etaBig)}`
+          }</div>
           </button>
-
-          <div class="hint">
+<div class="hint">
             <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
             ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
             ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
@@ -1312,7 +1288,7 @@
           <button class="count-btn" type="button" data-action="timeline" aria-label="Ver llegada en siguientes paradas">
             <div class="next-time" id="count-${instanceId}">—</div>
           </button>
-          <div class="hint">Cargando…</div>
+<div class="hint">Cargando…</div>
         </div>
 
         <div class="next-compact" id="next-${instanceId}"></div>
@@ -1343,7 +1319,7 @@
     $("#pin-btn-"+instanceId).addEventListener('click', ()=> togglePin(instanceId));
     $("#del-btn-"+instanceId).addEventListener('click', ()=> deletePanel(instanceId));
 
-    // Click en contador -> abrir timeline (badge es solo decorativo)
+    // Click en contador -> abrir timeline
     card.addEventListener('click', (e)=>{
       const btn = e.target.closest('.count-btn');
       if (!btn) return;
@@ -1418,6 +1394,7 @@
     }
   }
 
+
   function getRouteCode(line){
     const isTram = line.type === "tram";
     return isTram
@@ -1487,21 +1464,24 @@
         $("#next-"+instanceId).classList.remove("show");
         $("#next-"+instanceId).innerHTML = "";
 
-        // Countdown por bloque (tranvía)
+        // Countdown por bloque (tranvía): puede haber dos destinos en la misma parada
         p.tramCountdownIntervals = [];
         const panelEl = $("#panel-"+instanceId);
         const spans = panelEl ? panelEl.querySelectorAll(".tram-sec[data-seconds]") : [];
         spans.forEach(span=>{
           const intervalId = setInterval(()=>{
+            // Si el panel se ha eliminado o se ha vuelto a renderizar, paramos
             if (!document.body.contains(span)){
               clearInterval(intervalId);
               return;
             }
+
             let n = parseInt(span.dataset.seconds, 10);
             if (!Number.isFinite(n)){
               clearInterval(intervalId);
               return;
             }
+
             n = n - 1;
             if (n <= 0){
               clearInterval(intervalId);
@@ -1509,6 +1489,7 @@
               if (nextTimeEl) renderStoppedText(instanceId, nextTimeEl);
               return;
             }
+
             span.dataset.seconds = String(n);
             span.textContent = String(n);
           }, 1000);
@@ -1535,7 +1516,7 @@
         <button class="count-btn" type="button" data-action="timeline" aria-label="Ver llegada en siguientes paradas">
           <div class="next-time" id="count-${instanceId}">${escapeHtml(etaBig)}</div>
         </button>
-        <div class="hint">
+<div class="hint">
           <span>Hora: <strong>${escapeHtml(hour)}</strong></span>
           ${etaBig === hour && etaSmall ? `<span class="pill" style="padding:3px 10px">${escapeHtml(etaSmall)}</span>` : ''}
           ${dly.label ? `<span class="delay ${dly.cls}">${escapeHtml(dly.label)}</span>` : ''}
@@ -1701,6 +1682,7 @@
     }
   }
 
+
   /* ========= Timeline modal (siguientes paradas) ========= */
   let timelineForInstance = null;
 
@@ -1743,7 +1725,7 @@
     }).join("");
   }
 
-  async function fetchArrivalForStop({ stopId, line, routeCode, tripId }){
+  async function fetchArrivalForStop({ stopId, line, routeCode, tripId, destination }){
     const url = ARRIVALS_TPL.replace("{stopId}", stopId).replace("{lineCode}", routeCode);
     const data = await getJSON(url);
 
@@ -1756,9 +1738,17 @@
       arr = arr.filter(x => x.line === routeCode);
     }
 
-    // ✅ Clave: seguir el mismo vehículo/viaje
-    if (!tripId) return null;
-    arr = arr.filter(x => String(x.trip ?? "") === String(tripId));
+    // Autobús: seguir el mismo vehículo/viaje (trip)
+    if (line.type !== "tram") {
+      if (!tripId) return null;
+      arr = arr.filter(x => String(x.trip ?? "") === String(tripId));
+    } else {
+      // Tranvía: NO usar trip (según tu verificación).
+      // Asumimos que por línea + destino/dirección es suficiente.
+      if (destination) {
+        arr = arr.filter(x => String(x.destination ?? "") === String(destination));
+      }
+    }
 
     arr.sort((a, b) => (a.seconds ?? 1e12) - (b.seconds ?? 1e12));
     return arr[0] || null;
@@ -1823,13 +1813,28 @@
 
     const tripId = anchorArrival?.trip != null ? String(anchorArrival.trip) : null;
 
-    if (!tripId){
+    if (panel.line.type !== "tram" && !tripId){
       $("#timelineBody").innerHTML = `<div class="tl-empty">No hay suficiente información en tiempo real para seguir <strong>este mismo vehículo</strong> en las siguientes paradas.</div>`;
       return;
     }
 
-    // Paradas a mostrar: actual + siguientes (limitadas)
-    const nextStops = (idx >= 0 ? stops.slice(idx, idx + 11) : [current]).map(s=>({ id: s.idParada, name: s.nombre }));
+    // Paradas a mostrar: desde la actual hacia adelante, hasta volver a la misma parada (si el recorrido es circular).
+    // Si no aparece de nuevo, se muestran todas hasta el final.
+    const buildStops = ()=>{
+      if (!Array.isArray(stops) || !stops.length) return [{ id: current.idParada, name: current.nombre || panel.currentStopName || "Parada actual" }];
+      if (idx < 0) return stops.map(s=>({ id: s.idParada, name: s.nombre }));
+      const out = [];
+      const curId = String(panel.currentStopId);
+      for (let j = idx; j < stops.length; j++){
+        const s = stops[j];
+        const sid = String(s.idParada);
+        if (j > idx && sid === curId) break;
+        out.push({ id: s.idParada, name: s.nombre });
+      }
+      return out.length ? out : [{ id: current.idParada, name: current.nombre || panel.currentStopName || "Parada actual" }];
+    };
+
+    const nextStops = buildStops();
 
     const items = [];
     for (let i=0;i<nextStops.length;i++){
@@ -1840,7 +1845,7 @@
         top = anchorArrival;
       } else {
         try{
-          top = await fetchArrivalForStop({ stopId: st.id, line: panel.line, routeCode, tripId });
+          top = await fetchArrivalForStop({ stopId: st.id, line: panel.line, routeCode, tripId, destination: (destination || (anchorArrival?.destination || null)) });
         }catch(_){ top = null; }
       }
 
@@ -2041,7 +2046,6 @@
 
     $("#closeTimeline").addEventListener('click', closeTimeline);
     $("#timelineModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeTimeline(); });
-
     $("#stopsModal").addEventListener('click', e=>{ if(e.target===e.currentTarget) closeStops(); });
 
     document.addEventListener('keydown', e=>{
@@ -2096,14 +2100,15 @@
       });
     }
 
-    loadInitialPanels();
-    refreshAll();
-
+    globalLastRefresh = Date.now();
+    updateGlobalUpdated();
     if (globalTickTimer) clearInterval(globalTickTimer);
-    globalTickTimer = setInterval(updateGlobalUpdated, 1000);
+    globalTickTimer = setInterval(()=> updateGlobalUpdated(), 1000);
+
+    loadInitialPanels();
 
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(refreshAll, 35 * 1000);
+    autoRefreshTimer = setInterval(()=> refreshAll(), 30000);
   });
   </script>
 </body>
