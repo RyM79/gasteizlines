@@ -1,0 +1,10 @@
+{
+  "name": "gasteizlines",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Gasteiz Lines - web estática (sin dependencias). Solo se usa para ejecutar pruebas con el runner nativo de Node.",
+  "scripts": {
+    "test": "node --test tests/panel-order.test.js",
+    "factory:test": "node --test tests/panel-order.test.js"
+  }
+}
