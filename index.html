@@ -609,7 +609,62 @@
       text-align:center;
     }
 
-  </style>
+    /* ===== Reordenación de paneles (arrastre) ===== */
+    #panels-container{ position:relative; }
+    .drag-handle{
+      width:44px;height:44px;padding:0;
+      display:grid;place-items:center;
+      border-radius:12px;
+      border:1px solid var(--glass-border);
+      background:var(--surface);
+      color:var(--muted);
+      cursor:grab;
+      touch-action:none;               /* solo en el asa: el resto del panel sigue haciendo scroll */
+      -webkit-touch-callout:none;
+      -webkit-user-select:none;
+      user-select:none;
+    }
+    .drag-handle i{ font-size:22px;color:var(--muted);pointer-events:none; }
+    .drag-handle:focus-visible{ outline:none; box-shadow:var(--ring); }
+    .grid.single-panel .drag-handle{ display:none; }
+
+    .card.dragging{
+      z-index:6;
+      cursor:grabbing;
+      opacity:.97;
+      will-change:transform;
+      box-shadow:0 26px 60px rgba(16,24,40,.28), 0 0 0 2px color-mix(in oklab,var(--line-accent) 60%, transparent);
+    }
+    html[data-theme=dark] .card.dragging{
+      box-shadow:0 28px 64px rgba(0,0,0,.65), 0 0 0 2px color-mix(in oklab,var(--line-accent) 65%, transparent);
+    }
+    .card.dragging .drag-handle{ cursor:grabbing; }
+    .grid.reordering .card:not(.dragging){ transition:transform .18s ease; }
+    .card.settling{ transition:transform .18s ease; }
+    .grid.no-anim .card{ transition:none !important; }
+
+    .drop-slot{
+      position:absolute;left:0;right:0;
+      border:2px dashed color-mix(in oklab,var(--primary) 65%, var(--glass-border));
+      background:color-mix(in oklab,var(--primary) 9%, transparent);
+      border-radius:var(--radius);
+      pointer-events:none;
+      transition:top .18s ease;
+    }
+
+    html.panel-dragging{ overscroll-behavior:none; }
+    html.panel-dragging body{ -webkit-user-select:none; user-select:none; cursor:grabbing; }
+    html.panel-dragging body *{ cursor:grabbing !important; }   /* RF5: también sobre botones ajenos al asa */
+
+    .sr-only{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .grid.reordering .card:not(.dragging), .card.settling, .drop-slot{ transition:none !important; }
+    }
+
   </style>
 </head>
 
@@ -644,6 +699,9 @@
 
     <main id="panels-container" class="grid" aria-live="polite"></main>
   </div>
+
+  <p id="reorderHelp" class="sr-only">Arrastra el asa para cambiar el orden del panel, o usa las flechas arriba y abajo.</p>
+  <div id="reorderAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <nav class="bottom-nav" aria-label="Acciones">
     <button class="nav-btn primary" id="navAdd"><i class="material-icons">add</i><span>Añadir</span></button>
@@ -710,7 +768,128 @@
   </div>
 
   <script>
+  /* ===== PANEL_ORDER_LOGIC:BEGIN =====
+     Lógica pura de orden de paneles (sin DOM ni almacenamiento).
+     La extrae y prueba tests/panel-order.test.js: no referenciar aquí nada externo al bloque.
+
+     Formato persistido (localStorage):
+       panel_instances : [{id, lineCode, pinned, stop, favorite}, ...]  (en orden de visualización)
+       panel_order     : { v: 1, ids: [instanceId, ...] }                (orden explícito; fuente de verdad)
+     Si falta panel_order (configuración anterior), se usa el orden que la versión anterior mostraba:
+     fijados en el orden de "pinned_instances" y después el resto por código de línea.
+     Los fijados siempre se muestran arriba; el arrastre reordena dentro de cada grupo (fijados / no fijados). */
+  const PANEL_ORDER_KEY = "panel_order";
+  const PANEL_ORDER_SCHEMA = 1;
+  const PanelOrder = (()=>{
+    const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+    function isValidId(id){ return typeof id === "string" && ID_RE.test(id); }
+
+    // Orden guardado -> ids existentes, sin duplicados ni desconocidos; los que falten van al final.
+    function sanitize(savedIds, existingIds){
+      const exist = new Set(existingIds);
+      const seen = new Set();
+      const out = [];
+      (Array.isArray(savedIds) ? savedIds : []).forEach(id=>{
+        if (typeof id === "string" && exist.has(id) && !seen.has(id)){ seen.add(id); out.push(id); }
+      });
+      existingIds.forEach(id=>{ if (!seen.has(id)){ seen.add(id); out.push(id); } });
+      return out;
+    }
+
+    function readStoredOrder(raw){
+      if (Array.isArray(raw)) return raw;
+      if (raw && typeof raw === "object" && Array.isArray(raw.ids)) return raw.ids;
+      return null;
+    }
+
+    function groupByPinned(order, pinnedIds){
+      const p = new Set(Array.isArray(pinnedIds) ? pinnedIds : []);
+      return [...order.filter(id => p.has(id)), ...order.filter(id => !p.has(id))];
+    }
+
+    // Orden que mostraba la versión anterior (para migrar sin que nada cambie de sitio).
+    function legacyOrder(ids, pinnedIds, codeOf){
+      const all = new Set(ids);
+      const pinned = [];
+      (Array.isArray(pinnedIds) ? pinnedIds : []).forEach(id=>{
+        if (all.has(id) && !pinned.includes(id)) pinned.push(id);
+      });
+      const rest = ids.filter(id => !pinned.includes(id)).sort((a,b)=>{
+        const la = String(codeOf(a) || a), lb = String(codeOf(b) || b);
+        return la.localeCompare(lb);
+      });
+      return [...pinned, ...rest];
+    }
+
+    // Posición de destino entre los hermanos (sin el arrastrado): cuántos puntos medios quedan por encima del centro.
+    function computeTargetIndex(centerY, siblingMids){
+      let n = 0;
+      for (const m of siblingMids){ if (m < centerY) n++; }
+      return n;
+    }
+
+    // Mueve "id" a la posición "targetIndex" dentro de su grupo. Devuelve el nuevo orden de visualización.
+    function moveWithinGroup(displayOrder, pinnedIds, id, targetIndex){
+      const p = new Set(Array.isArray(pinnedIds) ? pinnedIds : []);
+      const ordered = groupByPinned(displayOrder, pinnedIds);
+      if (!ordered.includes(id)) return ordered;
+      const isP = p.has(id);
+      const group = ordered.filter(x => p.has(x) === isP);
+      const others = ordered.filter(x => p.has(x) !== isP);
+      group.splice(group.indexOf(id), 1);
+      const to = Math.max(0, Math.min(group.length, Math.trunc(Number(targetIndex) || 0)));
+      group.splice(to, 0, id);
+      return isP ? [...group, ...others] : [...others, ...group];
+    }
+
+    function sameOrder(a, b){
+      if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+      for (let i=0;i<a.length;i++){ if (a[i] !== b[i]) return false; }
+      return true;
+    }
+
+    // Sanea la lista de widgets guardada: entrada no fiable.
+    function normalizeSnapshot(raw, makeId){
+      if (!Array.isArray(raw)) return [];
+      const seen = new Set();
+      const out = [];
+      let fallback = 0;
+      raw.forEach(it=>{
+        if (!it || typeof it !== "object" || typeof it.lineCode !== "string") return;
+        let id = it.id;
+        let tries = 0;
+        while (!isValidId(id) || seen.has(id)){
+          id = tries++ < 5 ? makeId() : ("w-" + Date.now().toString(36) + "-" + (fallback++));
+        }
+        seen.add(id);
+        // Solo ids de parada escalares (string/number) y nombre de texto: nada de objetos arbitrarios.
+        const stopOf = (s)=>{
+          if (!s || typeof s !== "object") return null;
+          const sid = s.id;
+          if (!((typeof sid === "string" && sid) || (typeof sid === "number" && Number.isFinite(sid)))) return null;
+          // Se conserva el tipo original: el resto del código compara con === contra idParada de la API.
+          return { id: sid, name: typeof s.name === "string" ? s.name : null };
+        };
+        const stop = stopOf(it.stop);
+        const favorite = stopOf(it.favorite);
+        out.push({ id, lineCode: it.lineCode, pinned: it.pinned === true, stop, favorite });
+      });
+      return out;
+    }
+
+    return { isValidId, sanitize, readStoredOrder, groupByPinned, legacyOrder,
+             computeTargetIndex, moveWithinGroup, sameOrder, normalizeSnapshot };
+  })();
+  /* ===== PANEL_ORDER_LOGIC:END ===== */
+
   /* ========= State ========= */
+  let panelOrder = [];   // orden explícito de instanceIds (ver PANEL_ORDER_LOGIC)
+  let dragState = null;  // gesto de reordenación en curso (pendiente o activo)
+  let pendingRefreshAfterDrag = false;
+  let pendingOrderRenderAfterDrag = false;
+  let suppressClickUntil = 0;
+  let restoringPanels = false;   // true mientras loadInitialPanels recrea los paneles guardados
   let currentStopsForInstance = null;
   let addFilter = "all";
   const panels = {};
@@ -800,13 +979,18 @@
     return (crypto?.randomUUID ? crypto.randomUUID() : ("id-"+Date.now()+"-"+Math.random().toString(16).slice(2))).slice(0,18);
   }
 
-  const getPinned = () => loadJSON("pinned_instances", []);
+  const getPinned = () => {
+    const v = loadJSON("pinned_instances", []);
+    return Array.isArray(v) ? v.filter(x => typeof x === "string") : [];
+  };
   const setPinned = (arr) => saveJSON("pinned_instances", arr);
   const isPinned = (instanceId) => getPinned().includes(instanceId);
 
   function setPinnedInstance(instanceId, pinned){
     let p = getPinned();
     const has = p.includes(instanceId);
+    // Igual que antes: un panel recién fijado pasa al final del grupo de fijados.
+    if (pinned && !has) panelOrder = [...panelOrder.filter(x => x !== instanceId), instanceId];
     if (pinned && !has) p = [...p, instanceId];
     if (!pinned && has) p = p.filter(x=>x!==instanceId);
     setPinned(p);
@@ -836,7 +1020,10 @@
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 
   function updateEmpty(){
-    $("#empty-message").style.display = Object.keys(panels).length ? "none" : "block";
+    const count = Object.keys(panels).length;
+    $("#empty-message").style.display = count ? "none" : "block";
+    // Con un solo panel no hay nada que reordenar: se oculta el asa.
+    $("#panels-container")?.classList.toggle("single-panel", count <= 1);
   }
 
   function parseHexColor(v){
@@ -943,19 +1130,19 @@
   }
 
   /* ========= Order ========= */
-  function renderPanelsOrder(){
-    const container = $("#panels-container");
-    const allIds = Object.keys(panels);
-    const pinned = getPinned();
+  // Orden de visualización: fijados arriba y, dentro de cada grupo, el orden elegido por el usuario.
+  function getDisplayOrder(){
+    const ids = Object.keys(panels);
+    return PanelOrder.groupByPinned(PanelOrder.sanitize(panelOrder, ids), getPinned());
+  }
 
-    const ordered = [
-      ...pinned.filter(id => allIds.includes(id)),
-      ...allIds.filter(id => !pinned.includes(id)).sort((a,b)=>{
-        const la = panels[a]?.line?.code || a;
-        const lb = panels[b]?.line?.code || b;
-        return la.localeCompare(lb);
-      })
-    ];
+  function renderPanelsOrder(){
+    // RF12: durante un arrastre no se reordena el DOM; se aplica al soltar.
+    if (isDragActive()){ pendingOrderRenderAfterDrag = true; return; }
+    const container = $("#panels-container");
+    const ordered = getDisplayOrder();
+    const current = $$(":scope > .card", container).map(el => el.dataset.instanceId);
+    if (PanelOrder.sameOrder(current, ordered)) return;   // evita mover nodos (y perder el foco) sin necesidad
 
     ordered.forEach(id=>{
       const el = $("#panel-"+id);
@@ -983,9 +1170,11 @@
 
   /* ========= Delete ========= */
   function deletePanel(instanceId){
+    cancelPanelGesture();
     const p = panels[instanceId];
     if (p?.countdownInterval) clearInterval(p.countdownInterval);
     delete panels[instanceId];
+    panelOrder = panelOrder.filter(x => x !== instanceId);
     $("#panel-"+instanceId)?.remove();
 
     const pins = getPinned();
@@ -1229,8 +1418,9 @@
     `;
   }
 
-  function createPanel(line, {focus=false, pinOnAdd=false} = {}){
-    const instanceId = uid();
+  function createPanel(line, {focus=false, pinOnAdd=false, instanceId: presetId=null} = {}){
+    // Identificador estable: se reutiliza el guardado (validado) para conservar orden, fijación y favorita.
+    const instanceId = (PanelOrder.isValidId(presetId) && !panels[presetId]) ? presetId : uid();
 
     const card = document.createElement('section');
     card.className='card';
@@ -1264,6 +1454,10 @@
         </div>
 
         <div class="card-actions">
+          <button class="drag-handle" id="drag-handle-${instanceId}" type="button"
+                  aria-roledescription="asa de reordenación" aria-describedby="reorderHelp" title="Arrastrar para mover">
+            <i class="material-icons" aria-hidden="true">drag_indicator</i>
+          </button>
           <button class="pin-btn" id="pin-btn-${instanceId}" type="button" aria-pressed="false" title="Fijar">
             <i class="material-icons">push_pin</i>
           </button>
@@ -1313,6 +1507,14 @@
       lastArrivals: null,
       lastArrivalsAtStop: null
     };
+    // RF21: los widgets nuevos van al final (dentro de su grupo).
+    if (!panelOrder.includes(instanceId)) panelOrder.push(instanceId);
+
+    const handle = $("#drag-handle-"+instanceId);
+    handle.addEventListener('pointerdown', (e)=> onHandlePointerDown(e, instanceId));
+    handle.addEventListener('keydown', (e)=> onHandleKeyDown(e, instanceId));
+    handle.addEventListener('contextmenu', (e)=> e.preventDefault());
+    updateHandleLabel(instanceId);
 
     $("#stop-picker-"+instanceId).addEventListener('click', ()=> showStopsList(instanceId));
     $("#fav-btn-"+instanceId).addEventListener('click', ()=> toggleFavorite(instanceId));
@@ -1371,7 +1573,9 @@
       }
 
       const fav = getFavorite(instanceId);
-      if (fav){
+      if (panel.currentStopId){
+        // Parada restaurada desde panel_instances (CA7): se conserva.
+      } else if (fav){
         panel.currentStopId=fav.id; panel.currentStopName=fav.name;
       } else {
         const s=data.recorrido[0];
@@ -1381,6 +1585,7 @@
 
       $("#stop-name-"+instanceId).textContent = panel.currentStopName || "Parada no disponible";
       updateFavIcon(instanceId);
+      updateHandleLabel(instanceId);
 
       await refreshPanel(instanceId);
     }catch(err){
@@ -1406,6 +1611,9 @@
     const p = panels[instanceId]; if(!p || !p.currentStopId) return;
     const { line } = p;
 
+    // RF12/RF13: no se toca el panel durante un arrastre (la cuenta atrás sigue); se refresca al soltar.
+    if (isDragActive()){ pendingRefreshAfterDrag = true; return; }
+
     if (p.countdownInterval){ clearInterval(p.countdownInterval); p.countdownInterval=null; }
 
     if (p.tramCountdownIntervals && p.tramCountdownIntervals.length){
@@ -1422,6 +1630,9 @@
 
       const url = ARRIVALS_TPL.replace("{stopId}", p.currentStopId).replace("{lineCode}", routeCode);
       const data = await getJSON(url);
+
+      // RF12: si la respuesta llega durante un arrastre, no se repinta (cambiaría la altura); se repite al soltar.
+      if (isDragActive()){ pendingRefreshAfterDrag = true; return; }
 
       setAlerts(instanceId, data?.alertas || []);
 
@@ -1563,6 +1774,7 @@
       setStatus(instanceId, "OK");
       p.lastUpdated = started; setUpdated(instanceId, started);
     }catch(e){
+      if (isDragActive()){ pendingRefreshAfterDrag = true; return; }
       $("#info-"+instanceId).innerHTML = `<div class="next-time">—</div><div class="hint">⚠️ Error al actualizar</div>`;
       $("#next-"+instanceId).classList.remove("show");
       $("#next-"+instanceId).innerHTML = "";
@@ -1612,6 +1824,7 @@
     p.currentStopName = name;
 
     $("#stop-name-"+instanceId).textContent = name;
+    updateHandleLabel(instanceId);
 
     pushRecent(p.line.code, {id: stopId, name});
     closeStops();
@@ -1957,7 +2170,10 @@
 
   /* ========= Persist ========= */
   function persistAllPanels(){
-    const ids = Object.keys(panels);
+    // Mientras se restauran los paneles guardados no se escribe nada: la lista aún está incompleta.
+    if (restoringPanels) return;
+    const ids = getDisplayOrder();
+    saveJSON(PANEL_ORDER_KEY, { v: PANEL_ORDER_SCHEMA, ids });
     const snapshot = ids.map(id=>{
       const p = panels[id];
       return {
@@ -1972,29 +2188,390 @@
   }
 
   function loadInitialPanels(){
-    const snapshot = loadJSON("panel_instances", []);
-    if (!snapshot.length){
+    // Datos de localStorage = entrada no fiable: se sanean ids, duplicados y estructura (RF23).
+    const items = PanelOrder.normalizeSnapshot(loadJSON("panel_instances", []), uid)
+      .filter(item => lines.some(l => l.code === item.lineCode));
+    if (!items.length){
       updateEmpty();
       return;
     }
-    snapshot.forEach(item=>{
-      const line = lines.find(l=>l.code===item.lineCode);
-      if (!line) return;
-      const id = createPanel(line, {focus:false, pinOnAdd:item.pinned});
-      if (item.stop?.id){
-        panels[id].currentStopId = item.stop.id;
-        panels[id].currentStopName = item.stop.name || null;
-        $("#stop-name-"+id).textContent = panels[id].currentStopName || "Parada";
-      }
-      if (item.favorite?.id){
-        setFavorite(id, item.favorite);
-        updateFavIcon(id);
-      }
-      refreshPanel(id);
+
+    // Fijación: pertenencia según cada widget guardado, orden relativo según "pinned_instances"
+    // (se descartan ids obsoletos). No cambia cómo funciona la fijación.
+    const storedPinned = getPinned();
+    const wantPinned = new Set(items.filter(i => i.pinned).map(i => i.id));
+    const pinnedIds = [];
+    [...storedPinned, ...items.filter(i => i.pinned).map(i => i.id)].forEach(id=>{
+      if (wantPinned.has(id) && !pinnedIds.includes(id)) pinnedIds.push(id);
     });
+    setPinned(pinnedIds);
+
+    // Orden: el explícito si existe; si no (configuración anterior), el que se mostraba hasta ahora (RF20).
+    const ids = items.map(i => i.id);
+    const codeOf = Object.fromEntries(items.map(i => [i.id, i.lineCode]));
+    const storedOrder = PanelOrder.readStoredOrder(loadJSON(PANEL_ORDER_KEY, null));
+    panelOrder = storedOrder
+      ? PanelOrder.sanitize(storedOrder, ids)
+      : PanelOrder.legacyOrder(ids, pinnedIds, id => codeOf[id]);
+
+    // RF20/RF23: no se guarda hasta tener todos los paneles, y un widget que falle no impide restaurar el resto.
+    restoringPanels = true;
+    try{
+      items.forEach(item=>{
+        try{
+          const line = lines.find(l=>l.code===item.lineCode);
+          if (!line) return;
+          const id = createPanel(line, {focus:false, pinOnAdd:item.pinned, instanceId:item.id});
+          if (item.stop?.id){
+            panels[id].currentStopId = item.stop.id;
+            panels[id].currentStopName = item.stop.name || null;
+            $("#stop-name-"+id).textContent = panels[id].currentStopName || "Parada";
+            updateHandleLabel(id);
+          }
+          if (item.favorite?.id){
+            setFavorite(id, item.favorite);
+            updateFavIcon(id);
+          }
+          refreshPanel(id);
+        }catch(err){
+          console.warn("No se pudo restaurar el panel", item.lineCode, err);
+        }
+      });
+    } finally {
+      restoringPanels = false;
+    }
     persistAllPanels();
     renderPanelsOrder();
     updateEmpty();
+  }
+
+  /* ========= Reordenación de paneles (Pointer Events, sin librerías) =========
+     - Solo se inicia desde el asa (.drag-handle, touch-action:none solo ahí).
+     - Ratón: tras moverse > DRAG_MOUSE_THRESHOLD px.
+     - Táctil/lápiz: tras mantener DRAG_TOUCH_HOLD_MS o moverse > DRAG_TOUCH_THRESHOLD px.
+     - Se reordena dentro del grupo del panel (fijados / no fijados); los fijados siguen arriba.
+     - Cancelan: Escape, pointercancel, pérdida de captura, blur de la ventana, pestaña oculta.
+     - Teclado: flechas arriba/abajo sobre el asa mueven una posición y se anuncia por aria-live. */
+  const DRAG_MOUSE_THRESHOLD = 5;     // px
+  const DRAG_TOUCH_THRESHOLD = 8;     // px
+  const DRAG_TOUCH_HOLD_MS = 250;     // ms
+  const AUTOSCROLL_MARGIN = 60;       // px desde el borde útil de la ventana
+  const AUTOSCROLL_MAX_SPEED = 18;    // px por frame
+  const SETTLE_MS = 200;
+
+  function isDragActive(){ return !!(dragState && dragState.active); }
+  function isAnyModalOpen(){ return !!document.querySelector(".modal.open"); }
+  function prefersReducedMotion(){
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  function updateHandleLabel(instanceId){
+    const h = $("#drag-handle-"+instanceId);
+    const p = panels[instanceId];
+    if (!h || !p) return;
+    const stop = p.currentStopName ? ` – Parada ${p.currentStopName}` : "";
+    h.setAttribute("aria-label", `Mover panel Línea ${p.line.code}${stop}`);   // atributo, nunca innerHTML
+  }
+
+  function announce(msg){
+    const el = $("#reorderAnnouncer");
+    if (!el) return;
+    el.textContent = "";
+    setTimeout(()=>{ el.textContent = msg; }, 30);
+  }
+  function announcePosition(instanceId){
+    const order = getDisplayOrder();
+    const i = order.indexOf(instanceId);
+    if (i >= 0) announce(`Panel movido a la posición ${i+1} de ${order.length}`);
+  }
+
+  function onHandlePointerDown(e, instanceId){
+    if (!e.isPrimary) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (dragState){
+      if (dragState.active) return;
+      endPendingGesture();   // gesto pendiente huérfano (p. ej. se perdió el pointerup): no debe bloquear el asa
+    }
+    if (isAnyModalOpen()) return;                       // RF26
+    const el = $("#panel-"+instanceId);
+    if (!el) return;
+    e.preventDefault();                                 // sin selección de texto
+    const handle = e.currentTarget;
+    dragState = {
+      id: instanceId, el, handle,
+      pointerId: e.pointerId, pointerType: e.pointerType,
+      startX: e.clientX, startY: e.clientY, lastY: e.clientY,
+      active: false, holdTimer: null, raf: 0, scrollRaf: 0
+    };
+    try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+    if (e.pointerType !== "mouse"){
+      dragState.holdTimer = setTimeout(()=>{
+        if (dragState && !dragState.active) startPanelDrag();
+      }, DRAG_TOUCH_HOLD_MS);
+    }
+  }
+
+  function startPanelDrag(){
+    const s = dragState;
+    if (!s || s.active) return;
+    if (s.holdTimer){ clearTimeout(s.holdTimer); s.holdTimer = null; }
+    if (isAnyModalOpen() || !document.body.contains(s.el)){ endPendingGesture(); return; }
+
+    const container = $("#panels-container");
+    const pinnedSet = new Set(getPinned());
+    const isP = pinnedSet.has(s.id);
+    const groupEls = getDisplayOrder()
+      .filter(id => pinnedSet.has(id) === isP)
+      .map(id => $("#panel-"+id))
+      .filter(Boolean);
+
+    const scrollY0 = window.scrollY;
+    const items = groupEls.map(el=>{
+      const r = el.getBoundingClientRect();
+      return { el, top: r.top + scrollY0, height: r.height };
+    });
+    const originIndex = items.findIndex(it => it.el === s.el);
+    if (originIndex < 0 || items.length < 2){ endPendingGesture(); return; }  // nada que reordenar en su grupo
+
+    const me = items[originIndex];
+    const siblings = [];
+    items.forEach((it, i)=>{
+      if (i !== originIndex) siblings.push({ el: it.el, top: it.top, height: it.height, mid: it.top + it.height/2, origIndex: i });
+    });
+    const last = items[items.length-1];
+    const containerTop = container.getBoundingClientRect().top + scrollY0;
+
+    const slot = document.createElement("div");
+    slot.className = "drop-slot";
+    slot.setAttribute("aria-hidden", "true");
+    slot.style.height = me.height + "px";
+    slot.style.top = (me.top - containerTop) + "px";
+    container.prepend(slot);   // primero en el DOM: se pinta por debajo de los paneles
+
+    Object.assign(s, {
+      active: true, container, siblings, originIndex, targetIndex: originIndex, me,
+      gap: parseFloat(getComputedStyle(container).rowGap) || 14,
+      scrollY0, containerTop, slot,
+      groupTop: items[0].top, groupBottom: last.top + last.height
+    });
+
+    s.el.classList.add("dragging");
+    container.classList.add("reordering");
+    if (prefersReducedMotion()) container.classList.add("no-anim");
+    document.documentElement.classList.add("panel-dragging");
+    if (s.pointerType !== "mouse"){ try{ navigator.vibrate?.(10); }catch(_){} }
+
+    applyDragFrame();
+    s.scrollRaf = requestAnimationFrame(autoScrollStep);
+  }
+
+  function applyDragFrame(){
+    const s = dragState;
+    if (!s || !s.active) return;
+    s.raf = 0;
+
+    // Solo eje vertical; limitado a la zona del grupo (fijados / no fijados).
+    let dy = (s.lastY - s.startY) + (window.scrollY - s.scrollY0);
+    const minDy = s.groupTop - s.me.top;
+    const maxDy = s.groupBottom - s.me.height - s.me.top;
+    dy = Math.max(minDy, Math.min(maxDy, dy));
+
+    const center = s.me.top + s.me.height/2 + dy;
+    const target = PanelOrder.computeTargetIndex(center, s.siblings.map(x => x.mid));
+    s.targetIndex = target;
+
+    const shift = s.me.height + s.gap;
+    s.siblings.forEach((sib, k)=>{
+      let t = 0;
+      if (sib.origIndex < s.originIndex && k >= target) t = shift;
+      else if (sib.origIndex > s.originIndex && k < target) t = -shift;
+      sib.el.style.transform = t ? `translateY(${t}px)` : "";
+    });
+    s.el.style.transform = `translateY(${dy}px)`;
+
+    let slotTop = s.groupTop;
+    for (let k=0; k<target; k++) slotTop += s.siblings[k].height + s.gap;
+    s.slot.style.top = (slotTop - s.containerTop) + "px";
+  }
+
+  function scheduleDragFrame(){
+    if (dragState && dragState.active && !dragState.raf) dragState.raf = requestAnimationFrame(applyDragFrame);
+  }
+
+  function autoScrollStep(){
+    const s = dragState;
+    if (!s || !s.active) return;
+    const header = document.querySelector("header.appbar");
+    const nav = document.querySelector(".bottom-nav");
+    const topEdge = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+    const bottomEdge = nav ? nav.getBoundingClientRect().top : window.innerHeight;
+    const y = s.lastY;
+    let v = 0;
+    if (y < topEdge + AUTOSCROLL_MARGIN){
+      v = -AUTOSCROLL_MAX_SPEED * Math.min(1, (topEdge + AUTOSCROLL_MARGIN - y) / AUTOSCROLL_MARGIN);
+    } else if (y > bottomEdge - AUTOSCROLL_MARGIN){
+      v = AUTOSCROLL_MAX_SPEED * Math.min(1, (y - (bottomEdge - AUTOSCROLL_MARGIN)) / AUTOSCROLL_MARGIN);
+    }
+    if (v){
+      const before = window.scrollY;
+      window.scrollBy(0, v < 0 ? Math.min(-1, v) : Math.max(1, v));
+      if (window.scrollY !== before) applyDragFrame();
+    }
+    s.scrollRaf = requestAnimationFrame(autoScrollStep);
+  }
+
+  function onDragPointerMove(e){
+    const s = dragState;
+    if (!s || e.pointerId !== s.pointerId) return;
+    s.lastY = e.clientY;
+    if (!s.active){
+      const dist = Math.hypot(e.clientX - s.startX, e.clientY - s.startY);
+      const thr = s.pointerType === "mouse" ? DRAG_MOUSE_THRESHOLD : DRAG_TOUCH_THRESHOLD;
+      if (dist < thr) return;
+      startPanelDrag();
+      if (!isDragActive()) return;
+    }
+    e.preventDefault();
+    scheduleDragFrame();
+  }
+
+  function onDragPointerUp(e){
+    const s = dragState;
+    if (!s || e.pointerId !== s.pointerId) return;
+    if (s.active) finishPanelDrag(true);
+    else endPendingGesture();
+  }
+
+  function onDragPointerCancel(e){
+    const s = dragState;
+    if (!s || s.ending || e.pointerId !== s.pointerId) return;
+    cancelPanelGesture();
+  }
+
+  function cancelPanelGesture(){
+    if (!dragState) return;
+    if (dragState.active) finishPanelDrag(false);
+    else endPendingGesture();
+  }
+
+  // Gesto que no llegó a ser arrastre (p. ej. clic corto sobre el asa): no cambia nada.
+  function endPendingGesture(){
+    const s = dragState;
+    if (!s || s.ending) return;
+    s.ending = true;   // releasePointerCapture puede emitir lostpointercapture: evita reentrar
+    if (s.holdTimer) clearTimeout(s.holdTimer);
+    try{ s.handle.releasePointerCapture(s.pointerId); }catch(_){}
+    if (dragState === s) dragState = null;
+  }
+
+  function finishPanelDrag(commit){
+    const s = dragState;
+    if (!s || s.ending) return;
+    s.ending = true;   // releasePointerCapture puede emitir lostpointercapture: evita reentrar
+    if (s.holdTimer) clearTimeout(s.holdTimer);
+    if (s.raf) cancelAnimationFrame(s.raf);
+    if (s.scrollRaf) cancelAnimationFrame(s.scrollRaf);
+    try{ s.handle.releasePointerCapture(s.pointerId); }catch(_){}
+
+    const container = s.container;
+    const reduced = prefersReducedMotion();
+    const moved = commit && s.targetIndex !== s.originIndex;
+    suppressClickUntil = Date.now() + 400;   // RF18: el click tras soltar no activa nada
+
+    s.slot.remove();
+    document.documentElement.classList.remove("panel-dragging");
+    s.el.classList.remove("dragging");
+
+    if (moved){
+      const visualTop = s.el.getBoundingClientRect().top;
+      // Los vecinos ya están visualmente en su nueva posición: se quitan transforms sin animación.
+      container.classList.add("no-anim");
+      container.classList.remove("reordering");
+      s.siblings.forEach(x => { x.el.style.transform = ""; });
+      s.el.style.transform = "";
+      dragState = null;
+
+      panelOrder = PanelOrder.moveWithinGroup(getDisplayOrder(), getPinned(), s.id, s.targetIndex);
+      pendingOrderRenderAfterDrag = false;
+      renderPanelsOrder();
+      persistAllPanels();          // RF15: solo se escribe si el orden ha cambiado
+      announcePosition(s.id);
+
+      void container.offsetHeight;
+      container.classList.remove("no-anim");
+      if (!reduced){
+        const delta = visualTop - s.el.getBoundingClientRect().top;
+        if (Math.abs(delta) > 0.5){
+          s.el.style.transform = `translateY(${delta}px)`;
+          void s.el.offsetHeight;
+          s.el.classList.add("settling");
+          s.el.style.transform = "";
+          setTimeout(()=> s.el.classList.remove("settling"), SETTLE_MS);
+        }
+      }
+    } else {
+      // Cancelado o soltado en su sitio: vuelve a la posición original sin guardar nada.
+      if (!reduced) s.el.classList.add("settling");
+      s.el.style.transform = "";
+      s.siblings.forEach(x => { x.el.style.transform = ""; });
+      dragState = null;
+      setTimeout(()=>{
+        s.el.classList.remove("settling");
+        if (!isDragActive()) container.classList.remove("reordering", "no-anim");
+      }, reduced ? 0 : SETTLE_MS);
+    }
+
+    // Lo aplazado durante el arrastre (RF12).
+    if (pendingOrderRenderAfterDrag){ pendingOrderRenderAfterDrag = false; renderPanelsOrder(); }
+    if (pendingRefreshAfterDrag) refreshAll();
+  }
+
+  function onHandleKeyDown(e, instanceId){
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    if (dragState || isAnyModalOpen()) return;
+    e.preventDefault();
+    movePanelByKeyboard(instanceId, e.key === "ArrowUp" ? -1 : 1);
+  }
+
+  function movePanelByKeyboard(instanceId, delta){
+    const display = getDisplayOrder();
+    const pinned = getPinned();
+    const pSet = new Set(pinned);
+    const group = display.filter(id => pSet.has(id) === pSet.has(instanceId));
+    const from = group.indexOf(instanceId);
+    if (from < 0) return;
+    const to = from + delta;
+    if (to < 0 || to >= group.length){
+      announce(pSet.has(instanceId)
+        ? (delta < 0 ? "El panel ya es el primero de los fijados" : "El panel ya es el último de los fijados")
+        : (delta < 0 ? "El panel ya es el primero de los no fijados" : "El panel ya es el último"));
+      return;
+    }
+    panelOrder = PanelOrder.moveWithinGroup(display, pinned, instanceId, to);
+    renderPanelsOrder();
+    persistAllPanels();
+    const h = $("#drag-handle-"+instanceId);
+    if (h && document.activeElement !== h) h.focus({ preventScroll: true });
+    $("#panel-"+instanceId)?.scrollIntoView({ block: "nearest" });
+    announcePosition(instanceId);
+  }
+
+  function initPanelDrag(){
+    window.addEventListener("pointermove", onDragPointerMove, { passive: false });
+    window.addEventListener("pointerup", onDragPointerUp);
+    window.addEventListener("pointercancel", onDragPointerCancel);
+    window.addEventListener("lostpointercapture", onDragPointerCancel, true);
+    window.addEventListener("scroll", scheduleDragFrame, { passive: true });
+    window.addEventListener("blur", cancelPanelGesture);
+    document.addEventListener("visibilitychange", ()=>{ if (document.hidden) cancelPanelGesture(); });
+    document.addEventListener("keydown", (e)=>{
+      if (e.key === "Escape" && dragState){ e.preventDefault(); cancelPanelGesture(); }
+    }, true);
+    document.addEventListener("contextmenu", (e)=>{ if (dragState) e.preventDefault(); }, true);
+    window.addEventListener("click", (e)=>{
+      if (suppressClickUntil && Date.now() < suppressClickUntil){ e.preventDefault(); e.stopPropagation(); }
+      suppressClickUntil = 0;
+    }, true);
   }
 
   /* ========= Theme ========= */
@@ -2018,6 +2595,10 @@
   }
 
   function refreshAll(){
+    // RF12 (opción elegida: aplazar). Durante un arrastre no se repintan los paneles;
+    // el refresco pendiente se lanza justo después de soltar o cancelar.
+    if (isDragActive()){ pendingRefreshAfterDrag = true; return; }
+    pendingRefreshAfterDrag = false;
     globalLastRefresh = Date.now();
     updateGlobalUpdated();
     Object.keys(panels).forEach(id => refreshPanel(id));
@@ -2105,6 +2686,7 @@
     if (globalTickTimer) clearInterval(globalTickTimer);
     globalTickTimer = setInterval(()=> updateGlobalUpdated(), 1000);
 
+    initPanelDrag();
     loadInitialPanels();
 
     if (autoRefreshTimer) clearInterval(autoRefreshTimer);
